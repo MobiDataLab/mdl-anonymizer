@@ -47,7 +47,7 @@ class DistanceGraph:
         for T_i in self.dataset.trajectories:
             synchro_T = self.__synchronize_trajectory(T_i, timestamps)
             self.synchronyzed_trajectories.append(synchro_T)
-            logging.debug(f'Trajectory {T_i.id} synchronized!')
+            # logging.debug(f'Trajectory {T_i.id} synchronized!')
 
         # logging.debug(self.synchronyzed_trajectories)
 
@@ -99,13 +99,13 @@ class DistanceGraph:
         for T_i in self.dataset.trajectories:
             synchro_T = self.__synchronize_trajectory(T_i, timestamps)
             self.synchronyzed_trajectories.append(synchro_T)
-            logging.debug(f'Trajectory {T_i.id} resynchronized!')
+            # logging.debug(f'Trajectory {T_i.id} resynchronized!')
 
         # Finally add the synchronized new trajectory
         synchro_T = self.__synchronize_trajectory(new_t, timestamps)
         self.synchronyzed_trajectories.append(synchro_T)
 
-        logging.info("Trajectories re-synchronized")
+        logging.info("\tTrajectories re-synchronized")
 
     def get_distance(self, s_traj_1, s_traj_2):
 
@@ -121,13 +121,13 @@ class DistanceGraph:
                 raise Exception(f"Trajectory {id} doesn't exist")
 
         p = get_p_contemporary(s_traj_1, s_traj_2)
-        logging.debug(f'\tp-contemporary: {p}')
+        # logging.debug(f'\tp-contemporary: {p}')
         if p > 0:
             # p-contemporanies
             ot = get_overlap_time(s_traj_1, s_traj_2)
-            logging.debug(f'\tot: {ot}')
+            # logging.debug(f'\tot: {ot}')
             ts_interval = s_traj_1.get_interval_timestamps(ot)
-            logging.debug(f'\tts_interval length: {len(ts_interval)}')
+            # logging.debug(f'\tts_interval length: {len(ts_interval)}')
 
             d = 0
             denominator = pow(max(ot) - min(ot), 2)
@@ -150,13 +150,13 @@ class DistanceGraph:
 
         for T_i in self.synchronyzed_trajectories:
             for T_j in self.synchronyzed_trajectories:
-                logging.debug(f'Computing distance ({T_i.id, T_j.id})')
+                # logging.debug(f'Computing distance ({T_i.id, T_j.id})')
                 if T_i != T_j:
                     # Check if an edge between T_i and T_l already exists
                     if T_j.id not in self.graph.nodes() or T_i.id not in list(self.graph.neighbors(T_j.id)):
-                        logging.debug(f'\tActually computing ({T_i.id, T_j.id})')
+                        # logging.debug(f'\tActually computing ({T_i.id, T_j.id})')
                         d = self.get_distance(T_i, T_j)
-                        logging.debug(f'\td =  {d}')
+                        # logging.debug(f'\td =  {d}')
                         if d is not None:
                             self.graph.add_edge(T_i.id, T_j.id, weight=d)
 
