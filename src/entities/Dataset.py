@@ -20,7 +20,7 @@ class Dataset(ABC):
 #    def load(self):
 #        raise NotImplementedError
 
-    def load_from_scikit(self, filename, n_trajectories = None,
+    def load_from_scikit(self, filename, n_trajectories = None, min_locations = 10,
                          latitude_key="lat", longitude_key="lon", datetime_key="datetime", user_key = "user_id",
                          datetime_format = "%Y/%m/%d %H:%M:%S"):
         df = pandas.read_csv(filename)
@@ -38,20 +38,27 @@ class Dataset(ABC):
                 location = CabLocation(timestamp,  row[latitude_key],  row[longitude_key])
                 T.add_location(location)
             else:
-                T.locations.sort(key=lambda x: x.timestamp)
-                self.add_trajectory(T)
+                if len(T.locations) >= 10:
+                    T.locations.sort(key=lambda x: x.timestamp)
+                    self.add_trajectory(T)
 
-                if n_trajectories and len(self.trajectories) >= n_trajectories:
-                    break
+                    if n_trajectories and len(self.trajectories) >= n_trajectories:
+                        break
 
                 user_id = row[user_key]
                 T = Trajectory(user_id)
+
+                # Convert datetime to timestamp
+                element = datetime.datetime.strptime(row[datetime_key], datetime_format)
+                timestamp = datetime.datetime.timestamp(element)
                 location = CabLocation(timestamp, row[latitude_key], row[longitude_key])
                 T.add_location(location)
         else:
-            self.add_trajectory(T)
+            if len(T.locations) >= 10:
+                T.locations.sort(key=lambda x: x.timestamp)
+                self.add_trajectory(T)
 
-        logging.info(f"Dataset loaded: {len(self)} trajectories.")
+        logging.info(f"Dataset loaded: {len(self)} trajectories. Every trajectory has, at least, {min_locations} locations")
 
     '''
         Export a loaded dataset as scikit dataset
@@ -61,7 +68,7 @@ class Dataset(ABC):
         if not self.is_loaded():
             raise RuntimeError("Dataset is not loaded")
 
-        with open(filename, mode='w') as new_file:
+        with open(filename, mode='w', newline='') as new_file:
             writer = csv.writer(new_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
             writer.writerow(["lat", "lon", "datetime", "user_id"])
             for t in self.trajectories:
