@@ -10,6 +10,9 @@ class TimestampedLocation:
     def get_list(self):
         return [self.timestamp, self.x, self.y]
 
+    def __repr__(self):
+        return f'[{self.timestamp}: {self.x}, {self.y}]'
+
     def __str__(self):
         return f'[{self.timestamp}: {self.x}, {self.y}]'
 
@@ -20,7 +23,15 @@ class TimestampedLocation:
         return self.timestamp == other.timestamp and self.x == other.x and self.y == other.y
 
     def distance(self, location):
+        # TODO: Weight fields?
         return sqrt((location.x - self.x) ** 2 + (location.y - self.y) ** 2 + (location.timestamp - self.timestamp) ** 2)
+
+    def spatial_distance(self, another_location):
+        #TODO: Develop havardist distance?
+        return sqrt((another_location.x - self.x) ** 2 + (another_location.y - self.y) ** 2)
+
+    def temporal_distance(self, another_location):
+        return abs(another_location.timestamp - self.timestamp)
 
     @staticmethod
     def compute_centroid(locations: list):
