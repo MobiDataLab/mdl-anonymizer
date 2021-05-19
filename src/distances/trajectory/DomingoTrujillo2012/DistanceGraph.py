@@ -3,7 +3,7 @@ import math
 import networkx as nx
 import matplotlib.pyplot as plt
 
-from src.distances.DomingoTrujillo2012.TrajectoryUtils import get_p_contemporary, get_overlap_time
+from src.distances.trajectory.DomingoTrujillo2012.TrajectoryUtils import get_p_contemporary, get_overlap_time
 from src.entities.Dataset import Dataset
 from src.entities.TimestampedLocation import TimestampedLocation
 from src.entities.Trajectory import Trajectory
@@ -60,7 +60,7 @@ class DistanceGraph:
     def __synchronize_trajectory(self, T: Trajectory, timestamps):
 
         synchro_T = Trajectory(T.id)
-        filter_timestamps = [t for t in timestamps if (T.first_timestamp() <= t <= T.last_timestamp())]
+        filter_timestamps = [t for t in timestamps if (T.get_first_timestamp() <= t <= T.get_last_timestamp())]
         for ts in filter_timestamps:
             loc = T.get_location_by_timestamp(ts)
             if loc:

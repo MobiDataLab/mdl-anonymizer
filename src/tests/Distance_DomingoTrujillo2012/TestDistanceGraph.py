@@ -1,12 +1,12 @@
 import unittest
 
-from src.distances.DomingoTrujillo2012.Distance import Distance
-from src.distances.DomingoTrujillo2012.DistanceGraph import DistanceGraph
-from src.distances.DomingoTrujillo2012.TrajectoryUtils import get_p_contemporary, get_overlap_time
+from src.distances.trajectory.DomingoTrujillo2012.Distance import Distance
+from src.distances.trajectory.DomingoTrujillo2012.DistanceGraph import DistanceGraph
+from src.distances.trajectory.DomingoTrujillo2012.TrajectoryUtils import get_p_contemporary, get_overlap_time
 from src.entities.TimestampedLocation import TimestampedLocation
 from src.entities.Trajectory import Trajectory
 from src.tests.build_mocks import get_mock_dataset, get_mock_dataset_2, get_mock_dataset_3, get_mock_dataset_4, \
-    get_mock_dataset_5, get_mock_dataset_N, get_mock_dataset_6, get_mock_dataset_7
+    get_mock_dataset_5, get_mock_dataset_N, get_mock_dataset_7
 
 
 class TestDistanceGraph(unittest.TestCase):

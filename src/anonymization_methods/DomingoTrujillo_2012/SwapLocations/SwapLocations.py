@@ -7,8 +7,8 @@ from src.aggregation.TrajectoryAggregationInterface import TrajectoryAggregation
 from src.clustering.ClusteringInterface import ClusteringInterface
 from src.clustering.MDAV.SimpleMDAV import SimpleMDAV
 from src.clustering.MDAV.SimpleMDAVDataset import SimpleMDAVDataset
-from src.distances.DistanceInterface import DistanceInterface
-from src.distances.DomingoTrujillo2012.Distance import Distance
+from src.distances.trajectory.DistanceInterface import DistanceInterface
+from src.distances.trajectory.DomingoTrujillo2012.Distance import Distance
 from src.entities.Dataset import Dataset
 from src.entities.TimestampedLocation import TimestampedLocation
 from src.entities.Trajectory import Trajectory
@@ -17,6 +17,16 @@ from src.entities.Trajectory import Trajectory
 class SwapLocations:
     def __init__(self, dataset: Dataset, k, R_t, R_s, clustering_method: ClusteringInterface = None,
                  distance: DistanceInterface = None, aggregation_method: TrajectoryAggregationInterface = None):
+        '''
+
+        :param dataset:
+        :param k:
+        :param R_t: s
+        :param R_s: km
+        :param clustering_method:
+        :param distance:
+        :param aggregation_method:
+        '''
         self.dataset = dataset
         if not distance:
             self.distance = Distance(dataset)
@@ -116,6 +126,7 @@ class SwapLocations:
                 self.anonymized_dataset.add_trajectory(T)
 
             logging.debug(f'\tCluster {c} processed!')
+        logging.info(f'{len(triples_swapped)} triples swapped!')
         logging.info("Done!\n")
 
 

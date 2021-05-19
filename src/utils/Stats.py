@@ -18,3 +18,11 @@ class Stats:
 
     def get_perc_of_removed_locations(self):
         return self.get_number_of_removed_locations() / self.original_dataset.get_number_of_locations()
+
+    # def get_rsme(self):
+    #
+    #     dist = 0.0
+    #     for t1 in self.original_dataset.trajectories:
+    #         t1_anon = self.anonymized_dataset.get_trajectory(t1.id)
+    #         if t1_anon:
+    #             dist =

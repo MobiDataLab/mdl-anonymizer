@@ -2,7 +2,7 @@ import unittest
 
 from src.clustering.MDAV.SimpleMDAV import SimpleMDAV
 from src.clustering.MDAV.SimpleMDAVDataset import SimpleMDAVDataset
-from src.distances.DomingoTrujillo2012.Distance import Distance
+from src.distances.trajectory.DomingoTrujillo2012.Distance import Distance
 from src.tests.build_mocks import get_mock_dataset_N
 
 

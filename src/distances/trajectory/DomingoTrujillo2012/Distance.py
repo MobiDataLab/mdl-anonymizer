@@ -5,10 +5,10 @@ import numpy as np
 
 from networkx import NetworkXNoPath
 
-from src.distances.DomingoTrujillo2012.DistanceGraph import DistanceGraph
+from src.distances.trajectory.DomingoTrujillo2012.DistanceGraph import DistanceGraph
 from src.entities.Dataset import Dataset
 from src.entities.Trajectory import Trajectory
-from src.distances.DistanceInterface import DistanceInterface
+from src.distances.trajectory.DistanceInterface import DistanceInterface
 
 
 class Distance(DistanceInterface):
@@ -80,11 +80,11 @@ class Distance(DistanceInterface):
         #     # Check if this trajectories exists in the distance graph
         #     if not self.distance_graph.is_included(trajectory1.id):
         #         self.distance_graph.add_node(trajectory1)
-        #         # Add distances to the new node to the others to the distance matrix
+        #         # Add trajectory to the new node to the others to the distance matrix
         #         self.__add_node_to_distance_matrix(trajectory1.id)
         #     else:
         #         self.distance_graph.add_node(trajectory2)
-        #         # Add distances to the new node to the others to the distance matrix
+        #         # Add trajectory to the new node to the others to the distance matrix
         #         self.__add_node_to_distance_matrix(trajectory2.id)
         #
         #     d = self.distance_matrix[trajectory1.id, trajectory2.id]

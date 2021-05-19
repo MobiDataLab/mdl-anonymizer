@@ -1,7 +1,6 @@
 import unittest
 
-from src.distances.DomingoTrujillo2012.DistanceGraph import DistanceGraph
-from src.distances.DomingoTrujillo2012.TrajectoryUtils import get_p_contemporary, get_overlap_time
+from src.distances.trajectory.DomingoTrujillo2012.TrajectoryUtils import get_p_contemporary, get_overlap_time
 from src.tests.build_mocks import get_mock_dataset, get_mock_dataset_2
 
 

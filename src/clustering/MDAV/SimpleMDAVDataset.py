@@ -3,7 +3,7 @@ from src.aggregation.TrajectoryAggregationInterface import TrajectoryAggregation
 from src.clustering.MDAV.interfaces.MDAVDatasetInterface import MDAVDatasetInterface
 from src.entities.Dataset import Dataset
 from src.entities.Trajectory import Trajectory
-from src.distances.DistanceInterface import DistanceInterface
+from src.distances.trajectory.DistanceInterface import DistanceInterface
 
 
 class SimpleMDAVDataset(MDAVDatasetInterface):

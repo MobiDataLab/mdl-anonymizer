@@ -1,6 +1,6 @@
 import unittest
 
-from src.distances.DomingoTrujillo2012.Distance import Distance
+from src.distances.trajectory.DomingoTrujillo2012.Distance import Distance
 from src.tests.build_mocks import get_mock_dataset
 
 

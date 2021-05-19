@@ -7,7 +7,7 @@ class Trajectory:
         self.locations = []
 
     def add_location(self, location: TimestampedLocation):
-        if len(self.locations) > 0 and location.timestamp <= self.last_timestamp():
+        if len(self.locations) > 0 and location.timestamp <= self.get_last_timestamp():
             # Keep the list of trajectories sorted
             self.locations.append(location)
             self.locations.sort(key=lambda x: x.timestamp)
@@ -18,10 +18,10 @@ class Trajectory:
         locations.sort(key=lambda l: l.timestamp)
         self.locations.extend(locations)
 
-    def first_timestamp(self):
+    def get_first_timestamp(self):
         return self.locations[0].timestamp
 
-    def last_timestamp(self):
+    def get_last_timestamp(self):
         return self.locations[-1].timestamp
 
     def get_timestamps(self):
@@ -51,6 +51,38 @@ class Trajectory:
                 return loc
 
         return None
+
+    def get_avg_speed(self, unit='kmh', sp_type='Haversine') -> float:
+
+        avg_speed = 0.0
+        for i, l1 in enumerate(self.locations):
+            try:
+                l2 = self.locations[i+1]
+                avg_speed += (l1.spatial_distance(l2, sp_type) / l1.temporal_distance(l2))
+            except IndexError:
+                avg_speed /= (len(self.locations) - 1)
+
+        # Return km/h
+        if unit == 'kmh':
+            return avg_speed * 3600
+        else:
+            return avg_speed
+
+    def some_speed_over(self, max_speed=300) -> bool:
+        '''
+
+        :param max_speed: kmh
+        :return: bool
+        '''
+        for i, l1 in enumerate(self.locations):
+            try:
+                l2 = self.locations[i+1]
+                speed = (l1.spatial_distance(l2) / l1.temporal_distance(l2)) * 3600
+                if speed > max_speed:
+                    return True
+            except IndexError:
+                return False
+
 
     def __len__(self):
         return len(self.locations)
