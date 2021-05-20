@@ -1,4 +1,5 @@
 import itertools
+import logging
 from collections import defaultdict
 from math import sqrt
 
@@ -9,14 +10,21 @@ from src.distances.trajectory.DistanceInterface import DistanceInterface
 
 class Distance(DistanceInterface):
 
-    def __init__(self, dataset: Dataset, sp_type='Haversine'):
+    def __init__(self, dataset: Dataset, sp_type='Haversine', landa=None):
         self.dataset = dataset
         self.spatial_distance = sp_type
         self.distance_matrix = defaultdict(dict)
-
-        self.landa = self.__set_weight_parameter()
+        if not landa:
+            logging.info("Computing weight parameter")
+            self.landa = self.__set_weight_parameter()
+            logging.info(f"\tlanda = {self.landa}")
+            logging.info("Done!")
+        else:
+            self.landa = landa
+            logging.info(f"\tTaking landa = {self.landa}")
 
     def __set_weight_parameter(self):
+
         # We need the maximum distance between points in the data set, maximum time difference between points in
         # the data set and the avg velocity of the trajectories in the data set
         avg_speed = 0.0
@@ -46,6 +54,10 @@ class Distance(DistanceInterface):
                     if d > max_distance:
                         max_distance = d
 
+        logging.debug(f"Max distance: {max_distance} km")
+        logging.debug(f"Avg speed: {avg_speed} km/s")
+        logging.debug(f"Dif timestamps: {dif_timestamps}")
+
         return max_distance / (avg_speed * dif_timestamps)
 
     def compute(self, trajectory1: Trajectory, trajectory2: Trajectory) -> float:
@@ -54,6 +66,10 @@ class Distance(DistanceInterface):
             d = self.distance_matrix[trajectory1.id][trajectory2.id]
         except KeyError:
             # Distance not computed
+            avg_speed_1 = trajectory1.get_avg_speed(sp_type=self.spatial_distance)
+            avg_speed_2 = trajectory2.get_avg_speed(sp_type=self.spatial_distance)
+            avg_speed = (avg_speed_1 + avg_speed_2) / 2
+
             h = round((len(trajectory1) + len(trajectory2)) / 2)
             gap_1 = len(trajectory1) / h
             gap_2 = len(trajectory2) / h
@@ -64,15 +80,18 @@ class Distance(DistanceInterface):
             d = 0
 
             for k in range(h):
+
+                if i == len(trajectory1):
+                    i = len(trajectory1) - 1
+
+                if j == len(trajectory2):
+                    j = len(trajectory2) - 1
+
                 loc_1 = trajectory1.locations[i]
                 loc_2 = trajectory2.locations[j]
 
-                avg_speed_1 = trajectory1.get_avg_speed(sp_type=self.spatial_distance)
-                avg_speed_2 = trajectory2.get_avg_speed(sp_type=self.spatial_distance)
-                avg_speed = (avg_speed_1 + avg_speed_2) / 2
-
                 d += (loc_1.spatial_distance(loc_2, type=self.spatial_distance) +
-                             self.landa * (loc_1.temporal_distance(loc_2)) * avg_speed)
+                      self.landa * (loc_1.temporal_distance(loc_2)) * avg_speed)
 
                 index_1 += gap_1
                 index_2 += gap_2
@@ -89,3 +108,6 @@ class Distance(DistanceInterface):
         self.distance_matrix[trajectory2.id][trajectory1.id] = d
 
         return d
+
+    def filter_dataset(self):
+        return self.dataset

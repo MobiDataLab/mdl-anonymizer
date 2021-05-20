@@ -28,13 +28,10 @@ class SwapLocations:
         :param aggregation_method:
         '''
         self.dataset = dataset
-        if not distance:
-            self.distance = Distance(dataset)
-        if not aggregation_method:
-            self.aggregation_method = Aggregation
-        if not clustering_method:
-            mdav_dataset = SimpleMDAVDataset(dataset, self.distance, self.aggregation_method)
-            self.clustering_method = SimpleMDAV(mdav_dataset)
+        self.distance = distance if distance else Distance(dataset)
+        self.aggregation_method = aggregation_method if aggregation_method else Aggregation
+        self.clustering_method = clustering_method if clustering_method \
+            else SimpleMDAV(SimpleMDAVDataset(dataset, self.distance, self.aggregation_method))
 
         self.clusters = {}
         self.anonymized_dataset = dataset.__class__()

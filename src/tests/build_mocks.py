@@ -142,6 +142,22 @@ def get_mock_dataset_7():
 
     return dataset
 
+def get_mock_dataset_8():
+    dataset = CabDatasetTXT()
+
+    trajectories_6 = [
+        [[0, 0, 0], [5, 5, 5], [8, 15, 5]],
+        [[1, 0, 0], [5, 5, 5], [10, 7, 10], [15, 3, 17], [20, 5, 21], [25, 10, 20]],
+    ]
+
+    for idx, t in enumerate(trajectories_6):
+        trajectory = Trajectory(idx)
+        for l in t:
+            trajectory.add_location(TimestampedLocation(l[0], l[1], l[2]))
+        dataset.add_trajectory(trajectory)
+
+    return dataset
+
 def get_mock_dataset_N(num):
     dataset = CabDatasetTXT()
     dataset.set_description("TEST DATASET")
@@ -157,7 +173,16 @@ def get_mock_dataset_N(num):
     return dataset
 
 
-def get_mock_trajectory():
+def get_mock_trajectory_1():
+    t = [[0, 0, 0], [5, 5, 5]]
+
+    trajectory = Trajectory(0)
+    for l in t:
+        trajectory.add_location(TimestampedLocation(l[0], l[1], l[2]))
+
+    return trajectory
+
+def get_mock_trajectory_2():
     t = [[0, 0, 0], [5, 5, 5], [10, 7, 10], [15, 3, 17], [20, 5, 21], [25, 10, 20]]
 
     trajectory = Trajectory(0)
