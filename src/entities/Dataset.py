@@ -4,11 +4,10 @@ import logging
 
 import pandas
 
-from abc import ABC, abstractmethod
-
+from abc import ABC
 
 from src.entities.Trajectory import Trajectory
-from use_package.src.entities.CabLocation import CabLocation
+from examples.anonymize.src.entities.CabLocation import CabLocation
 
 
 class Dataset(ABC):
