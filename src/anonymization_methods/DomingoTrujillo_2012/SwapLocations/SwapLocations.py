@@ -123,7 +123,12 @@ class SwapLocations:
                 self.anonymized_dataset.add_trajectory(T)
 
             logging.debug(f'\tCluster {c} processed!')
+
         logging.info(f'{len(triples_swapped)} triples swapped!')
+
+        self.anonymized_dataset.trajectories = [t for t in self.anonymized_dataset.trajectories if len(t) > 1]
+        logging.info("Removed trajectories with less than 1 locations!\n")
+
         logging.info("Done!\n")
 
 

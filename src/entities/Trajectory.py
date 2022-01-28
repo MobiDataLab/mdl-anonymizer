@@ -37,6 +37,9 @@ class Trajectory:
 
         return None
 
+    def filter_by_interval(self, interval: tuple):
+        return [l for l in self.locations if interval[0] <= l.timestamp <= interval[1]]
+
     def get_previous_location_by_timestamp(self, ts):
         prev_loc = None
         for idx, loc in enumerate(self.locations):
