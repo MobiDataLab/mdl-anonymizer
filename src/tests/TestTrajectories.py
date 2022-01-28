@@ -3,7 +3,7 @@ import time
 import unittest
 
 from src.tests.build_mocks import get_mock_trajectory
-from use_package.src.entities.CabDatasetTXT import CabDatasetTXT
+from examples.anonymize.src.entities.CabDatasetTXT import CabDatasetTXT
 
 
 class TestTrajectories(unittest.TestCase):
@@ -18,7 +18,7 @@ class TestTrajectories(unittest.TestCase):
                             level=logging.DEBUG)
 
         dataset = CabDatasetTXT()
-        dataset.load("../../use_package/data/TXT_SF_Cabs", n_trajectories=50, n_locations=500)
+        dataset.load("../../examples/data/TXT_SF_Cabs", n_trajectories=50, n_locations=500)
         # print(dataset)
         traj = dataset.get_trajectory("enyenewl")
 

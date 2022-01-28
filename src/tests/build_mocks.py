@@ -1,7 +1,6 @@
-from src.entities.Dataset import Dataset
 from src.entities.TimestampedLocation import TimestampedLocation
 from src.entities.Trajectory import Trajectory
-from use_package.src.entities.CabDatasetTXT import CabDatasetTXT
+from examples.anonymize.src.entities.CabDatasetTXT import CabDatasetTXT
 
 trajectories = [
     [[100, 0, 0], [105, 5, 5], [110, 7, 10], [115, 3, 17], [120, 5, 21], [125, 10, 20]],

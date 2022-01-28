@@ -1,4 +1,5 @@
-/use_package/
-
 /venv/
 /.idea/
+/examples/scikit-mobility-use-conda/maps/
+/examples/anonymize/data/CSV_SF_Cabs/
+/examples/anonymize/data/TXT_SF_Cabs/
