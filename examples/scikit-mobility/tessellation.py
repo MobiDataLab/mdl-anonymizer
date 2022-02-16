@@ -41,7 +41,7 @@ def get_bounding_box(tdf):
 # maploc.save('maps/tesselation.html')
 
 
-tdf = skmob.TrajDataFrame.from_file('dataset/actual_dataset_loaded.csv', latitude='lat', longitude='lon', datetime='timestamp', user_id='user_id')
+tdf = skmob.TrajDataFrame.from_file('../anonymize/out/actual_dataset_loaded.csv', latitude='lat', longitude='lon', datetime='timestamp', user_id='user_id')
 
 
 

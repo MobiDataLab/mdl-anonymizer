@@ -4,7 +4,7 @@ from folium.plugins import HeatMap
 from skmob.measures.individual import radius_of_gyration, home_location
 from skmob.utils import plot
 
-tdf = skmob.TrajDataFrame.from_file('dataset/actual_dataset_loaded.csv', latitude='lat', longitude='lon', datetime='timestamp', user_id='user_id')
+tdf = skmob.TrajDataFrame.from_file('../anonymize/out/actual_dataset_loaded.csv', latitude='lat', longitude='lon', datetime='timestamp', user_id='user_id')
 #first trajectories
 first_traj = tdf[tdf['uid'] < 20]
 
@@ -22,7 +22,7 @@ heatmap.save('maps/heatmap_orig.html')
 
 
 
-tdf = skmob.TrajDataFrame.from_file('dataset/cabs_scikit_anonymized.csv', latitude='lat', longitude='lon', datetime='timestamp', user_id='user_id')
+tdf = skmob.TrajDataFrame.from_file('../anonymize/out/cabs_scikit_anonymized.csv', latitude='lat', longitude='lon', datetime='timestamp', user_id='user_id')
 
 first_traj = tdf[tdf['uid'] < 20]
 

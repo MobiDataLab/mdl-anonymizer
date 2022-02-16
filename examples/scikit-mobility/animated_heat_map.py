@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 import folium
-import imageio
+#import imageio
 import numpy as np
 import skmob
 from folium.plugins import HeatMapWithTime
@@ -26,7 +26,7 @@ from skmob.utils import plot, constants
 #         to_ts = from_ts + timedelta(seconds=lapse)
 
 
-tdf = skmob.TrajDataFrame.from_file('dataset/cabs_scikit_anonymized.csv', latitude='lat', longitude='lon', datetime='timestamp', user_id='user_id')
+tdf = skmob.TrajDataFrame.from_file('../anonymize/out/actual_dataset_loaded.csv', latitude='lat', longitude='lon', datetime='timestamp', user_id='user_id')
 
 
 # create_maps(tdf)
@@ -75,4 +75,4 @@ def plot_points_heatmap_with_time(tdf, map_f=None, lapse=600, max_points=1000,
 
 
 heatmaptime = plot_points_heatmap_with_time(tdf, zoom=6)
-heatmaptime.save('maps/heatmap_anonymized_time.html')
+heatmaptime.save('maps/heatmap_orig_time.html')

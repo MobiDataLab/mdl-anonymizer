@@ -1,10 +1,10 @@
 import skmob
 from skmob.measures.individual import radius_of_gyration, jump_lengths, home_location
 
-tdf = skmob.TrajDataFrame.from_file('dataset/actual_dataset_loaded.csv', latitude='lat', longitude='lon', datetime='timestamp', user_id='user_id')
+tdf = skmob.TrajDataFrame.from_file('../anonymize/out/actual_dataset_loaded.csv', latitude='lat', longitude='lon', datetime='timestamp', user_id='user_id')
 
 
-anon_tdf = skmob.TrajDataFrame.from_file('dataset/cabs_scikit_anonymized.csv', latitude='lat', longitude='lon', datetime='timestamp', user_id='user_id')
+anon_tdf = skmob.TrajDataFrame.from_file('../anonymize/out/cabs_scikit_anonymized.csv', latitude='lat', longitude='lon', datetime='timestamp', user_id='user_id')
 
 
 # Radius of Gyration
