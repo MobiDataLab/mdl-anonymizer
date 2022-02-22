@@ -57,7 +57,7 @@ class TimestampedLocation:
         y /= len(locations)
         ts /= len(locations)
 
-        return TimestampedLocation(round(ts, 2), round(x, 2), round(y, 2))
+        return TimestampedLocation(round(ts, 5), round(x, 5), round(y, 5))
 
 
 
