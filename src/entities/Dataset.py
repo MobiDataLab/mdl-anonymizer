@@ -37,7 +37,7 @@ class Dataset(ABC):
                 location = CabLocation(timestamp,  row[latitude_key],  row[longitude_key])
                 T.add_location(location)
             else:
-                if len(T.locations) >= 10:
+                if len(T.locations) >= min_locations:
                     T.locations.sort(key=lambda x: x.timestamp)
                     self.add_trajectory(T)
 
@@ -53,7 +53,7 @@ class Dataset(ABC):
                 location = CabLocation(timestamp, row[latitude_key], row[longitude_key])
                 T.add_location(location)
         else:
-            if len(T.locations) >= 10:
+            if len(T.locations) >= min_locations:
                 T.locations.sort(key=lambda x: x.timestamp)
                 self.add_trajectory(T)
 
