@@ -23,6 +23,7 @@
 #             i = round(index_1)
 #             j = round(index_2)
 import time
+import random
 
 import numpy
 
@@ -42,15 +43,37 @@ import numpy
 # print(array[indexes])
 import numpy as np
 
+n = 3000000
 
+# Test creating numpy arrays from lists
+c = []
+for i in range(n):
+    c.append(random.uniform(0, 1))
+
+start = time.time()
+candidates_timestamps = np.array([b for b in c])
+end = time.time()
+print(end-start)
+start = time.time()
+candidates_timestamps = np.array([b for b in c if b > 0.5])
+end = time.time()
+print(end-start)
+exit()
+
+# Test computing distance
 l_timestamp = np.array([0.5])
-candidates_timestamps = np.random.rand(3000000)
+candidates_timestamps = np.random.rand(n)
 
 start = time.time()
 temporal_distances = candidates_timestamps - l_timestamp
 end = time.time()
 print(end-start)
 
+start = time.time()
+temporal_distances = candidates_timestamps - l_timestamp
+c = candidates_timestamps[np.where(abs(temporal_distances) <= 0.1)]
+end = time.time()
+print(end-start)
 
 start = time.time()
 for c in candidates_timestamps:
