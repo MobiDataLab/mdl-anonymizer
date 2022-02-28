@@ -58,8 +58,3 @@ class TimestampedLocation:
         ts /= len(locations)
 
         return TimestampedLocation(round(ts, 5), round(x, 5), round(y, 5))
-
-
-
-
-

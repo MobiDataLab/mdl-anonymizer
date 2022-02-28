@@ -44,7 +44,7 @@ class Trajectory:
         prev_loc = None
         for idx, loc in enumerate(self.locations):
             if loc.timestamp >= ts:
-                return self.locations[idx-1]
+                return self.locations[idx - 1]
 
         return None
 
@@ -60,7 +60,7 @@ class Trajectory:
         avg_speed = 0.0
         for i, l1 in enumerate(self.locations):
             try:
-                l2 = self.locations[i+1]
+                l2 = self.locations[i + 1]
                 avg_speed += (l1.spatial_distance(l2, sp_type) / l1.temporal_distance(l2))
             except IndexError:
                 avg_speed /= (len(self.locations) - 1)
@@ -71,7 +71,7 @@ class Trajectory:
         else:
             return avg_speed
 
-    def some_speed_over(self, max_speed=300) -> bool:
+    def some_speed_over(self, max_speed_kmh) -> bool:
         '''
 
         :param max_speed: kmh
@@ -79,13 +79,12 @@ class Trajectory:
         '''
         for i, l1 in enumerate(self.locations):
             try:
-                l2 = self.locations[i+1]
+                l2 = self.locations[i + 1]
                 speed = (l1.spatial_distance(l2) / l1.temporal_distance(l2)) * 3600
-                if speed > max_speed:
+                if speed > max_speed_kmh:
                     return True
             except IndexError:
                 return False
-
 
     def __len__(self):
         return len(self.locations)
