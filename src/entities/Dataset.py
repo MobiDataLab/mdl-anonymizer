@@ -1,6 +1,7 @@
 import csv
 import datetime
 import logging
+from functools import reduce
 
 import pandas
 
@@ -60,7 +61,10 @@ class Dataset(ABC):
                 T.locations.sort(key=lambda x: x.timestamp)
                 self.add_trajectory(T)
 
-        logging.info(f"Dataset loaded: {len(self)} trajectories. Every trajectory has, at least, {min_locations} locations")
+        count_locations = sum([len(t) for t in self.trajectories])
+
+        logging.info(f"Dataset loaded: {len(self)} trajectories, {count_locations} locations. "
+                     f"Every trajectory has, at least, {min_locations} locations")
 
     '''
         Export a loaded dataset as scikit dataset
@@ -109,7 +113,10 @@ class Dataset(ABC):
 
         self.trajectories = [t for t in self.trajectories if not t.some_speed_over(max_speed_kmh)]
 
-        logging.info(f"Dataset filtered. Removed trajectories with some one-time speed above {max_speed_kmh}. Now it has {len(self)} trajectories.")
+        count_locations = sum([len(t) for t in self.trajectories])
+
+        logging.info(f"Dataset filtered. Removed trajectories with some one-time speed above {max_speed_kmh}. "
+                     f"Now it has {len(self)} trajectories and {count_locations} locations.")
 
 
     def __len__(self):
