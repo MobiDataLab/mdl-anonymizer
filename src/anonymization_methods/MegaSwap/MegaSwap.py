@@ -1,11 +1,6 @@
 import logging
 import random
-import time
-from collections import defaultdict
-from copy import deepcopy
 
-import haversine
-import numpy as np
 from tqdm import tqdm
 
 from src.entities.Dataset import Dataset
@@ -35,7 +30,6 @@ class MegaSwap:
         logging.info("Swapping...")
         pbar = tqdm(total=len(remaining_locations))
 
-
         while remaining_locations:
 
             # logging.info(f"Remaining locations: {len(remaining_locations)}")
@@ -46,72 +40,15 @@ class MegaSwap:
             # Find all nearest locations
             U = [landa]
 
-            ###################################################################################################
-            # VECTORIZING BOTH DISTANCES
-            #
-            # candidates = np.array([l_1 for l_1 in remaining_locations if l_1[0] != landa[0]])
-            # # All the locations within the temporal distance
-            # l_timestamp = np.array([landa[1].timestamp])
-            # candidates_timestamps = np.array([l_1[1].timestamp for l_1 in candidates])
-            #
-            # temporal_distances = candidates_timestamps - l_timestamp
-            # candidates = candidates[np.where(abs(temporal_distances) <= self.R_t)]
-            # if candidates.size > 0:
-            #     # From the remaining candidates, those within the haversine distance
-            #
-            #     l_point = np.array([landa[1].get_coordinates()])
-            #     candidates_points = np.array([l1[1].get_coordinates() for l1 in candidates])
-            #     spatial_distances = haversine.haversine_vector(l_point, candidates_points, comb=True)
-            #     spatial_distances = spatial_distances.flatten()
-            #
-            #     candidates = candidates[np.where(spatial_distances <= self.R_s)]
-            #
-            #     if candidates.size > 0:
-            #         for c in candidates:
-            #             U.append(tuple(c))
-            #
-            ###################################################################################################
-            # VECTORIZING JUST TEMPORAL DISTANCES
-            start = time.time()
-            candidates = [l_1 for l_1 in remaining_locations if l_1[0] != landa[0]]
+            for l in [l_2 for l_2 in remaining_locations if l_2[0] != landa[0]]:
 
-            # All the locations within the temporal distance
-            l_timestamp = np.array([landa[1].timestamp])
-            candidates_timestamps = np.array([l_1[1].timestamp for l_1 in candidates])
+                # Check temporal distance from 'landa' to 'l'
+                if landa[1].temporal_distance(l[1]) <= self.R_t:
+                    # Check spatial distance from 'landa' to 'l'
+                    distance = landa[1].spatial_distance(l[1])
 
-            temporal_distances = candidates_timestamps - l_timestamp
-
-            # ca = candidates[np.where(abs(temporal_distances) <= self.R_t)]
-            # end = time.time()
-            # print(end - start)
-            candidates = [c for i, c in enumerate(candidates) if abs(temporal_distances[i]) <= self.R_t]
-
-            if len(candidates) > 0:
-                # From the remaining candidates, those within the haversine distance
-                for c in candidates:
-                    distance = landa[1].spatial_distance(c[1])
                     if 0 <= distance <= self.R_s:
-                        U.append(tuple(c))
-
-            end = time.time()
-            print(end - start)
-            exit()
-            ###################################################################################################
-
-            # start = time.time()
-            # for l in [l_2 for l_2 in remaining_locations if l_2[0] != landa[0]]:
-            #
-            #     # Check temporal distance from 'landa' to 'l'
-            #     if landa[1].temporal_distance(l[1]) <= self.R_t:
-            #         # Check spatial distance from 'landa' to 'l'
-            #         distance = landa[1].spatial_distance(l[1])
-            #
-            #         if 0 <= distance <= self.R_s:
-            #             U.append(l)
-            # end = time.time()
-            # print(end - start)
-            # exit()
-
+                        U.append(l)
 
             if len(U) > 2:
                 # Assign every location to a random trajectory
@@ -135,7 +72,5 @@ class MegaSwap:
 
         logging.info("Done!")
 
-
     def get_anonymized_dataset(self):
         return self.anonymized_dataset
-
