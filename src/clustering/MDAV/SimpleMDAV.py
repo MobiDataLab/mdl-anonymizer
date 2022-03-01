@@ -6,6 +6,7 @@ from src.clustering.MDAV.interfaces.MDAVDatasetInterface import MDAVDatasetInter
 from src.entities.Dataset import Dataset
 
 from timeit import default_timer as timer
+from tqdm import tqdm
 
 
 class SimpleMDAV(ClusteringInterface):
@@ -33,6 +34,7 @@ class SimpleMDAV(ClusteringInterface):
         # We compute the centroid just one time
         centroid = self.mdav_dataset.compute_centroid()
         logging.debug(f'Centroid: {centroid}')
+        pbar = tqdm(total=expected_clusters)
         while self.mdav_dataset.unselected_length() >= 3*k:
             t1 = timer()
             farthest_r = self.mdav_dataset.farthest_from(centroid)
@@ -42,22 +44,28 @@ class SimpleMDAV(ClusteringInterface):
             t3 = timer()
             #print(f"make cluster: {t3-t2}")
 
-            logging.info(f"\tCluster made! {self.mdav_dataset.cluster_id}")
+            # logging.info(f"\tCluster made! {self.mdav_dataset.cluster_id}")
+            pbar.update(1)
             #exit()
             farthest_s = self.mdav_dataset.farthest_from(farthest_r)
 
             self.mdav_dataset.make_cluster(farthest_s, k)
-            logging.info(f"\tCluster made! {self.mdav_dataset.cluster_id}")
+            # logging.info(f"\tCluster made! {self.mdav_dataset.cluster_id}")
+            pbar.update(1)
 
         logging.debug(f'Unselected_length: {self.mdav_dataset.unselected_length()}')
         if self.mdav_dataset.unselected_length() >= 2*k:
             farthest_r = self.mdav_dataset.farthest_from(centroid)
             logging.debug(f'Farthest: {farthest_r}')
             self.mdav_dataset.make_cluster(farthest_r, k)
-            logging.info(f"\tCluster made! {self.mdav_dataset.cluster_id}")
+            # logging.info(f"\tCluster made! {self.mdav_dataset.cluster_id}")
+            pbar.update(1)
 
         self.mdav_dataset.make_cluster_unselected()
-        logging.info("\tLast cluster made!")
+        # logging.info("\tLast cluster made!")
+        pbar.update(1)
+
+        pbar.close()
 
     def get_clusters(self) -> list:
         clusters = {}

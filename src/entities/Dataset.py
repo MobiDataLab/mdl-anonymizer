@@ -1,6 +1,7 @@
 import csv
 import datetime
 import logging
+from functools import reduce
 
 import pandas
 
@@ -22,6 +23,9 @@ class Dataset(ABC):
     def load_from_scikit(self, filename, n_trajectories = None, min_locations = 10,
                          latitude_key="lat", longitude_key="lon", datetime_key="datetime", user_key = "user_id",
                          datetime_format = "%Y/%m/%d %H:%M:%S"):
+
+        logging.info("Loading dataset...")
+
         df = pandas.read_csv(filename)
 
         user_id = df.loc[0, user_key]
@@ -37,7 +41,7 @@ class Dataset(ABC):
                 location = CabLocation(timestamp,  row[latitude_key],  row[longitude_key])
                 T.add_location(location)
             else:
-                if len(T.locations) >= 10:
+                if len(T.locations) >= min_locations:
                     T.locations.sort(key=lambda x: x.timestamp)
                     self.add_trajectory(T)
 
@@ -53,11 +57,14 @@ class Dataset(ABC):
                 location = CabLocation(timestamp, row[latitude_key], row[longitude_key])
                 T.add_location(location)
         else:
-            if len(T.locations) >= 10:
+            if len(T.locations) >= min_locations:
                 T.locations.sort(key=lambda x: x.timestamp)
                 self.add_trajectory(T)
 
-        logging.info(f"Dataset loaded: {len(self)} trajectories. Every trajectory has, at least, {min_locations} locations")
+        count_locations = sum([len(t) for t in self.trajectories])
+
+        logging.info(f"Dataset loaded: {len(self)} trajectories, {count_locations} locations. "
+                     f"Every trajectory has, at least, {min_locations} locations")
 
     '''
         Export a loaded dataset as scikit dataset
@@ -96,6 +103,21 @@ class Dataset(ABC):
     def filter(self, min_locations=3):
         self.trajectories = [t for t in self.trajectories if len(t) >= min_locations]
         logging.info(f"Dataset filtered. Removed trajectories with less than {min_locations} locations. Now it has {len(self)} trajectories.")
+
+    def filter_by_speed(self, max_speed_kmh=300):
+        """
+        :param max_velocity: km/h
+        :return:
+        """
+        logging.info(f"Filtering dataset by max velocity")
+
+        self.trajectories = [t for t in self.trajectories if not t.some_speed_over(max_speed_kmh)]
+
+        count_locations = sum([len(t) for t in self.trajectories])
+
+        logging.info(f"Dataset filtered. Removed trajectories with some one-time speed above {max_speed_kmh}. "
+                     f"Now it has {len(self)} trajectories and {count_locations} locations.")
+
 
     def __len__(self):
         return len(self.trajectories)

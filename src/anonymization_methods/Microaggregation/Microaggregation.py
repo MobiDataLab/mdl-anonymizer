@@ -23,6 +23,7 @@ class Microaggregation:
             else SimpleMDAV(SimpleMDAVDataset(dataset, self.distance, self.aggregation_method))
 
         self.clusters = {}
+        self.centroids = {}
         self.anonymized_dataset = dataset.__class__()
 
         self.k = k
@@ -56,9 +57,16 @@ class Microaggregation:
             anon_trajectories = list(map(lambda t: Trajectory(t.id), cluster_trajectories))
 
             aggregate_trajectory = self.aggregation_method.compute(cluster_trajectories)
+            self.centroids[c] = aggregate_trajectory
 
             # Add to anonymized dataset
             for T in anon_trajectories:
                 T.add_locations(aggregate_trajectory.locations)
 
                 self.anonymized_dataset.add_trajectory(T)
+
+    def get_clusters(self):
+        return self.clusters
+
+    def get_centroids(self):
+        return self.centroids
