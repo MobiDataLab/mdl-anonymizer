@@ -1,6 +1,6 @@
 from math import sqrt
 
-from haversine import haversine
+from haversine import haversine, Unit
 
 
 class TimestampedLocation:
@@ -31,11 +31,11 @@ class TimestampedLocation:
         # TODO: Weight fields?
         return sqrt((location.x - self.x) ** 2 + (location.y - self.y) ** 2 + (location.timestamp - self.timestamp) ** 2)
 
-    def spatial_distance(self, another_location, type ='Haversine'):
+    def spatial_distance(self, another_location, type ='Haversine', unit=Unit.KILOMETERS):
 
         if type == 'Haversine':
             # Haversine distance. Return km
-            return haversine(self.get_coordinates(), another_location.get_coordinates())
+            return haversine(self.get_coordinates(), another_location.get_coordinates(), unit=unit)
 
         if type == 'Euclidean':
             return sqrt((another_location.x - self.x) ** 2 + (another_location.y - self.y) ** 2)
