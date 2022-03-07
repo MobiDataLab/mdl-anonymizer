@@ -4,10 +4,25 @@
 
 Checkout 'master'.
 
-Then create conda environment in PyCharm and install the dependencies later: 
+### Option 1
 
-`conda install --yes --file requirements.txt`
+Create conda environment in the PyCharm terminal using the provided yaml file:
 
-or  create conda environment in the PyCharm terminal using the provided yaml file:
+`conda env create --name myenv -f environment.yml`
 
-`conda env create -f environment.yaml`
+### Option 2
+
+Crear conda interpreter en Pycharm con python 3.8 (no he probado con 3.9 ni 3.10)
+
+Después, en el terminal: 
+
+`conda activate <env>`
+
+`conda install rtree`
+
+`conda install -c conda-forge scikit-mobility` (tarda)
+
+`conda install -c conda-forge haversine`
+
+`conda install networkx`
+
