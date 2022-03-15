@@ -16,10 +16,10 @@ class SwapMob:
 
 		self.anonymized_dataset = dataset.__class__()
 
-	def run(self):
+	def run(self):	# TODO: Use to_numpy and from_numpy methods and adapt class methods to them
 		# Create anonymized dataset as a copy of the original dataset
 		for t in self.dataset.trajectories:
-			self.anonymized_dataset.add_trajectory(Trajectory(t.id))    # TODO: Since I change trajectories, this should be an object copy
+			self.anonymized_dataset.add_trajectory(Trajectory(t.id))    # TODO: Since I change trajectories, this must be an object copy
 		logging.info("Anonymized dataset initialized!")
 
 		# Get first and last timestamp of the dataset
