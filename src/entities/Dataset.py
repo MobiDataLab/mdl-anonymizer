@@ -83,26 +83,26 @@ class Dataset(ABC):
                     date_time = datetime.datetime.fromtimestamp(l.timestamp)
                     writer.writerow([l.x, l.y, date_time.strftime("%Y/%m/%d %H:%M:%S"), t.id])
 
-     def to_numpy(self, sort_by_timestamp=False):
-         """Transforms the dataset to a NumPy matrix for faster processing.
-         Columns correspond to lat, long, timestamp and user_id.
-         If desired, it can be sorted by timestamp using the sort_by_timestamp parameter.
-         CAUTION: Additional parameters of the location object will not be stored!
-         """
+    def to_numpy(self, sort_by_timestamp=False):
+        """Transforms the dataset to a NumPy matrix for faster processing.
+        Columns correspond to lat, long, timestamp and user_id.
+        If desired, it can be sorted by timestamp using the sort_by_timestamp parameter.
+        CAUTION: Additional parameters of the location object will not be stored!
+        """
 
-         # Get number of locations and allocate matrix
-         num_locations = self.get_number_of_locations()
-         np_dataset = np.empty((num_locations, 4))
+        # Get number of locations and allocate matrix
+        num_locations = self.get_number_of_locations()
+        np_dataset = np.empty((num_locations, 4))
 
-         # Assign values to matrix
-         idx = 0
-         for traj in self.trajectories:
-             for loc in traj.locations:
-                 np_dataset[idx][0] = loc.x
-                 np_dataset[idx][1] = loc.y
-                 np_dataset[idx][2] = loc.timestamp
-                 np_dataset[idx][3] = traj.id
-                 idx += 1
+        # Assign values to matrix
+        idx = 0
+        for traj in self.trajectories:
+         for loc in traj.locations:
+             np_dataset[idx][0] = loc.x
+             np_dataset[idx][1] = loc.y
+             np_dataset[idx][2] = loc.timestamp
+             np_dataset[idx][3] = traj.id
+             idx += 1
 
         # Sort by timestamp if required
         if sort_by_timestamp:
