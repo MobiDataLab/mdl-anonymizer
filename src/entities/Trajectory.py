@@ -3,7 +3,7 @@ from src.entities.TimestampedLocation import TimestampedLocation
 
 class Trajectory:
     def __init__(self, id):
-        self.id = id
+        self.id = int(id)
         self.locations = []
 
     def add_location(self, location: TimestampedLocation):
