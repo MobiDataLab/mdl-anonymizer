@@ -26,3 +26,6 @@ Después, en el terminal:
 
 `conda install networkx`
 
+## Datasets
+- **cabs_dataset_20080608_0700_0715.csv**: 371 trajectories and 3120 locations. All locations between 07:00 and 07:15
+- **cabs_dataset_0700_0715.csv**: 7265 trajectories and 60628 locations. All locations between 07:00 and 07:15
