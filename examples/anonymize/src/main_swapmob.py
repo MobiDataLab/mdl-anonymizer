@@ -7,10 +7,11 @@ from src.utils.Stats import Stats
 logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', level=logging.INFO)
 
 dataset = Dataset()
-dataset.load_from_scikit('../data/cabs_dataset_20080608_0800_1000.csv', n_trajectories=2000, min_locations=10, datetime_key="timestamp")
+dataset.load_from_scikit('../../data/cabs_dataset_20080608_0800_1000.csv', n_trajectories=2000, min_locations=10, datetime_key="timestamp")
+dataset.filter_by_speed()
 dataset.export_to_scikit(filename="../out/actual_dataset_loaded.csv")
 
-anonymizer = SwapMob(dataset, temporal_thold=60, spatial_thold=0.1)
+anonymizer = SwapMob(dataset, temporal_thold=30, spatial_thold=0.1, min_n_swaps=1, seed=42)
 anonymizer.run()
 anon_dataset = anonymizer.get_anonymized_dataset()
 
