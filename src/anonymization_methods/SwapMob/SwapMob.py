@@ -9,7 +9,24 @@ from src.entities.TimestampedLocation import TimestampedLocation
 
 
 class SwapMob:
-    def __init__(self, dataset: Dataset, spatial_thold: float, temporal_thold: float, min_n_swaps=1, seed=None):
+    """Implements the SwapMob anonymization method from Julián Salas, David Megías & Vicenç Torra ( https://doi.org/10.1007/978-3-319-99771-1_22 )"""
+
+    def __init__(self, dataset: Dataset, spatial_thold: float, temporal_thold: float,
+                 min_n_swaps: int = 1, seed: int = None):
+        """
+        Parameters
+        ----------
+        dataset : Dataset
+            Dataset to anonymize.
+        spatial_thold : float
+            Maximum distance (in kilometers) to consider two locations as close.
+        temporal_thold : float
+            Maximum time difference (in seconds) to consider two locations as coexistent.
+        min_n_swaps : int, optional
+            Minimum number of swaps for a trajectory for not being removed. (default is 1)
+        seed : int, optional
+            Seed for the random swapping process (default is None, so seed is not fixed)
+        """
         self.dataset = dataset
         self.spatial_thold = spatial_thold
         self.temporal_thold = temporal_thold
@@ -19,6 +36,13 @@ class SwapMob:
         self.anonymized_dataset = dataset.__class__()
 
     def run(self):
+        """Performs the SwapMob anonymization method.
+
+        During the execution will transform the original dataset to NumPy for faster processing.
+        It will create a new dataset and assign it to the self.anonymized_dataset variable.
+        This new dataset can be obtained with the get_anonymized_dataset method.
+        A tqdm progress bar is used.
+        """
         # Set seed
         if self.seed is not None:
             random.seed(self.seed)
@@ -55,10 +79,10 @@ class SwapMob:
                     possible_swaps = self.get_possible_swaps(locs_in_interval)
 
                     # Random matching of possible swaps
-                    swaps = self.compute_random_matchings(possible_swaps, locs_in_interval)
+                    swaps = self.select_random_swaps(possible_swaps, locs_in_interval)
 
-                    # Perform all swaps and update np_dataset, returning also the number of swaps performed per user
-                    np_dataset, performed_swaps_per_user = self.perform_swaps(np_dataset, swaps, ini_idx)
+                    # Perform all swaps on np_dataset, returning also a dictionary with the number of swaps performed per user
+                    performed_swaps_per_user = self.do_swaps(np_dataset, swaps, ini_idx)
 
                     # Update swaps_per_user_dict
                     for (user_id, count) in performed_swaps_per_user.items():
@@ -83,27 +107,67 @@ class SwapMob:
         logging.info("Transforming NumPy matrix to anonymized dataset")
         self.anonymized_dataset.from_numpy(np_dataset)
 
-        # Remove trajectories with less than 1 locations    # TODO: Remove this? Do it with numpy?
-        logging.info("Remove trajectories with less than 1 locations")
-        self.anonymized_dataset.trajectories = [t for t in self.anonymized_dataset.trajectories if len(t) > 1]
-
         logging.info("Done!")
 
-    def create_swaps_per_user_dict(self, np_dataset):
+    def create_swaps_per_user_dict(self, np_dataset: np.array) -> dict:
+        """Creates a dictionary for counting the number of swaps per user id.
+        Used for min_n_swaps filtering.
+
+        Parameters
+        ----------
+        np_dataset : np.array
+            NumPy array version of the original dataset.
+
+        Returns
+        -------
+        swaps_per_user : dict
+            A dictionary with integer user_ids passed to string as keys and
+            values intialized to zero.
+        """
         users_ids = np.unique(np_dataset[:, 3]).astype(int)
         return {str(user_id): 0 for user_id in users_ids}
 
-    def get_first_and_last_timestamps(self, np_dataset):
-        """CAUTION: It assumes that np_dataset is sorted by timestamp"""
+    def get_first_and_last_timestamps(self, np_dataset: np.array) -> tuple:
+        """Obtains the first and last timestamps of the dataset.
+
+        CAUTION: It assumes that np_dataset is sorted by timestamp.
+
+        Parameters
+        ----------
+        np_dataset : np.array
+            NumPy array version of the original dataset sorted by timestamp.
+
+        Returns
+        -------
+        first_and_last : tuple
+            A tuple with first and last timestamps.
+        """
         first_timestamp = np_dataset[0][2]
         last_timestamp = np_dataset[-1][2]
         return int(first_timestamp), int(last_timestamp)
 
-    def get_locs_in_interval(self, np_dataset, end_t, last_end_idx=0):
-        """Get locations existing from the last_end_idx to the end_t of the interval (equivalent to [ini_t, end_t])
-        last_end_idx is the end_idx of the last call (used for avoiding re-computation) and it will be the returned ini_idx
-        CAUTION 1: It assumes that np_dataset is sorted by timestamp
-        CAUTION 2: It is possible that none locations are found in the interval"""
+    def get_locs_in_interval(self, np_dataset: np.array, end_t: int, last_end_idx: int = 0) -> tuple:
+        """Gets locations existing from the last_end_idx to that with a timestamp greater or equal to end_t (equivalent to [ini_t, end_t]).
+
+        last_end_idx is the end_idx of the last call (used for avoiding re-computation) and it will be the returned ini_idx.
+        CAUTION 1: It assumes that np_dataset is sorted by timestamp.
+        CAUTION 2: It is possible that none locations are found in the interval.
+
+        Parameters
+        ----------
+        np_dataset : np.array
+            NumPy array version of the dataset sorted by timestamp.
+        end_t : int
+            Last timestamp to consider in the interval (included).
+        last_end_idx : int, optional
+            Last end index returned for the method (default is 0).
+            Used for avoiding re-computation. It will be returned as ini_idx.
+
+        Returns
+        -------
+        locs_in_interval, ini_idx, end_idx : tuple
+            A tuple with the section np_dataset of that interval (maybe empty) and the initial (equal to last_end_idx) and end indexes (maybe equal).
+        """
 
         # If there are locations after the last end index (not guaranteed due to float precision errors in computing end_t)
         if last_end_idx < len(np_dataset):
@@ -125,10 +189,23 @@ class SwapMob:
         return locs_in_interval, int(ini_idx), int(end_idx)
 
     def get_possible_swaps(self, locs_in_interval: np.array) -> list:
-        """Obtains all the crossing trajectories in the time interval as possible swaps
-        (including the redundant cases of a->b and b->a).
-        locs_in_interval is assumed to be ordered by timestamp.
-        Returned swaps list is formed by pairs (as tuples) of the location index and a list of all the close locations indexes."""
+        """Obtains all the crossing trajectories in the time interval.
+
+        CAUTION: locs_in_interval is assumed to be ordered by timestamp.
+        It includes redundant cases such as a->b and b->a, that are removed at the select_random_swaps method.
+
+        Parameters
+        ----------
+        locs_in_interval : np.array
+            Section of the np_dataset with locations in the current interval.
+            Returned by the get_locs_in_interval method.
+
+        Returns
+        -------
+        possible_swaps : list
+            List of possible swaps. Each value is a tuple with the location index (within locs_in_inverval array) and
+            a list of the close locations indexes (also within locs_in_interval array).
+        """
         # Transform locations in interval to location objects for distance computation
         locations = []
         for loc in locs_in_interval:
@@ -151,9 +228,25 @@ class SwapMob:
 
         return possible_swaps
 
-    def compute_random_matchings(self, possible_swaps: list, locs_in_interval: np.array):
-        """Given a list of possible swaps, selects the swap for each close_locations list
-        possible_swaps is assumed to be ordered by timestamp (by the first element, not with close_locations).
+    def select_random_swaps(self, possible_swaps: list, locs_in_interval: np.array) -> list:
+        """Randomly selects the swaps to perform from the possible_swaps list.
+
+        Equivalent to the random matching method from the SwapMob article.
+        Avoids problematic swaps such as those with already swapped users or between locations from the same user.
+        Due to that it is not guaranteed that every location in possible_swaps obtains a swap.
+
+        Parameters
+        ----------
+        possible_swaps : list
+            List of possible swaps returned by the get_possible_swaps method.
+        locs_in_interval : np.array
+            NumPy array section of the np_dataset returned by the get_locs_in_interval method.
+
+        Returns
+        -------
+        swaps : list
+            List containing the swaps. Each element is tuple with the indexes pair of locations to swap (within locs_in_interval).
+            Pairs are sorted by timestamp.
         """
         # Sort possible_swaps by number of close locations (descending) for maximizing the number of total swaps
         possible_swaps.sort(key=lambda x: len(x[1]), reverse=False)
@@ -167,9 +260,9 @@ class SwapMob:
             # Randomly select swapping
             idx2 = random.choice(close_locations)
 
-            # Sort swap by timestamp
+            # Sort indexes by timestamp
             if locs_in_interval[idx1, 2] > locs_in_interval[idx2, 2]:
-                # Swap variables
+                # Swap variables (idx1 <-> idx2)
                 idx1 = idx1 + idx2
                 idx2 = idx1 - idx2
                 idx1 = idx1 - idx2
@@ -177,7 +270,7 @@ class SwapMob:
             # Add to swaps list
             swaps.append((idx1, idx2))
 
-            # Remove from future possible swaps
+            # Remove user ids from swaps of future possible swaps
             id1 = locs_in_interval[idx1, 3]
             id2 = locs_in_interval[idx2, 3]
             j = i + 1
@@ -198,7 +291,7 @@ class SwapMob:
                         # If repeated location index or user_id, remove close location
                         if idx4 == idx1 or id4 == id1 or idx4 == idx2 or id4 == id2:
                             del close_locations[k]
-                            k -= 1  # Decrease index because of the removing
+                            k -= 1  # Decrement index because of the removing
                         k += 1  # Increment index
                     # Remove possible swap if close_locations is empty
                     if len(close_locations) == 0:
@@ -211,7 +304,28 @@ class SwapMob:
 
         return swaps
 
-    def perform_swaps(self, np_dataset, swaps: list, ini_idx: int) -> np.array:
+    def do_swaps(self, np_dataset: np.array, swaps: list, ini_idx: int) -> dict:
+        """Performs the swaps as defined in the SwapMob article.
+
+        For each pair of indexes of locations from the swaps list, swaps the user ids of all the previous locations.
+        Directly modifies the np_dataset during the swaps.
+
+        Parameters
+        ----------
+        np_dataset : np.array
+            NumPy array version of the dataset. Will be modified during the method.
+        swaps : list
+            List of swaps returned by the select_random_swaps method.
+        ini_idx : int
+            Initial index of the locations of the current interval.
+            Used as offset for the swaps from the swaps list.
+
+        Returns
+        -------
+        swaps_per_user : dict
+            Dictionary containing the number of swaps for each user_id (as integer transformed to string).
+            Used for updating the global swaps_per_user dictionary in the run method.
+        """
         # Dictionary for storing number of swaps per user (used outside for filtering)
         swaps_per_user = {}
 
@@ -239,7 +353,11 @@ class SwapMob:
             id2_str = str(int(id2))
             swaps_per_user[id2_str] = swaps_per_user.get(id2_str, 0) + 1
 
-        return np_dataset, swaps_per_user
+        return swaps_per_user
 
-    def get_anonymized_dataset(self):
+    def get_anonymized_dataset(self) -> Dataset:
+        """Returns
+        -------
+        anonymized_dataset : Dataset
+            The anonymized dataset computed at the run method"""
         return self.anonymized_dataset
