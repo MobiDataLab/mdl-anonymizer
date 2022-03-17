@@ -44,21 +44,21 @@ class SwapMob:
                 end_t = min(ini_t + self.temporal_thold, last_timestamp)
 
                 # Get initial and end index of the locations in the interval
-                locs_in_interval, ini_idx, end_idx = self.get_locs_in_interval(np_dataset, ini_t, end_t, last_end_idx)
+                locs_in_interval, ini_idx, end_idx = self.get_locs_in_interval(np_dataset, end_t, last_end_idx)
 
                 # Update last_end_idx for next interval get
                 last_end_idx = end_idx
 
                 # If there are locations in the interval
-                if len(locs_in_interval):
+                if len(locs_in_interval) > 0:
                     # Get possible swaps depending on the distance
                     possible_swaps = self.get_possible_swaps(locs_in_interval)
 
-                    # Random matching of possible swaps, returning also the number of swaps performed per user
-                    swaps, performed_swaps_per_user = self.compute_random_matchings(possible_swaps, locs_in_interval)
+                    # Random matching of possible swaps
+                    swaps = self.compute_random_matchings(possible_swaps)
 
-                    # Perform all swaps and update np_dataset
-                    np_dataset = self.compute_swaps(np_dataset, swaps, ini_idx)
+                    # Perform all swaps and update np_dataset, returning also the number of swaps performed per user
+                    np_dataset, performed_swaps_per_user = self.compute_swaps(np_dataset, swaps, ini_idx)
 
                     # Update swaps_per_user_dict
                     for (user_id, count) in performed_swaps_per_user.items():
@@ -99,24 +99,22 @@ class SwapMob:
         last_timestamp = np_dataset[-1][2]
         return int(first_timestamp), int(last_timestamp)
 
-    def get_locs_in_interval(self, np_dataset, ini_t, end_t, last_end_idx=0):
-        """Get locations existing in the time interval [ini_t, end_t]
-        last_end_idx is the end_idx of the last call (used for avoiding re-computation)
-        CAUTION: It assumes that np_dataset is sorted by timestamp"""
-        # Get only the dataset from the last for avoiding re-computation
-        considered_dataset = np_dataset[last_end_idx:]
+    def get_locs_in_interval(self, np_dataset, end_t, last_end_idx=0):
+        """Get locations existing from the last_end_idx to the end_t of the interval (equivalent to [ini_t, end_t])
+        last_end_idx is the end_idx of the last call (used for avoiding re-computation) and it will be the returned ini_idx
+        CAUTION 1: It assumes that np_dataset is sorted by timestamp
+        CAUTION 2: It is possible that none locations are found in the interval"""
 
-        # If there are locations after the last end index
-        if len(considered_dataset) > 0:
-            # Get ini and end indeces of locations in interval (np_dataset SORTED BY TIMESTAMP IS ASSUMED)
-            # TODO: Maybe np.searchsorted(side="right") would be faster?
-            ini_idx = np.argmax(considered_dataset >= ini_t)  # ArgMax gets the first index where condition is true
-            end_idx = np.argmax(
-                considered_dataset[ini_idx + 1:] > end_t)  # ArgMax gets the first index where condition is true
+        # If there are locations after the last end index (not guaranteed due to float precision errors in computing end_t)
+        if last_end_idx < len(np_dataset):
+            # Initial index is assumed to be last_end_idx (end_idx of the previous interval)
+            ini_idx = last_end_idx
 
-            # Adjust ini and end indexes to real positions
-            ini_idx += last_end_idx
-            end_idx += ini_idx + 1  # Used for avoiding future re-computation (next last_end_idx)
+            # Search the end index based on end_t after ini_idx, since np_dataset is sorted by timestamp
+            end_idx = np.searchsorted(np_dataset[ini_idx:, 2], end_t, side="right")
+
+            # Add offset
+            end_idx += last_end_idx
         # Otherwise, return and empty array
         else:
             ini_idx = end_idx = 0
@@ -130,8 +128,7 @@ class SwapMob:
         """Obtains all the crossing trajectories in the time interval as possible swaps
         (including the redundant cases of a->b and b->a).
         locs_in_interval is assumed to be ordered by timestamp.
-        Returned swaps list is formed by pairs (as tuples) of the loc index and a list of all the close locations indexes,
-        sorted by timestamp."""
+        Returned swaps list is formed by pairs (as tuples) of the location index and a list of all the close locations indexes."""
         # Transform locations in interval to location objects for distance computation
         locations = []
         for loc in locs_in_interval:
@@ -145,6 +142,7 @@ class SwapMob:
             for idx2, l2 in enumerate(locations):
                 # If not comparing with the same location or user
                 if idx1 != idx2 and locs_in_interval[idx1, 3] != locs_in_interval[idx2, 3]:
+                    # If locations are closer than the threshold
                     if l1.spatial_distance(l2) < self.spatial_thold:
                         close_locations.append(idx2)
             # Add to possible_swaps
@@ -153,24 +151,22 @@ class SwapMob:
 
         return possible_swaps
 
-    def compute_random_matchings(self, possible_swaps: list, locs_in_interval: np.array):
+    def compute_random_matchings(self, possible_swaps: list):
         """Given a list of possible swaps, selects the swap for each close_locations list
         possible_swaps is assumed to be ordered by timestamp.
-        Apart from the swap list, it also returns a dict with the number of swaps performed per user"""
-
+        """
         # Sort possible_swaps by number of close locations (descending) for maximizing the number of total swaps
         possible_swaps.sort(key=lambda x: len(x[1]), reverse=False)
 
         # Compute swaps
         swaps = []
-        swaps_per_user = self.create_swaps_per_user_dict(locs_in_interval)
         i = 0
         while 0 <= i < len(possible_swaps):
             (idx1, close_locations) = possible_swaps[i]
 
             # Randomly select swapping and add to list
             idx2 = random.choice(close_locations)
-            swaps.append((idx1, idx2))
+            swaps.append((idx1, idx2))  # TODO: Sort this swaps by timestamp
 
             # Remove from future possible swaps
             j = i + 1
@@ -199,26 +195,24 @@ class SwapMob:
                 # Increment removing index
                 j += 1
 
-            # Increment number of swaps per user (used outside for filtering)
-            id1 = int(locs_in_interval[idx1, 3])
-            swaps_per_user[str(id1)] += 1
-            id2 = int(locs_in_interval[idx2, 3])
-            swaps_per_user[str(id2)] += 1
-
             # Increment possible swap index
             i += 1
 
-        return swaps, swaps_per_user
+        return swaps
 
     def compute_swaps(self, np_dataset, swaps: list, ini_idx: int) -> np.array:
+        # Dictionary for storing number of swaps per user (used outside for filtering)
+        swaps_per_user = {}
+
+        # Perform all swaps
         for (raw_idx1, raw_idx2) in swaps:
-            # Apply offset to raw indexes computed considering only the locs_in_interval
+            # Apply offset to raw indexes computed considering only locs_in_interval
             idx1 = ini_idx + raw_idx1
             idx2 = ini_idx + raw_idx2
 
             # Get user ids corresponding the swap
-            id1 = np_dataset[idx1][3]
-            id2 = np_dataset[idx2][3]
+            id1 = np_dataset[idx1, 3]
+            id2 = np_dataset[idx2, 3]
 
             # If IDs are different
             if id1 != id2:  # TODO: Change previous code for making this impossible
@@ -230,7 +224,15 @@ class SwapMob:
                 np_dataset[prev_indices_1, 3] = id2
                 np_dataset[prev_indices_2, 3] = id1
 
-        return np_dataset
+                # Increment number of swaps per user (used outside for filtering)
+                id1_str = str(int(id1))
+                swaps_per_user[id1_str] = swaps_per_user.get(id1_str, 0) + 1
+                id2_str = str(int(id2))
+                swaps_per_user[id2_str] = swaps_per_user.get(id2_str, 0) + 1
+            else:
+                print("ERROR: Swap of a user trajectory with itself")
+
+        return np_dataset, swaps_per_user
 
     def get_anonymized_dataset(self):
         return self.anonymized_dataset
