@@ -55,7 +55,7 @@ class SwapMob:
                     possible_swaps = self.get_possible_swaps(locs_in_interval)
 
                     # Random matching of possible swaps
-                    swaps = self.compute_random_matchings(possible_swaps)
+                    swaps = self.compute_random_matchings(possible_swaps, locs_in_interval)
 
                     # Perform all swaps and update np_dataset, returning also the number of swaps performed per user
                     np_dataset, performed_swaps_per_user = self.compute_swaps(np_dataset, swaps, ini_idx)
@@ -151,7 +151,7 @@ class SwapMob:
 
         return possible_swaps
 
-    def compute_random_matchings(self, possible_swaps: list):
+    def compute_random_matchings(self, possible_swaps: list, locs_in_interval: np.array):
         """Given a list of possible swaps, selects the swap for each close_locations list
         possible_swaps is assumed to be ordered by timestamp.
         """
@@ -166,11 +166,13 @@ class SwapMob:
 
             # Randomly select swapping and add to list
             idx2 = random.choice(close_locations)
+            if locs_in_interval[idx1, 3] == locs_in_interval[idx2, 3]:
+                pass#print("ERROR in random matching with", locs_in_interval[idx1, 3], locs_in_interval[idx2, 3], idx1, idx2)   # TODO: Remove
             swaps.append((idx1, idx2))  # TODO: Sort this swaps by timestamp
 
             # Remove from future possible swaps
             j = i + 1
-            while 0 < j < len(possible_swaps):
+            while j < len(possible_swaps):
                 (idx3, close_locations) = possible_swaps[j]
 
                 # If is the location index, remove possible swap
@@ -230,7 +232,7 @@ class SwapMob:
                 id2_str = str(int(id2))
                 swaps_per_user[id2_str] = swaps_per_user.get(id2_str, 0) + 1
             else:
-                print("ERROR: Swap of a user trajectory with itself")
+                pass#print("ERROR: Swap of a user trajectory with itself", id1, id2)  # TODO: Solve this
 
         return np_dataset, swaps_per_user
 
