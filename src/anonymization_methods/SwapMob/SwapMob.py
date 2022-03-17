@@ -58,7 +58,7 @@ class SwapMob:
                     swaps = self.compute_random_matchings(possible_swaps, locs_in_interval)
 
                     # Perform all swaps and update np_dataset, returning also the number of swaps performed per user
-                    np_dataset, performed_swaps_per_user = self.compute_swaps(np_dataset, swaps, ini_idx)
+                    np_dataset, performed_swaps_per_user = self.perform_swaps(np_dataset, swaps, ini_idx)
 
                     # Update swaps_per_user_dict
                     for (user_id, count) in performed_swaps_per_user.items():
@@ -153,7 +153,7 @@ class SwapMob:
 
     def compute_random_matchings(self, possible_swaps: list, locs_in_interval: np.array):
         """Given a list of possible swaps, selects the swap for each close_locations list
-        possible_swaps is assumed to be ordered by timestamp.
+        possible_swaps is assumed to be ordered by timestamp (by the first element, not with close_locations).
         """
         # Sort possible_swaps by number of close locations (descending) for maximizing the number of total swaps
         possible_swaps.sort(key=lambda x: len(x[1]), reverse=False)
@@ -161,48 +161,57 @@ class SwapMob:
         # Compute swaps
         swaps = []
         i = 0
-        while 0 <= i < len(possible_swaps):
+        while i < len(possible_swaps):
             (idx1, close_locations) = possible_swaps[i]
 
-            # Randomly select swapping and add to list
+            # Randomly select swapping
             idx2 = random.choice(close_locations)
-            if locs_in_interval[idx1, 3] == locs_in_interval[idx2, 3]:
-                pass#print("ERROR in random matching with", locs_in_interval[idx1, 3], locs_in_interval[idx2, 3], idx1, idx2)   # TODO: Remove
-            swaps.append((idx1, idx2))  # TODO: Sort this swaps by timestamp
+
+            # Sort swap by timestamp
+            if locs_in_interval[idx1, 2] > locs_in_interval[idx2, 2]:
+                # Swap variables
+                idx1 = idx1 + idx2
+                idx2 = idx1 - idx2
+                idx1 = idx1 - idx2
+
+            # Add to swaps list
+            swaps.append((idx1, idx2))
 
             # Remove from future possible swaps
+            id1 = locs_in_interval[idx1, 3]
+            id2 = locs_in_interval[idx2, 3]
             j = i + 1
             while j < len(possible_swaps):
                 (idx3, close_locations) = possible_swaps[j]
 
-                # If is the location index, remove possible swap
-                if idx3 == idx1 or idx3 == idx2:
+                # If repeated location index or user_id, remove possible swap
+                id3 = locs_in_interval[idx3, 3]
+                if idx3 == idx1 or id3 == id1 or idx3 == idx2 or id3 == id2:
                     del possible_swaps[j]
-                    # Decrement both i and j indexes because of the removing
-                    i -= 1
-                    j -= 1
+                    j -= 1  # Decrement index because of the removing
                 # Otherwise, try to remove from close locations list
                 else:
-                    if idx1 in close_locations:
-                        close_locations.remove(idx1)
-                    if idx2 in close_locations:
-                        close_locations.remove(idx2)
+                    k = 0
+                    while k < len(close_locations):
+                        idx4 = close_locations[k]
+                        id4 = locs_in_interval[idx4, 3]
+                        # If repeated location index or user_id, remove close location
+                        if idx4 == idx1 or id4 == id1 or idx4 == idx2 or id4 == id2:
+                            del close_locations[k]
+                            k -= 1  # Decrease index because of the removing
+                        k += 1  # Increment index
+                    # Remove possible swap if close_locations is empty
                     if len(close_locations) == 0:
-                        # Remove possible swap if close_locations is empty
                         del possible_swaps[j]
-                        # Decrement both i and j indexes because of the removing
-                        i -= 1
-                        j -= 1
-
-                # Increment removing index
-                j += 1
+                        j -= 1  # Decrement index because of the removing
+                j += 1  # Increment index
 
             # Increment possible swap index
             i += 1
 
         return swaps
 
-    def compute_swaps(self, np_dataset, swaps: list, ini_idx: int) -> np.array:
+    def perform_swaps(self, np_dataset, swaps: list, ini_idx: int) -> np.array:
         # Dictionary for storing number of swaps per user (used outside for filtering)
         swaps_per_user = {}
 
@@ -216,23 +225,19 @@ class SwapMob:
             id1 = np_dataset[idx1, 3]
             id2 = np_dataset[idx2, 3]
 
-            # If IDs are different
-            if id1 != id2:  # TODO: Change previous code for making this impossible
-                # Get previous indices of the trajectories
-                prev_indices_1 = np.where(np_dataset[:idx1 + 1, 3] == id1)[0]
-                prev_indices_2 = np.where(np_dataset[:idx2 + 1, 3] == id2)[0]
+            # Get previous indices of the trajectories
+            prev_indices_1 = np.where(np_dataset[:idx1 + 1, 3] == id1)[0]
+            prev_indices_2 = np.where(np_dataset[:idx2 + 1, 3] == id2)[0]
 
-                # Perform swap
-                np_dataset[prev_indices_1, 3] = id2
-                np_dataset[prev_indices_2, 3] = id1
+            # Perform swap
+            np_dataset[prev_indices_1, 3] = id2
+            np_dataset[prev_indices_2, 3] = id1
 
-                # Increment number of swaps per user (used outside for filtering)
-                id1_str = str(int(id1))
-                swaps_per_user[id1_str] = swaps_per_user.get(id1_str, 0) + 1
-                id2_str = str(int(id2))
-                swaps_per_user[id2_str] = swaps_per_user.get(id2_str, 0) + 1
-            else:
-                pass#print("ERROR: Swap of a user trajectory with itself", id1, id2)  # TODO: Solve this
+            # Increment number of swaps per user (used outside for filtering)
+            id1_str = str(int(id1))
+            swaps_per_user[id1_str] = swaps_per_user.get(id1_str, 0) + 1
+            id2_str = str(int(id2))
+            swaps_per_user[id2_str] = swaps_per_user.get(id2_str, 0) + 1
 
         return np_dataset, swaps_per_user
 
