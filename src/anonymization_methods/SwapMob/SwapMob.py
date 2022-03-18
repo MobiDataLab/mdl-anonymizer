@@ -149,9 +149,9 @@ class SwapMob:
     def get_locs_in_interval(self, np_dataset: np.array, end_t: int, last_end_idx: int = 0) -> tuple:
         """Gets locations existing from the last_end_idx to that with a timestamp greater or equal to end_t (equivalent to [ini_t, end_t]).
 
-        last_end_idx is the end_idx of the last call (used for avoiding re-computation) and it will be the returned ini_idx.
         CAUTION 1: It assumes that np_dataset is sorted by timestamp.
         CAUTION 2: It is possible that none locations are found in the interval.
+        last_end_idx is the end_idx of the last call (used for avoiding re-computation) and it will be the returned ini_idx.
 
         Parameters
         ----------
@@ -192,7 +192,9 @@ class SwapMob:
         """Obtains all the crossing trajectories in the time interval.
 
         CAUTION: locs_in_interval is assumed to be ordered by timestamp.
-        It includes redundant cases such as a->b and b->a, that are removed at the select_random_swaps method.
+        It avoids swaps between locations of the same user, but redundant cases (such as a->b and b->a) are kept
+        for its usage at the select_random_swaps method.
+        This redundancy is required for maxmimizing the number of swaps.
 
         Parameters
         ----------
