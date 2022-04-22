@@ -76,6 +76,8 @@ class Dataset(ABC):
         if not self.is_loaded():
             raise RuntimeError("Dataset is not loaded")
 
+        logging.info("Writing dataset...")
+
         with open(filename, mode='w', newline='') as new_file:
             writer = csv.writer(new_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
             writer.writerow(["lat", "lon", "datetime", "user_id"])
