@@ -22,9 +22,10 @@ Después, en el terminal:
 
 `conda install tqdm`
 
+`conda install -c conda-forge haversine`
+
 `conda install -c conda-forge scikit-mobility` (tarda)
 
-`conda install -c conda-forge haversine`
 
 <!-- `conda install networkx` -->
 
