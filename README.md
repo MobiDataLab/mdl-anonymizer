@@ -20,11 +20,14 @@ Después, en el terminal:
 
 `conda install rtree`
 
-`conda install -c conda-forge scikit-mobility` (tarda)
+`conda install tqdm`
 
 `conda install -c conda-forge haversine`
 
-`conda install networkx`
+`conda install -c conda-forge scikit-mobility` (tarda)
+
+
+<!-- `conda install networkx` -->
 
 ## Datasets
 - **cabs_dataset_20080608_0700_0715.csv**: 371 trajectories and 3120 locations. All locations between 07:00 and 07:15
