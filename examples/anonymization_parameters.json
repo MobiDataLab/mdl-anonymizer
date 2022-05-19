@@ -1,0 +1,9 @@
+{
+  "method": "MegaSwap",
+  "input": "examples/data/cabs_dataset_20080608_0700_0715.csv",
+  "output": "examples/output.csv",
+  "Max_R_se": 500,
+  "Min_R_s2": 120,
+  "Max_R_t2": 100,
+  "Min_R_t2": 60
+}

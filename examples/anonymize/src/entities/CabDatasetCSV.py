@@ -1,7 +1,7 @@
 import csv
 
-from src.entities.Dataset import Dataset
-from src.entities.Trajectory import Trajectory
+from mob_data_anonymizer.entities.Dataset import Dataset
+from mob_data_anonymizer.entities.Trajectory import Trajectory
 from examples.anonymize.src.entities.CabLocation import CabLocation
 
 

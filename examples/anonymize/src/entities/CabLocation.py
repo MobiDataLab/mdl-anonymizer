@@ -1,4 +1,4 @@
-from src.entities.TimestampedLocation import TimestampedLocation
+from mob_data_anonymizer.entities.TimestampedLocation import TimestampedLocation
 
 
 class CabLocation(TimestampedLocation):

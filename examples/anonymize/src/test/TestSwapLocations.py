@@ -1,8 +1,8 @@
 import logging
 import unittest
 
-from src.anonymization_methods.DomingoTrujillo_2012.SwapLocations.SwapLocations import SwapLocations
-from src.utils.Stats import Stats
+from mob_data_anonymizer.anonymization_methods.DomingoTrujillo_2012.SwapLocations.SwapLocations import SwapLocations
+from mob_data_anonymizer.utils.Stats import Stats
 from examples.anonymize.src.entities.CabDatasetTXT import CabDatasetTXT
 
 

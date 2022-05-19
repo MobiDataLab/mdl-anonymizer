@@ -5,11 +5,11 @@ import pandas
 import skmob
 from skmob.utils import plot
 
-from src.anonymization_methods.Microaggregation.Microaggregation import Microaggregation
-from src.distances.trajectory.Martinez2021.Distance import Distance
-from src.entities.Dataset import Dataset
-from src.io.scikit import Scikit
-from src.utils.Stats import Stats
+from mob_data_anonymizer.anonymization_methods.Microaggregation.Microaggregation import Microaggregation
+from mob_data_anonymizer.distances.trajectory.Martinez2021.Distance import Distance
+from mob_data_anonymizer.entities.Dataset import Dataset
+from mob_data_anonymizer.io.scikit import Scikit
+from mob_data_anonymizer.utils.Stats import Stats
 
 def plot_cluster(cluster_id, filename="out/cluster.html"):
     cluster = microaggregation.get_clusters()[cluster_id]

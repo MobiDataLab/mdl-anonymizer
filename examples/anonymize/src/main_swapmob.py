@@ -2,9 +2,9 @@
 import logging
 import time
 
-from src.anonymization_methods.SwapMob.SwapMob import SwapMob
-from src.entities.Dataset import Dataset
-from src.utils.Stats import Stats
+from mob_data_anonymizer.anonymization_methods.SwapMob.SwapMob import SwapMob
+from mob_data_anonymizer.entities.Dataset import Dataset
+from mob_data_anonymizer.utils.Stats import Stats
 
 logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', level=logging.INFO)
 

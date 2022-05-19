@@ -1,9 +1,9 @@
 import logging
 
-from src.anonymization_methods.MegaSwap.MegaSwap import MegaSwap
-from src.distances.trajectory.Martinez2021.Distance import Distance
-from src.entities.Dataset import Dataset
-from src.utils.Stats import Stats
+from mob_data_anonymizer.anonymization_methods.MegaSwap.MegaSwap import MegaSwap
+from mob_data_anonymizer.distances.trajectory.Martinez2021.Distance import Distance
+from mob_data_anonymizer.entities.Dataset import Dataset
+from mob_data_anonymizer.utils.Stats import Stats
 
 logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', level=logging.INFO)
 

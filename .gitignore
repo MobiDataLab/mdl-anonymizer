@@ -7,3 +7,4 @@
 /examples/anonymize/out/cabs_scikit_anonymized.csv
 /examples/data/cabs_dataset_all.csv
 *.pyc
+/utilities/Geolife_dataset_to_CSV/data/
