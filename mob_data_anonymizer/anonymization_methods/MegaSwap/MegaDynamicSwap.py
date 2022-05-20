@@ -8,11 +8,13 @@ from mob_data_anonymizer.entities.Dataset import Dataset
 from mob_data_anonymizer.entities.Trajectory import Trajectory
 from mob_data_anonymizer.utils import utils
 
-DEFAULT_MAX_R_S = 500
-DEFAULT_MIN_R_S = 120
-DEFAULT_MAX_R_T = 100
-DEFAULT_MIN_R_T = 60
-DEFAULT_K = 3
+DEFAULT_VALUES = {
+    "k": 3,
+    "Max_r_s": 500,
+    "Min_r_s": 120,
+    "Max_r_t": 100,
+    "Min_r_t": 60
+}
 
 class MegaDynamicSwap:
     def __init__(self, dataset: Dataset, k, max_R_s, max_R_t, min_R_s, min_R_t, step_s=None, step_t=None):
@@ -140,36 +142,22 @@ class MegaDynamicSwap:
         return self.anonymized_dataset
 
     @staticmethod
-    def get_instance(data):
+    def get_instance(data, save_filtered_dataset = True):
 
-        # Check if all specific fields exists
-        max_r_s = data.get("Max_r_s")
-        if not max_r_s:
-            logging.info(f"No 'max_r_s' provided. Using {DEFAULT_MAX_R_S} m.")
-            max_r_s = DEFAULT_MAX_R_S
+        required_fields = ["k", "Max_r_s", "Min_r_s", "Max_r_t", "Min_r_t"]
+        values = {}
 
-        min_r_s = data.get("Min_r_s")
-        if not min_r_s:
-            logging.info(f"No 'min_r_s' provided. Using {DEFAULT_MIN_R_S} m.")
-            min_r_s = DEFAULT_MIN_R_S
-
-        max_r_t = data.get("Max_r_t")
-        if not max_r_t:
-            logging.info(f"No 'max_r_t' provided. Using {DEFAULT_MAX_R_T} s.")
-            max_r_t = DEFAULT_MAX_R_T
-
-        min_r_t = data.get("Min_r_t")
-        if not min_r_t:
-            logging.info(f"No 'min_r_t' provided. Using {DEFAULT_MIN_R_T} s.")
-            min_r_t = DEFAULT_MIN_R_T
-
-        k = data.get("k")
-        if not k:
-            logging.info(f"No 'k' provided. Using {DEFAULT_K}.")
-            k = DEFAULT_K
+        for field in required_fields:
+            values[field] = data.get(field)
+            if not values[field]:
+                logging.info(f"No '{field}' provided. Using {DEFAULT_VALUES[field]}.")
+                values[field] = DEFAULT_VALUES[field]
 
         dataset = Dataset()
         dataset.load_from_scikit(data.get("input"), min_locations=5, datetime_key="timestamp")
         dataset.filter_by_speed()
 
-        return MegaDynamicSwap(dataset, k, max_r_s, max_r_t, min_r_s, min_r_t)
+        if save_filtered_dataset:
+            dataset.export_to_scikit(f"{data['output_folder']}filtered.csv")
+
+        return MegaDynamicSwap(dataset, values['k'], values['Max_r_s'], values['Max_r_t'], values['Min_r_s'], values['Min_r_t'])

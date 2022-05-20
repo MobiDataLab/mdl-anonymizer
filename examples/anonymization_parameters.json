@@ -1,9 +1,12 @@
 {
   "method": "MegaSwap",
   "input": "examples/data/cabs_dataset_20080608_0700_0715.csv",
-  "output": "examples/output.csv",
-  "Max_R_se": 500,
-  "Min_R_s2": 120,
-  "Max_R_t2": 100,
-  "Min_R_t2": 60
+  "output_folder": "examples/output/",
+  "main_output_file": "output.csv",
+  "save_filtered_dataset": true,
+  "Max_r_s": 600,
+  "Min_r_s": 150,
+  "Max_r_t": 200,
+  "Min_r_t": 10,
+  "k": 3
 }

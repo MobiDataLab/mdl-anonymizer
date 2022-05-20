@@ -9,13 +9,15 @@ DEFAULT_PARAMETERS_FILE = "anonymization_parameters.json"
     PARAMETERS_FILE_NOT_JSON,
     PARAMETERS_NOT_VALID,
     INPUT_FILE_NOT_EXIST,
+    OUTPUT_FOLDER_NOT_EXIST,
     WRONG_METHOD
-) = range(6)
+) = range(7)
 
 ERRORS = {
     PARAMETERS_FILE_DOESNT_EXIST: "Parameters file does not exist",
     PARAMETERS_FILE_NOT_JSON: "Parameters file has to be a valid JSON",
     PARAMETERS_NOT_VALID: "Some parameters are missing",
     INPUT_FILE_NOT_EXIST: "Input file does not exist",
+    OUTPUT_FOLDER_NOT_EXIST: "Output folder does not exist",
     WRONG_METHOD: "The requested method is not supported (or it is misspelled)",
 }
