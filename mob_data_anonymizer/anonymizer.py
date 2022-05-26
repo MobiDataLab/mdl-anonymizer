@@ -6,6 +6,7 @@ from mob_data_anonymizer import PARAMETERS_FILE_DOESNT_EXIST, SUCCESS, PARAMETER
     WRONG_METHOD, INPUT_FILE_NOT_EXIST, OUTPUT_FOLDER_NOT_EXIST, DEFAULT_OUTPUT_FILE, DEFAULT_SAVE_FILTERED_DATASET, \
     DEFAULT_FILTERED_FILE
 from mob_data_anonymizer.anonymization_methods.MegaSwap.MegaDynamicSwap import MegaDynamicSwap
+from mob_data_anonymizer.anonymization_methods.Microaggregation.Microaggregation import Microaggregation
 from mob_data_anonymizer.anonymization_methods.SwapMob.SwapMob import SwapMob
 
 VALID_METHODS = ['MegaSwap', 'SwapMob', 'Microaggregation']
@@ -49,7 +50,7 @@ def anonymizer(file_path: str) -> int:
     elif method == 'SwapMob':
         anonymizer_method = SwapMob.get_instance(data)
     elif method == 'Microaggregation':
-        pass
+        anonymizer_method = Microaggregation.get_instance(data)
 
     output_folder = data.get('output_folder', '')
     if output_folder != '':

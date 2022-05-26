@@ -8,9 +8,12 @@ from mob_data_anonymizer.clustering.MDAV.SimpleMDAV import SimpleMDAV
 from mob_data_anonymizer.clustering.MDAV.SimpleMDAVDataset import SimpleMDAVDataset
 from mob_data_anonymizer.distances.trajectory.DistanceInterface import DistanceInterface
 from mob_data_anonymizer.distances.trajectory.Martinez2021.Distance import Distance
-from mob_data_anonymizer.entities import Dataset
+from mob_data_anonymizer.entities.Dataset import Dataset
 from mob_data_anonymizer.entities.Trajectory import Trajectory
 
+DEFAULT_VALUES = {
+    "k": 3
+}
 
 class Microaggregation:
     def __init__(self, dataset: Dataset, k=3, clustering_method: ClusteringInterface = None,
@@ -46,8 +49,6 @@ class Microaggregation:
 
         logging.info('Anonymization finished!')
 
-    def get_anonymized_dataset(self):
-        return self.anonymized_dataset
 
     def process_clusters(self):
         for c in self.clusters:
@@ -70,3 +71,24 @@ class Microaggregation:
 
     def get_centroids(self):
         return self.centroids
+
+    def get_anonymized_dataset(self):
+        return self.anonymized_dataset
+
+    @staticmethod
+    def get_instance(data):
+
+        required_fields = ["k"]
+        values = {}
+
+        for field in required_fields:
+            values[field] = data.get(field)
+            if not values[field]:
+                logging.info(f"No '{field}' provided. Using {DEFAULT_VALUES[field]}.")
+                values[field] = DEFAULT_VALUES[field]
+
+        dataset = Dataset()
+        dataset.load_from_scikit(data.get("input"), min_locations=5, datetime_key="timestamp")
+        dataset.filter_by_speed()
+
+        return Microaggregation(dataset, k=values['k'])
