@@ -142,7 +142,7 @@ class MegaDynamicSwap:
         return self.anonymized_dataset
 
     @staticmethod
-    def get_instance(data, save_filtered_dataset = True):
+    def get_instance(data):
 
         required_fields = ["k", "Max_r_s", "Min_r_s", "Max_r_t", "Min_r_t"]
         values = {}
@@ -156,8 +156,5 @@ class MegaDynamicSwap:
         dataset = Dataset()
         dataset.load_from_scikit(data.get("input"), min_locations=5, datetime_key="timestamp")
         dataset.filter_by_speed()
-
-        if save_filtered_dataset:
-            dataset.export_to_scikit(f"{data['output_folder']}filtered.csv")
 
         return MegaDynamicSwap(dataset, values['k'], values['Max_r_s'], values['Max_r_t'], values['Min_r_s'], values['Min_r_t'])

@@ -2,6 +2,9 @@ __app_name__ = "mob_data_anonymizer"
 __version__ = "0.1.0"
 
 DEFAULT_PARAMETERS_FILE = "anonymization_parameters.json"
+DEFAULT_OUTPUT_FILE = "output.json"
+DEFAULT_SAVE_FILTERED_DATASET = True
+DEFAULT_FILTERED_FILE = "filtered.json"
 
 (
     SUCCESS,

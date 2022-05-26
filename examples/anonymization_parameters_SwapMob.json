@@ -1,0 +1,10 @@
+{
+  "method": "SwapMob",
+  "input": "examples/data/cabs_dataset_20080608_0700_0715.csv",
+  "output_folder": "examples/output/",
+  "main_output_file": "output_SwapMob.csv",
+  "save_filtered_dataset": true,
+  "filtered_file": "filtered_SwapMob.csv",
+  "spatial_thold": 0.1,
+  "temporal_thold": 60
+}

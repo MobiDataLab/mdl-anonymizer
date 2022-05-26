@@ -3,8 +3,10 @@ import json
 import os
 
 from mob_data_anonymizer import PARAMETERS_FILE_DOESNT_EXIST, SUCCESS, PARAMETERS_FILE_NOT_JSON, PARAMETERS_NOT_VALID, \
-    WRONG_METHOD, INPUT_FILE_NOT_EXIST, OUTPUT_FOLDER_NOT_EXIST
+    WRONG_METHOD, INPUT_FILE_NOT_EXIST, OUTPUT_FOLDER_NOT_EXIST, DEFAULT_OUTPUT_FILE, DEFAULT_SAVE_FILTERED_DATASET, \
+    DEFAULT_FILTERED_FILE
 from mob_data_anonymizer.anonymization_methods.MegaSwap.MegaDynamicSwap import MegaDynamicSwap
+from mob_data_anonymizer.anonymization_methods.SwapMob.SwapMob import SwapMob
 
 VALID_METHODS = ['MegaSwap', 'SwapMob', 'Microaggregation']
 
@@ -41,17 +43,26 @@ def anonymizer(file_path: str) -> int:
     with open(file_path) as param_file:
         data = json.load(param_file)
 
-    save_filtered_dataset = data.get('save_filtered_dataset', True)
-
     method = data['method']
     if method == 'MegaSwap':
-        anonymizer_method = MegaDynamicSwap.get_instance(data, save_filtered_dataset)
+        anonymizer_method = MegaDynamicSwap.get_instance(data)
     elif method == 'SwapMob':
-        pass
+        anonymizer_method = SwapMob.get_instance(data)
     elif method == 'Microaggregation':
         pass
 
+    output_folder = data.get('output_folder', '')
+    if output_folder != '':
+        output_folder += '/'
+
+    save_filtered_dataset = data.get('save_filtered_dataset', DEFAULT_SAVE_FILTERED_DATASET)
+    if save_filtered_dataset:
+        filtered_file = data.get('filtered_file', DEFAULT_FILTERED_FILE)
+        anonymizer_method.dataset.export_to_scikit(f"{output_folder}{filtered_file}")
+
     anonymizer_method.run()
+
     output_dataset = anonymizer_method.get_anonymized_dataset()
 
-    output_dataset.export_to_scikit(f"{data['output_folder']}output.csv")
+    output_file = data.get('main_output_file', DEFAULT_OUTPUT_FILE)
+    output_dataset.export_to_scikit(f"{output_folder}{output_file}")

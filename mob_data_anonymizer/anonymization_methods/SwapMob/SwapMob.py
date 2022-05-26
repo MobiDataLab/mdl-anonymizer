@@ -7,6 +7,10 @@ from mob_data_anonymizer.entities.Dataset import Dataset
 from mob_data_anonymizer.entities.Trajectory import Trajectory
 from mob_data_anonymizer.entities.TimestampedLocation import TimestampedLocation
 
+DEFAULT_VALUES = {
+    "spatial_thold": 0.2,
+    "temporal_thold": 30,
+}
 
 class SwapMob:
     """Implements the SwapMob anonymization method from Julián Salas, David Megías & Vicenç Torra ( https://doi.org/10.1007/978-3-319-99771-1_22 )"""
@@ -363,3 +367,22 @@ class SwapMob:
         anonymized_dataset : Dataset
             The anonymized dataset computed at the run method"""
         return self.anonymized_dataset
+
+
+    @staticmethod
+    def get_instance(data):
+
+        required_fields = ["spatial_thold", "temporal_thold"]
+        values = {}
+
+        for field in required_fields:
+            values[field] = data.get(field)
+            if not values[field]:
+                logging.info(f"No '{field}' provided. Using {DEFAULT_VALUES[field]}.")
+                values[field] = DEFAULT_VALUES[field]
+
+        dataset = Dataset()
+        dataset.load_from_scikit(data.get("input"), min_locations=5, datetime_key="timestamp")
+        dataset.filter_by_speed()
+
+        return SwapMob(dataset, values['spatial_thold'], values['temporal_thold'])
