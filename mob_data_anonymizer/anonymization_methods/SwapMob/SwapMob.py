@@ -385,4 +385,9 @@ class SwapMob:
         dataset.load_from_scikit(data.get("input"), min_locations=5, datetime_key="timestamp")
         dataset.filter_by_speed()
 
-        return SwapMob(dataset, values['spatial_thold'], values['temporal_thold'])
+        min_n_swaps = data.get('min_n_swaps', 1)
+        seed = data.get('seed', None)
+
+        return SwapMob(dataset,
+                       values['spatial_thold'], values['temporal_thold'],
+                       min_n_swaps=min_n_swaps, seed=seed)

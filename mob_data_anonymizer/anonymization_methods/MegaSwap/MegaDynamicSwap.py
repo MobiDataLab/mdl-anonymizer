@@ -157,4 +157,9 @@ class MegaDynamicSwap:
         dataset.load_from_scikit(data.get("input"), min_locations=5, datetime_key="timestamp")
         dataset.filter_by_speed()
 
-        return MegaDynamicSwap(dataset, values['k'], values['Max_r_s'], values['Max_r_t'], values['Min_r_s'], values['Min_r_t'])
+        step_s = data.get('step_s', None)
+        step_t = data.get('step_t', None)
+
+        return MegaDynamicSwap(dataset,
+                               values['k'], values['Max_r_s'], values['Max_r_t'], values['Min_r_s'], values['Min_r_t'],
+                               step_s=step_s, step_t=step_t)
