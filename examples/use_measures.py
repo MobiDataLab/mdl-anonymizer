@@ -3,7 +3,7 @@ import logging
 import skmob
 
 from mob_data_anonymizer.entities.Dataset import Dataset
-from mob_data_anonymizer.utils.Measures import Measures, MEAN_SQUARE_ERROR, REPORT
+from mob_data_anonymizer.utils.Measures import Measures
 from mob_data_anonymizer.utils.Stats import Stats
 
 logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', level=logging.INFO)
@@ -29,4 +29,7 @@ anonymized_tdf = skmob.TrajDataFrame.from_file(anonymized_file,
 measures = Measures(original_tdf, anonymized_tdf, output_folder="output/")
 
 #measures.cmp_mean_square_displacement()
-measures.cmp_distance_straight_line(output=REPORT)
+measures.cmp_distance_straight_line(output="mean")
+
+#measures.cmp_random_location_entropy(output='report')
+#measures.cmp_visits_per_location(output='report')
