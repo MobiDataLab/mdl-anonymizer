@@ -8,6 +8,8 @@ import numpy as np
 
 from abc import ABC
 
+from skmob import TrajDataFrame
+
 from mob_data_anonymizer.entities.Trajectory import Trajectory
 from mob_data_anonymizer.entities.TimestampedLocation import TimestampedLocation
 from examples.anonymize.src.entities.CabLocation import CabLocation
@@ -18,13 +20,13 @@ class Dataset(ABC):
         self.trajectories = []
         self.description = None
 
-#    @abstractmethod
-#    def load(self):
-#        raise NotImplementedError
+    #    @abstractmethod
+    #    def load(self):
+    #        raise NotImplementedError
 
-    def load_from_scikit(self, filename, n_trajectories = None, min_locations = 10,
-                         latitude_key="lat", longitude_key="lon", datetime_key="datetime", user_key = "user_id",
-                         datetime_format = "%Y/%m/%d %H:%M:%S"):
+    def load_from_scikit(self, filename, n_trajectories=None, min_locations=10,
+                         latitude_key="lat", longitude_key="lon", datetime_key="datetime", user_key="user_id",
+                         datetime_format="%Y/%m/%d %H:%M:%S"):
 
         logging.info("Loading dataset...")
 
@@ -40,7 +42,7 @@ class Dataset(ABC):
                 element = datetime.datetime.strptime(row[datetime_key], datetime_format)
                 timestamp = datetime.datetime.timestamp(element)
 
-                location = CabLocation(timestamp,  row[latitude_key],  row[longitude_key])
+                location = CabLocation(timestamp, row[latitude_key], row[longitude_key])
                 T.add_location(location)
             else:
                 if len(T.locations) >= min_locations:
@@ -86,6 +88,49 @@ class Dataset(ABC):
                     date_time = datetime.datetime.fromtimestamp(l.timestamp)
                     writer.writerow([l.x, l.y, date_time.strftime("%Y/%m/%d %H:%M:%S"), t.id])
 
+    def to_tdf(self):
+
+        df = pandas.DataFrame()
+
+        for traj in self.trajectories:
+            for loc in traj.locations:
+                df2 = pandas.DataFrame(
+                    {'lat': [loc.x],
+                     'lng': [loc.y],
+                     'datetime': [loc.timestamp],
+                     'uid': [traj.id],
+                     })
+                df = pandas.concat([df, df2], ignore_index=True)
+
+        return TrajDataFrame(df, timestamp=True)
+
+    def from_tdf(self, tdf: TrajDataFrame):
+
+        # Sort by uid
+        tdf.sort_values('uid')
+
+        user_id = tdf.loc[0, 'uid']
+
+        T = Trajectory(user_id)
+
+        for index, row in tdf.iterrows():
+            # Change of trajectory
+            if user_id != row['uid']:
+                T.locations.sort(key=lambda x: x.timestamp)
+                self.add_trajectory(T)
+
+                user_id = row['uid']
+                T = Trajectory(user_id)
+
+            # Add new location
+            timestamp = row['datetime'].timestamp()
+            location = CabLocation(timestamp, row['lat'], row['lng'])
+            T.add_location(location)
+
+        # Add the last trajectory
+        T.locations.sort(key=lambda x: x.timestamp)
+        self.add_trajectory(T)
+
     def to_numpy(self, sort_by_timestamp=False):
         """Transforms the dataset to a NumPy array for faster processing.
         Columns correspond to lat, long, timestamp and user_id.
@@ -99,12 +144,12 @@ class Dataset(ABC):
         # Assign values to matrix
         idx = 0
         for traj in self.trajectories:
-         for loc in traj.locations:
-             np_dataset[idx][0] = loc.x
-             np_dataset[idx][1] = loc.y
-             np_dataset[idx][2] = loc.timestamp
-             np_dataset[idx][3] = traj.id
-             idx += 1
+            for loc in traj.locations:
+                np_dataset[idx][0] = loc.x
+                np_dataset[idx][1] = loc.y
+                np_dataset[idx][2] = loc.timestamp
+                np_dataset[idx][3] = traj.id
+                idx += 1
 
         # Sort by timestamp if required
         if sort_by_timestamp:
@@ -125,11 +170,11 @@ class Dataset(ABC):
         # Get and store trajectories
         current_traj = None
         for record in np_dataset:
-            if current_traj is None:    # First trajectory
+            if current_traj is None:  # First trajectory
                 current_traj = Trajectory(record[3])
             elif record[3] != current_traj.id:  # ID changed
-                self.add_trajectory(current_traj)       # Store trajectory
-                current_traj = Trajectory(record[3])    # New trajectory
+                self.add_trajectory(current_traj)  # Store trajectory
+                current_traj = Trajectory(record[3])  # New trajectory
             # Add location
             loc = TimestampedLocation(record[2], record[0], record[1])
             current_traj.add_location(loc)
@@ -158,7 +203,8 @@ class Dataset(ABC):
 
     def filter(self, min_locations=3):
         self.trajectories = [t for t in self.trajectories if len(t) >= min_locations]
-        logging.info(f"Dataset filtered. Removed trajectories with less than {min_locations} locations. Now it has {len(self)} trajectories.")
+        logging.info(
+            f"Dataset filtered. Removed trajectories with less than {min_locations} locations. Now it has {len(self)} trajectories.")
 
     def filter_by_speed(self, max_speed_kmh=300):
         """
@@ -173,7 +219,6 @@ class Dataset(ABC):
 
         logging.info(f"Dataset filtered. Removed trajectories with some one-time speed above {max_speed_kmh}. "
                      f"Now it has {len(self)} trajectories and {count_locations} locations.")
-
 
     def __len__(self):
         return len(self.trajectories)
