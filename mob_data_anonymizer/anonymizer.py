@@ -23,7 +23,7 @@ def check_parameters_file(file_path: str) -> int:
         return PARAMETERS_FILE_NOT_JSON
 
     try:
-        # Check if input file exist
+        # Check if input file exists
         if not os.path.exists(data['input']):
             return INPUT_FILE_NOT_EXIST
 

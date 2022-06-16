@@ -1,8 +1,8 @@
 import typer
 
 from typing import Optional
-from mob_data_anonymizer import __app_name__, __version__, DEFAULT_PARAMETERS_FILE, ERRORS, SUCCESS
-from mob_data_anonymizer.anonymizer import check_parameters_file, anonymizer
+from mob_data_anonymizer import __app_name__, __version__, DEFAULT_PARAMETERS_FILE, ERRORS, SUCCESS, anonymizer, \
+    compute_measures
 
 app = typer.Typer()
 
@@ -12,11 +12,11 @@ def anonymize(
         parameters_file: str = typer.Option(
             str(DEFAULT_PARAMETERS_FILE),
             "--parameters_file",
-            "-pl",
+            "-f",
             prompt="Anonymization parameters file location"
         ),
 ) -> None:
-    code = check_parameters_file(parameters_file)
+    code = anonymizer.check_parameters_file(parameters_file)
     if code != SUCCESS:
         typer.secho(
             f'Anonymization failed with "{ERRORS[code]}"',
@@ -25,25 +25,27 @@ def anonymize(
 
         raise typer.Exit(1)
     else:
-        anonymizer(parameters_file)
+        anonymizer.anonymizer(parameters_file)
 
 @app.command()
-def synthetic_generation(
+def measures(
         parameters_file: str = typer.Option(
             str(DEFAULT_PARAMETERS_FILE),
             "--parameters_file",
-            "-pl",
-            prompt="Anonymization parameters file location"
+            "-f",
+            prompt="Stats parameters file location"
         ),
 ) -> None:
-    code = check_parameters_file(parameters_file)
+    code = compute_measures.check_parameters_file(parameters_file)
     if code != SUCCESS:
         typer.secho(
-            f'Synthetic generation failed with "{ERRORS[code]}"',
+            f'Measures failed with "{ERRORS[code]}"',
             fg=typer.colors.RED,
         )
 
         raise typer.Exit(1)
+    else:
+        compute_measures.compute_measures(parameters_file)
 
 
 def _version_callback(value: bool) -> None:

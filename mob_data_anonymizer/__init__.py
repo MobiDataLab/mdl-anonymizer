@@ -13,8 +13,9 @@ DEFAULT_FILTERED_FILE = "filtered.json"
     PARAMETERS_NOT_VALID,
     INPUT_FILE_NOT_EXIST,
     OUTPUT_FOLDER_NOT_EXIST,
-    WRONG_METHOD
-) = range(7)
+    WRONG_METHOD,
+    WRONG_MODE
+) = range(8)
 
 ERRORS = {
     PARAMETERS_FILE_DOESNT_EXIST: "Parameters file does not exist",
@@ -22,5 +23,6 @@ ERRORS = {
     PARAMETERS_NOT_VALID: "Some parameters are missing",
     INPUT_FILE_NOT_EXIST: "Input file does not exist",
     OUTPUT_FOLDER_NOT_EXIST: "Output folder does not exist",
-    WRONG_METHOD: "The requested method is not supported (or it is misspelled)",
+    WRONG_METHOD: "A requested method is not supported (or it is misspelled)",
+    WRONG_MODE: "The requested mode is not supported (or it is misspelled)",
 }
