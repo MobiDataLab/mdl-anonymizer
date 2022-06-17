@@ -16,8 +16,22 @@ DEFAULT_VALUES = {
 }
 
 class Microaggregation:
-    def __init__(self, dataset: Dataset, k=3, clustering_method: ClusteringInterface = None,
+    def __init__(self, dataset: Dataset, k=DEFAULT_VALUES['k'], clustering_method: ClusteringInterface = None,
                  distance: DistanceInterface = None, aggregation_method: TrajectoryAggregationInterface = None):
+        """
+                Parameters
+                ----------
+                dataset : Dataset
+                    Dataset to anonymize.
+                k : int
+                    Mínimium number of trajectories to be aggregated in a cluster (default is 3)
+                clustering_method : ClusteringInterface, optional
+                    Method to cluster the trajectories (Default is SimpleMDAV)
+                distance : DistanceInterface, optional
+                    Method to compute the distance between two trajectories (Default is Martinez2021.Distance)
+                aggregation_method : TrajectoryAggregationInterface, optional
+                    Method to aggregate the trajectories within a cluster (Default is Martinez2021.Aggregation)
+                """
 
         self.dataset = dataset
         self.distance = distance if distance else Distance(dataset)

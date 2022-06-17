@@ -18,17 +18,27 @@ DEFAULT_VALUES = {
 
 class MegaDynamicSwap:
     def __init__(self, dataset: Dataset, k, max_R_s, max_R_t, min_R_s, min_R_t, step_s=None, step_t=None):
-        '''
+        """
+        Parameters
+        ----------
+        dataset : Dataset
+            Dataset to anonymize.
+        k : int
+            Minimum number of locations of a swapping cluster (default is 3)
+        max_R_s: int
+            Maximum spatial radius of the swapping cluster (in meters)
+        max_R_t: int
+            Maximum temporal threshold of the swapping cluster (in seconds)
+        min_R_s: int
+            Minimum spatial radius of the swapping cluster (in meters)
+        min_R_t: int
+            Minimum temporal threshold of the swapping cluster (in seconds)
+        step_s: int
+            In meters
+        step_t: int
+            In seconds
+        """
 
-        :param dataset:
-        :param k:
-        :param max_R_s: In meters
-        :param max_R_t: In seconds
-        :param min_R_s: In meters
-        :param min_R_t: In seconds
-        :param step_s: In meters
-        :param step_t: In seconds
-        '''
         self.dataset = dataset
         self.anonymized_dataset = dataset.__class__()
         self.k = k
