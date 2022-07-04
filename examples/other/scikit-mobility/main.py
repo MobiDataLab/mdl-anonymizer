@@ -3,12 +3,16 @@ from folium import folium
 from folium.plugins import HeatMap
 from skmob.measures.individual import radius_of_gyration, home_location
 from skmob.utils import plot
+import numpy as np
 
 tdf = skmob.TrajDataFrame.from_file('../anonymize/out/actual_dataset_loaded.csv', latitude='lat', longitude='lon', datetime='timestamp', user_id='user_id')
-#first trajectories
-first_traj = tdf[tdf['uid'] < 20]
 
-m = first_traj.plot_trajectory(zoom=12, weight=3, opacity=0.9, tiles='Stamen Toner')
+# First trajectories
+n_users = 20
+nth_user_id = np.sort(np.unique(tdf['uid']))[n_users]
+first_traj = tdf[tdf['uid'] <= nth_user_id]
+
+m = first_traj.plot_trajectory(max_users=n_users, zoom=12, weight=3, opacity=0.9, tiles='Stamen Toner')
 m.save('maps/map_orig.html')
 
 #HeatMap(tdf[['lat', 'lng']].values).add_to(m)
@@ -24,7 +28,9 @@ heatmap.save('maps/heatmap_orig.html')
 
 tdf = skmob.TrajDataFrame.from_file('../anonymize/out/cabs_scikit_anonymized.csv', latitude='lat', longitude='lon', datetime='timestamp', user_id='user_id')
 
-first_traj = tdf[tdf['uid'] < 20]
+# First usaers
+nth_user_id = np.sort(np.unique(tdf['uid']))[n_users]
+first_traj = tdf[tdf['uid'] <= nth_user_id]
 
 m = first_traj.plot_trajectory(zoom=12, weight=3, opacity=0.9, tiles='Stamen Toner')
 m.save('maps/map_anon.html')

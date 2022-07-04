@@ -1,6 +1,8 @@
 ############################## Imports ##############################
 import logging
 import time
+import sys
+sys.path.append("../../../")
 
 from mob_data_anonymizer.anonymization_methods.SwapMob.SwapMob import SwapMob
 from mob_data_anonymizer.entities.Dataset import Dataset
@@ -11,7 +13,7 @@ logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', level=logg
 ############################## Dataset ##############################
 dataset = Dataset()
 dataset_name = "cabs_dataset_0700_0715" # Alternatively: "cabs_dataset_20080608_0700_0715"
-dataset.load_from_scikit(f'../../data/{dataset_name}.csv', min_locations=10, datetime_key="timestamp")
+dataset.load_from_scikit(f'../../data/{dataset_name}.csv', min_locations=10, datetime_key="datetime")
 dataset.filter_by_speed()
 dataset.export_to_scikit(filename="../out/actual_dataset_loaded.csv")
 

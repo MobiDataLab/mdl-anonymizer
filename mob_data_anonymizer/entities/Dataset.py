@@ -12,7 +12,7 @@ from skmob import TrajDataFrame
 
 from mob_data_anonymizer.entities.Trajectory import Trajectory
 from mob_data_anonymizer.entities.TimestampedLocation import TimestampedLocation
-from examples.anonymize.src.entities.CabLocation import CabLocation
+from examples.anonymize.src.entities.CabLocation import CabLocation # TODO: Check this! "from examples.anonymize.src.entities.CabLocation" depends on examples!
 
 
 class Dataset(ABC):

@@ -1,0 +1,10 @@
+{
+  "input_1": "examples/outputs/filtered_Micro.csv",
+  "input_2": "examples/outputs/output_Micro.csv",
+  "mode": "average",
+  "methods": [
+    "visits_per_location",
+    "distance_straight_line"
+  ],
+  "output_folder": "examples/outputs/"
+}

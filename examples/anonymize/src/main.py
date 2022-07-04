@@ -1,4 +1,6 @@
 import logging
+import sys
+sys.path.append("../../../")
 
 from mob_data_anonymizer.anonymization_methods.MegaSwap.MegaSwap import MegaSwap
 from mob_data_anonymizer.distances.trajectory.Martinez2021.Distance import Distance
