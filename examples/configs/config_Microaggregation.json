@@ -2,8 +2,8 @@
   "method": "Microaggregation",
   "input": "examples/data/cabs_dataset_20080608_0700_0715.csv",
   "output_folder": "examples/outputs",
-  "main_output_file": "output_Micro.csv",
+  "main_output_file": "anonymized_Microaggregation_CLI.csv",
   "save_filtered_dataset": true,
-  "filtered_file": "filtered_Micro.csv",
+  "filtered_file": "filtered_dataset_CLI.csv",
   "k": 3
 }

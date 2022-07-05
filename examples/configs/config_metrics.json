@@ -1,6 +1,6 @@
 {
-  "input_1": "examples/outputs/filtered_Micro.csv",
-  "input_2": "examples/outputs/output_Micro.csv",
+  "input_1": "examples/outputs/filtered_dataset_CLI.csv",
+  "input_2": "examples/outputs/anonymized_Microaggregation_CLI.csv",
   "mode": "average",
   "methods": [
     "visits_per_location",

@@ -65,22 +65,38 @@ There are some common parameters to all the anonymization methods:
 * filtered_file (string, optional): The name of the pre-processed dataset
 
 Each of the anonymization methods has some specific parameters that have to be added to the parameters file:
-* SwapMob (configuration file example [here](examples/config_SwapMob.json)):
+* SwapMob:
   * spatial_thold (float): Maximum distance (in km) to consider two locations as close
   * temporal_thold (int): Maximum time difference (in seconds) to consider two locations as coexistent 
   * min_n_swap (int, optional): Minimum number of swaps for a trajectory for not being removed.
   * seed (int, optional): Seed for the random swapping process
-* Microaggregation (configuration file example [here](examples/config_Microaggregation.json)):
+
+Example using the given [configuration file](examples/configs/config_SwapMob.json):
+```bash
+python -m mob_data_anonymizer anonymize -f examples/configs/config_SwapMob.json
+```
+
+* Microaggregation:
   * k (int): Minimum number of trajectories to be aggregated in a cluster
-* SwapLocations (configuration file example [here](examples/config_SwapLocations.json)):
+
+Example using the given [configuration file](examples/configs/config_Microaggregation.json):
+```bash
+python -m mob_data_anonymizer anonymize -f examples/configs/config_Microaggregation.json
+```
+
+* SwapLocations:
   * k (int):  Minimum number of locations of the swapping cluster
   * min_r_s (int): Minimum spatial radius of the swapping cluster (in meters)
   * max_r_s (int): Maximum spatial radius for building the swapping cluster (in meters)
   * min_r_t (int): Minimum temporal threshold for building the swapping cluster (in seconds)
   * max_r_t (int): Maximum temporal threshold for building the swapping cluster (in seconds)
 
+Example using the given [configuration file](examples/configs/config_SwapLocations.json):
+```bash
+python -m mob_data_anonymizer anonymize -f examples/configs/config_SwapLocations.json
+```
 #### Utility metrics
-As previously mentioned, the anonymization module also includes a tool to compute and compare some utility metrics of original and anonymized datasets. We leverage on the well-known scikit-mobility1 library to compute these utility metrics. To compute some of these measures, the datasets to be compared are previously tessellated.
+As previously mentioned, the anonymization module also includes a tool to compute and compare some utility metrics of original and anonymized datasets. We leverage on the well-known scikit-mobility library to compute these utility metrics. To compute some of these measures, the datasets to be compared are previously tessellated.
 
 Again, the parameter values to compute the measures are provided to the application through a JSON file:
 ```bash
@@ -100,14 +116,17 @@ Available parameters are:
 * input_2 (string): Filepath of the second dataset 
 * output_folder (string, optional): Folder to save the generated output files
 
-An example of metrics configurations file can be found [here](examples/config_metrics.json).
+Example using the given [configuration file](examples/configs/config_metrics.json):
+```bash
+python -m mob_data_anonymizer measures -f examples/configs/config_metrics.json
+```
 
 ### By code
 Once the module is installed, its usage only requires from an import:
 ```python
 import mob_data_anonymizer
 ```
-Specific examples are given in the [examples/anonymize/src](examples/anonymize/src) folder.
+An example using all the aforementioned anonymization methods is provided in the [examples/anonymize/src/main.py](examples/anonymize/src/main.py) file.
 
 <!---
 ## Datasets

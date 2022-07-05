@@ -1,61 +1,77 @@
+############################## Imports and initialization ##############################
 import logging
+import time
+import os
 import sys
+
 sys.path.append("../../../")
 
 from mob_data_anonymizer.anonymization_methods.MegaSwap.MegaSwap import MegaSwap
+from mob_data_anonymizer.anonymization_methods.SwapMob.SwapMob import SwapMob
+from mob_data_anonymizer.anonymization_methods.Microaggregation.Microaggregation import Microaggregation
 from mob_data_anonymizer.distances.trajectory.Martinez2021.Distance import Distance
+from mob_data_anonymizer.aggregation.Martinez2021.Aggregation import Aggregation
+from mob_data_anonymizer.clustering.MDAV.SimpleMDAV import SimpleMDAV
+from mob_data_anonymizer.clustering.MDAV.SimpleMDAVDataset import SimpleMDAVDataset
+
 from mob_data_anonymizer.entities.Dataset import Dataset
 from mob_data_anonymizer.utils.Stats import Stats
 
 logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', level=logging.INFO)
 
+############################## Settings ##############################
+### Anonymization method selection and settings ###
+METHOD_NAME = "SwapMob"  # Options: ["SwapMob", "Microaggregation", "SwapLocations"]
+TEMPORAL_THLD = 30  # Only for SwapMob and SwapLocations
+SPATIAL_THLD = 0.2  # Only for SwapMob and SwapLocations
+MIN_N_SWAPS = 1  # Only for SwapMob
+SEED = 42  # Only for SwapMob
+K = 3  # Only for Microaggregation
+DISTANCE_LANDA = 1.0480570490488479  # Only for Microaggregation
+
+### Paths ###
+DATA_FOLDER = os.path.join("..", "..", "data")
+DATASET_NAME = "cabs_dataset_20080608_0700_0715"
+DATASET_PATH = os.path.join(DATA_FOLDER, DATASET_NAME + ".csv")
+OUTPUT_FOLDER = os.path.join("..", "..", "outputs")
+FILTERED_PATH = os.path.join(OUTPUT_FOLDER, f"filtered_dataset_byCode.csv")
+ANONYMIZED_PATH = os.path.join(OUTPUT_FOLDER, f"anonymized_{METHOD_NAME}_byCode.csv")
+
+############################## Load dataset and export filtered ##############################
 dataset = Dataset()
-dataset.load_from_scikit('../data/cabs_dataset_20080608_0800_1000.csv', n_trajectories=2000, min_locations=10, datetime_key="timestamp")
-dataset.export_to_scikit(filename="../out/actual_dataset_loaded.csv")
-# self.assertEqual(10, len(dataset))
+dataset.load_from_scikit(DATASET_PATH, min_locations=10, datetime_key="timestamp")
+dataset.filter_by_speed()
+dataset.export_to_scikit(filename=FILTERED_PATH)
 
-# print(dataset)
-# 500 trayectorias: landa =  1.0480570490488479
-Martinez2021_distance = Distance(dataset, landa=1.0480570490488479)
+############################## Anonymization ##############################
+#### Method initialization ###
+if METHOD_NAME == "SwapMob":
+    anonymizer = SwapMob(dataset, temporal_thold=TEMPORAL_THLD, spatial_thold=SPATIAL_THLD,
+                         min_n_swaps=MIN_N_SWAPS, seed=SEED)
+elif METHOD_NAME == "Microaggregation":
+    Martinez2021_distance = Distance(dataset, landa=DISTANCE_LANDA)
+    aggregation_method = Aggregation
+    clustering_method = SimpleMDAV(SimpleMDAVDataset(dataset, Martinez2021_distance, aggregation_method))
+    anonymizer = Microaggregation(dataset, k=K, clustering_method=clustering_method,
+                                  distance=Martinez2021_distance, aggregation_method=aggregation_method)
+elif METHOD_NAME == "SwapLocations":
+    anonymizer = MegaSwap(dataset, R_t=TEMPORAL_THLD, R_s=SPATIAL_THLD)  # MegaSwap(dataset, R_t=60, R_s=0.5)
+else:
+    raise Exception(f"Method [{METHOD_NAME}] is not available. Options: SwapMob, Microaggregation and SwapLocations")
 
-# IdeaFeliz2021_distance = IdeaFeliz2021_Distance(dataset)
-#
-# swap_locations = SwapLocations(dataset, k=10, R_t=60, R_s=1, distance=IdeaFeliz2021_distance)
-# swap_locations.run()
-# anon_dataset = swap_locations.get_anonymized_dataset()
+### Anonymization process ###
+ini_t = time.time()
+anonymizer.run()
+elapsed_time = time.time() - ini_t
+logging.info(f"Elapsed time = {elapsed_time} seconds")
 
-megaSwap = MegaSwap(dataset, R_t=60, R_s=0.5)
-megaSwap.run()
-anon_dataset = megaSwap.get_anonymized_dataset()
-
-'''
-Idea: reconstruir la trayectoria empezando por el principio, añadiendo la siguiente localización más cercana en el
-espacio, pero manteniendo el tiempo de la q era 2ª originalmente y seguir
-'''
-# for t in anon_dataset:
-#     new_locations = []
-#     l = t.locations[0]
-#     new_locations.append(l)
-#     min_d = 9999999
-#     min_l = None
-#     for l2 in [l3 for l3 in t.locations if l3 != l]:
-#         d = l.spatial_distance(l2)
-#         if d < min_d:
-#             min_d = d
-#             min_l = l2
-#
-#     new_l = TimestampedLocation(l.timestamp, min_l.x, min_l.y)
-
-
-
+anon_dataset = anonymizer.get_anonymized_dataset()
 anon_dataset.set_description("DATASET ANONYMIZED")
 
-anon_dataset.export_to_scikit(filename="../out/cabs_scikit_anonymized.csv")
+############################## Export anonymized dataset ##############################
+anon_dataset.export_to_scikit(filename=ANONYMIZED_PATH)
 
-# print(anon_dataset)
-
+############################## Statistics ##############################
 stats = Stats(dataset, anon_dataset)
 print(f'Removed trajectories: {round(stats.get_perc_of_removed_trajectories() * 100, 2)}%')
 print(f'Removed locations: {round(stats.get_perc_of_removed_locations() * 100, 2)}%')
-# rsme = stats.get_rsme(Martinez2021_distance)
-# print(rsme)

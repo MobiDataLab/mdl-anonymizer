@@ -12,7 +12,6 @@ from skmob import TrajDataFrame
 
 from mob_data_anonymizer.entities.Trajectory import Trajectory
 from mob_data_anonymizer.entities.TimestampedLocation import TimestampedLocation
-from examples.anonymize.src.entities.CabLocation import CabLocation # TODO: Check this! "from examples.anonymize.src.entities.CabLocation" depends on examples!
 
 
 class Dataset(ABC):
@@ -42,7 +41,7 @@ class Dataset(ABC):
                 element = datetime.datetime.strptime(row[datetime_key], datetime_format)
                 timestamp = datetime.datetime.timestamp(element)
 
-                location = CabLocation(timestamp, row[latitude_key], row[longitude_key])
+                location = TimestampedLocation(timestamp, row[latitude_key], row[longitude_key])
                 T.add_location(location)
             else:
                 if len(T.locations) >= min_locations:
@@ -58,7 +57,7 @@ class Dataset(ABC):
                 # Convert datetime to timestamp
                 element = datetime.datetime.strptime(row[datetime_key], datetime_format)
                 timestamp = datetime.datetime.timestamp(element)
-                location = CabLocation(timestamp, row[latitude_key], row[longitude_key])
+                location = TimestampedLocation(timestamp, row[latitude_key], row[longitude_key])
                 T.add_location(location)
         else:
             if len(T.locations) >= min_locations:
@@ -124,7 +123,7 @@ class Dataset(ABC):
 
             # Add new location
             timestamp = row['datetime'].timestamp()
-            location = CabLocation(timestamp, row['lat'], row['lng'])
+            location = TimestampedLocation(timestamp, row['lat'], row['lng'])
             T.add_location(location)
 
         # Add the last trajectory
