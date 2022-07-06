@@ -1,10 +1,13 @@
 {
   "input_1": "examples/outputs/filtered_dataset_CLI.csv",
-  "input_2": "examples/outputs/anonymized_Microaggregation_CLI.csv",
+  "input_2": "examples/outputs/anonymized_SwapMob_CLI.csv",
   "mode": "average",
   "methods": [
     "visits_per_location",
-    "distance_straight_line"
+    "distance_straight_line",
+    "uncorrelated_location_entropy",
+    "random_location_entropy",
+    "mean_square_displacement"
   ],
   "output_folder": "examples/outputs/"
 }

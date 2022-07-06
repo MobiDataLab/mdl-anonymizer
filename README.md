@@ -111,7 +111,7 @@ Available parameters are:
   * mean_square_displacement
 * mode (string): Type of output. As some measures output is a DataFrame a strategy has to be defined. Must be one of the following:
   * average: computes the average of each DataFrame (from original and anonymized dataset) and send it to stdout
-  * export: join and export both output DataFrame (from the original and anonymized datasets) to a single CSV file
+  * report: join and export both output DataFrame (from the original and anonymized datasets) to a single CSV file
 * input_1 (string): Filepath of the first dataset 
 * input_2 (string): Filepath of the second dataset 
 * output_folder (string, optional): Folder to save the generated output files

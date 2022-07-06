@@ -78,8 +78,7 @@ class Measures:
         o = mean_square_displacement(self.original_tdf, show_progress=False)
         a = mean_square_displacement(self.anonymized_tdf, show_progress=False)
 
-        print("Mean square displacement")
-        print(f"Original: {o} - Anonymized: {a}")
+        print(f"Mean square displacement: Original={o} - Anonymized={a}")
 
     def cmp_random_location_entropy(self, output='mean'):
         '''
@@ -87,7 +86,7 @@ class Measures:
 
         Parameters
         ----------
-        output : {'mean', 'report'}
+        output : {'average', 'report'}
         Type of output
 
         '''
@@ -96,13 +95,11 @@ class Measures:
 
         dt_o = random_location_entropy(self.original_tdf, show_progress=False)
         dt_a = random_location_entropy(self.anonymized_tdf, show_progress=False)
-        print(dt_o.head())
-        if output == 'mean':
+
+        if output == 'average':
             o = dt_o['random_location_entropy'].mean()
             a = dt_a['random_location_entropy'].mean()
-
-            print("Random location entropy (mean)")
-            print(f"Original: {o} - Anonymized: {a}")
+            print(f"Average random location entropy: Original={o} - Anonymized={a}")
 
         if output == 'report':
             report = pandas.merge(dt_o, dt_a, on=["lat", "lng"])
@@ -117,7 +114,7 @@ class Measures:
 
         Parameters
         ----------
-        output : {'mean', 'report'}
+        output : {'average', 'report'}
         Type of output
 
         '''
@@ -126,13 +123,11 @@ class Measures:
 
         dt_o = uncorrelated_location_entropy(self.original_tdf, show_progress=False)
         dt_a = uncorrelated_location_entropy(self.anonymized_tdf, show_progress=False)
-        print(dt_o.head())
-        if output == 'mean':
+
+        if output == 'average':
             o = dt_o['uncorrelated_location_entropy'].mean()
             a = dt_a['uncorrelated_location_entropy'].mean()
-
-            print("Uncorrelated location entropy (mean)")
-            print(f"Original: {o} - Anonymized: {a}")
+            print(f"Average uncorrelated location entropy: Original={o} - Anonymized={a}")
 
         if output == 'report':
             report = pandas.merge(dt_o, dt_a, on=["lat", "lng"])
@@ -146,7 +141,7 @@ class Measures:
 
         Parameters
         ----------
-        output : {'mean', 'report'}
+        output : {'average', 'report'}
         Type of output
 
         '''
@@ -155,13 +150,11 @@ class Measures:
 
         dt_o = visits_per_location(self.original_tdf)
         dt_a = visits_per_location(self.anonymized_tdf)
-        print(dt_o.head())
-        if output == 'mean':
+
+        if output == 'average':
             o = dt_o['n_visits'].mean()
             a = dt_a['n_visits'].mean()
-
-            print("Uncorrelated location entropy (mean)")
-            print(f"Original: {o} - Anonymized: {a}")
+            print(f"Average visits per location: Original={o} - Anonymized={a}")
 
         if output == 'report':
             report = pandas.merge(dt_o, dt_a, on=["lat", "lng"])
@@ -170,29 +163,26 @@ class Measures:
             report.to_csv(f"{self.output_folder}visits_per_location.csv", index=False)
 
     ### INDIVIDUAL
-
     def cmp_distance_straight_line(self, output='mean'):
         '''
         ( See https://scikit-mobility.github.io/scikit-mobility/reference/individual_measures.html#skmob.measures.individual.distance_straight_line)
 
         Parameters
         ----------
-        output : {'mean', 'report'}
+        output : {'average', 'report'}
         Type of output
 
         '''
 
         logging.info("Computing individual distance straight line")
 
-        dt_o = distance_straight_line(self.original_tdf, show_progress=False)
-        dt_a = distance_straight_line(self.anonymized_tdf, show_progress=False)
-        print(dt_o.head())
-        if output == 'mean':
+        dt_o = distance_straight_line(self.pre_original_tdf, show_progress=False)
+        dt_a = distance_straight_line(self.pre_anonymized_tdf, show_progress=False)
+
+        if output == 'average':
             o = dt_o['distance_straight_line'].mean()
             a = dt_a['distance_straight_line'].mean()
-
-            print("Distance straight line (mean)")
-            print(f"Original: {o} km - Anonymized: {a} km")
+            print(f"Average distance straight line: Original={o} - Anonymized={a}")
 
         if output == 'report':
             report = pandas.merge(dt_o, dt_a, on="uid")
