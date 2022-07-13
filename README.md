@@ -35,8 +35,8 @@ conda develop mob_data_anonymizer
 
 Tested to work with the following software versions:
 * Python: 3.8 and 3.10
-* Conda: 4.11.0
-* Operating System: Ubuntu 20.04
+* Conda: 4.11.0 and 4.12.0
+* Operating System: Ubuntu 20.04 and Windows 10
 
 ## Usage
 This module can be employed as a command line interface (CLI) or by Python code.
