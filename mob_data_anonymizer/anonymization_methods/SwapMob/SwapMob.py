@@ -382,7 +382,7 @@ class SwapMob:
                 values[field] = DEFAULT_VALUES[field]
 
         dataset = Dataset()
-        dataset.load_from_scikit(data.get("input"), min_locations=5, datetime_key="timestamp")
+        dataset.load_from_scikit(data.get("input_file"), min_locations=5, datetime_key="timestamp")
         dataset.filter_by_speed()
 
         min_n_swaps = data.get('min_n_swaps', 1)
