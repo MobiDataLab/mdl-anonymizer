@@ -5,11 +5,11 @@ import os
 from mob_data_anonymizer import PARAMETERS_FILE_DOESNT_EXIST, SUCCESS, PARAMETERS_FILE_NOT_JSON, PARAMETERS_NOT_VALID, \
     WRONG_METHOD, INPUT_FILE_NOT_EXIST, OUTPUT_FOLDER_NOT_EXIST, DEFAULT_OUTPUT_FILE, DEFAULT_SAVE_FILTERED_DATASET, \
     DEFAULT_FILTERED_FILE
-from mob_data_anonymizer.anonymization_methods.MegaSwap.MegaDynamicSwap import MegaDynamicSwap
+from mob_data_anonymizer.anonymization_methods.SwapLocations.SwapLocations import SwapLocations
 from mob_data_anonymizer.anonymization_methods.Microaggregation.Microaggregation import Microaggregation
 from mob_data_anonymizer.anonymization_methods.SwapMob.SwapMob import SwapMob
 
-VALID_METHODS = ['MegaSwap', 'SwapMob', 'Microaggregation']
+VALID_METHODS = ['SwapLocations', 'SwapMob', 'Microaggregation']
 
 
 def check_parameters_file(file_path: str) -> int:
@@ -24,7 +24,7 @@ def check_parameters_file(file_path: str) -> int:
 
     try:
         # Check if input file exists
-        if not os.path.exists(data['input']):
+        if not os.path.exists(data['input_file']):
             return INPUT_FILE_NOT_EXIST
 
         # Check if output folder exist
@@ -45,8 +45,8 @@ def anonymizer(file_path: str) -> int:
         data = json.load(param_file)
 
     method = data['method']
-    if method == 'MegaSwap':
-        anonymizer_method = MegaDynamicSwap.get_instance(data)
+    if method == 'SwapLocations':
+        anonymizer_method = SwapLocations.get_instance(data)
     elif method == 'SwapMob':
         anonymizer_method = SwapMob.get_instance(data)
     elif method == 'Microaggregation':
@@ -56,9 +56,9 @@ def anonymizer(file_path: str) -> int:
     if output_folder != '':
         output_folder += '/'
 
-    save_filtered_dataset = data.get('save_filtered_dataset', DEFAULT_SAVE_FILTERED_DATASET)
+    save_filtered_dataset = data.get('save_preprocessed_dataset', DEFAULT_SAVE_FILTERED_DATASET)
     if save_filtered_dataset:
-        filtered_file = data.get('filtered_file', DEFAULT_FILTERED_FILE)
+        filtered_file = data.get('preprocessed_file', DEFAULT_FILTERED_FILE)
         anonymizer_method.dataset.export_to_scikit(f"{output_folder}{filtered_file}")
 
     anonymizer_method.run()

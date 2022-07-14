@@ -10,14 +10,18 @@ from mob_data_anonymizer.utils import utils
 
 DEFAULT_VALUES = {
     "k": 3,
-    "Max_r_s": 500,
-    "Min_r_s": 120,
-    "Max_r_t": 100,
-    "Min_r_t": 60
+    "max_r_s": 500,
+    "min_r_s": 120,
+    "max_r_t": 100,
+    "min_r_t": 60
 }
 
-class MegaDynamicSwap:
-    def __init__(self, dataset: Dataset, k, max_R_s, max_R_t, min_R_s, min_R_t, step_s=None, step_t=None):
+
+class SwapLocations:
+    def __init__(self, dataset: Dataset, k=DEFAULT_VALUES['k'],
+                 max_r_s=DEFAULT_VALUES['max_r_s'], max_r_t=DEFAULT_VALUES['max_r_t'],
+                 min_r_s=DEFAULT_VALUES['min_r_s'], min_r_t=DEFAULT_VALUES['min_r_t'],
+                 step_s=None, step_t=None):
         """
         Parameters
         ----------
@@ -25,13 +29,13 @@ class MegaDynamicSwap:
             Dataset to anonymize.
         k : int
             Minimum number of locations of a swapping cluster (default is 3)
-        max_R_s: int
+        max_r_s: int
             Maximum spatial radius of the swapping cluster (in meters)
-        max_R_t: int
+        max_r_t: int
             Maximum temporal threshold of the swapping cluster (in seconds)
-        min_R_s: int
+        min_r_s: int
             Minimum spatial radius of the swapping cluster (in meters)
-        min_R_t: int
+        min_r_t: int
             Minimum temporal threshold of the swapping cluster (in seconds)
         step_s: int
             In meters
@@ -42,23 +46,23 @@ class MegaDynamicSwap:
         self.dataset = dataset
         self.anonymized_dataset = dataset.__class__()
         self.k = k
-        self.min_R_s = min_R_s
-        self.max_R_s = max_R_s
-        self.min_R_t = min_R_t
-        self.max_R_t = max_R_t
+        self.min_r_s = min_r_s
+        self.max_r_s = max_r_s
+        self.min_r_t = min_r_t
+        self.max_r_t = max_r_t
         if not step_s:
-            self.step_s = int(abs(max_R_s - min_R_s) / 5)
+            self.step_s = int(abs(max_r_s - min_r_s) / 5)
 
         if not step_t:
-            self.step_t = int(abs(max_R_t - min_R_t) / 5)
+            self.step_t = int(abs(max_r_t - min_r_t) / 5)
 
     def __build_cluster(self, remaining_locations, chosen_location):
 
         spatial_distances_computed = {}
         temporal_distances_computed = {}
 
-        for R_t in utils.inclusive_range(self.min_R_t, self.max_R_t, self.step_t if self.step_t > 0 else None):
-            for R_s in utils.inclusive_range(self.min_R_s, self.max_R_s, self.step_s if self.step_s > 0 else None):
+        for R_t in utils.inclusive_range(self.min_r_t, self.max_r_t, self.step_t if self.step_t > 0 else None):
+            for R_s in utils.inclusive_range(self.min_r_s, self.max_r_s, self.step_s if self.step_s > 0 else None):
                 U_prima = []
 
                 for i, l in enumerate(remaining_locations):
@@ -154,7 +158,7 @@ class MegaDynamicSwap:
     @staticmethod
     def get_instance(data):
 
-        required_fields = ["k", "Max_r_s", "Min_r_s", "Max_r_t", "Min_r_t"]
+        required_fields = ["k", "max_r_s", "min_r_s", "max_r_t", "min_r_t"]
         values = {}
 
         for field in required_fields:
@@ -164,12 +168,12 @@ class MegaDynamicSwap:
                 values[field] = DEFAULT_VALUES[field]
 
         dataset = Dataset()
-        dataset.load_from_scikit(data.get("input"), min_locations=5, datetime_key="timestamp")
+        dataset.load_from_scikit(data.get("input_file"), min_locations=5, datetime_key="timestamp")
         dataset.filter_by_speed()
 
         step_s = data.get('step_s', None)
         step_t = data.get('step_t', None)
 
-        return MegaDynamicSwap(dataset,
-                               values['k'], values['Max_r_s'], values['Max_r_t'], values['Min_r_s'], values['Min_r_t'],
+        return SwapLocations(dataset,
+                               values['k'], values['max_r_s'], values['max_r_t'], values['min_r_s'], values['min_r_t'],
                                step_s=step_s, step_t=step_t)

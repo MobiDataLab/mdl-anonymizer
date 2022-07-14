@@ -1,10 +1,10 @@
 {
   "method": "SwapMob",
-  "input": "examples/data/cabs_dataset_0700_0715.csv",
+  "input_file": "examples/data/cabs_dataset_0700_0715.csv",
   "output_folder": "examples/outputs",
   "main_output_file": "anonymized_SwapMob_CLI.csv",
-  "save_filtered_dataset": true,
-  "filtered_file": "filtered_dataset_CLI.csv",
+  "save_preprocessed_dataset": true,
+  "preprocessed_file": "preprocessed_dataset_CLI.csv",
   "spatial_thold": 0.1,
   "temporal_thold": 60
 }

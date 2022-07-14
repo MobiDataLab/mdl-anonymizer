@@ -1,8 +1,8 @@
 import logging
 
-from mob_data_anonymizer.anonymization_methods.MegaSwap.MegaDynamicSwap import MegaDynamicSwap
-from mob_data_anonymizer.anonymization_methods.MegaSwap.MegaSwap import MegaSwap
-from mob_data_anonymizer.anonymization_methods.MegaSwap.MegaSwapOptimized import MegaSwapOptimized
+from mob_data_anonymizer.anonymization_methods.SwapLocations.SwapLocations import SwapLocations
+from mob_data_anonymizer.anonymization_methods.SwapLocations.MegaSwap import MegaSwap
+from mob_data_anonymizer.anonymization_methods.SwapLocations.MegaSwapOptimized import MegaSwapOptimized
 from mob_data_anonymizer.entities.Dataset import Dataset
 from mob_data_anonymizer.utils.Stats import Stats
 
@@ -33,11 +33,11 @@ max_R_t = 120
 min_R_s = 100
 min_R_t = 60
 
-megaSwap = MegaDynamicSwap(dataset, k=k, max_R_s=max_R_s, max_R_t=max_R_t, min_R_s=min_R_s, min_R_t=min_R_t)
+megaSwap = SwapLocations(dataset, k=k, max_R_s=max_R_s, max_R_t=max_R_t, min_R_s=min_R_s, min_R_t=min_R_t)
 megaSwap.run()
 anon_dataset = megaSwap.get_anonymized_dataset()
 
-anonymized_filename = f"{out_folder}{filename_wo_ext}_anonymized_megadynamicswap_{k}_{max_R_s}_{max_R_t}_{min_R_s}_{min_R_t}.csv"
+anonymized_filename = f"{out_folder}{filename_wo_ext}_anonymized_SwapLocations_{k}_{max_R_s}_{max_R_t}_{min_R_s}_{min_R_t}.csv"
 anon_dataset.set_description("DATASET ANONYMIZED")
 anon_dataset.export_to_scikit(filename=anonymized_filename)
 

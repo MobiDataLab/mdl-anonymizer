@@ -1,9 +1,9 @@
 import logging
 
 from mob_data_anonymizer.anonymization_methods.Generalization.Simple import Simple
-from mob_data_anonymizer.anonymization_methods.MegaSwap.MegaDynamicSwap import MegaDynamicSwap
-from mob_data_anonymizer.anonymization_methods.MegaSwap.MegaSwap import MegaSwap
-from mob_data_anonymizer.anonymization_methods.MegaSwap.MegaSwapOptimized import MegaSwapOptimized
+from mob_data_anonymizer.anonymization_methods.SwapLocations.SwapLocations import SwapLocations
+from mob_data_anonymizer.anonymization_methods.SwapLocations.MegaSwap import MegaSwap
+from mob_data_anonymizer.anonymization_methods.SwapLocations.MegaSwapOptimized import MegaSwapOptimized
 from mob_data_anonymizer.entities.Dataset import Dataset
 from mob_data_anonymizer.utils.Stats import Stats
 

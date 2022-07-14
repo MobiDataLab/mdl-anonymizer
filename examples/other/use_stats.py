@@ -9,6 +9,6 @@ original_dataset = Dataset()
 original_dataset.load_from_scikit("data/cabs_dataset_0700_0715_filtered_n5.csv", min_locations=1)
 
 anon_dataset = Dataset()
-anon_dataset.load_from_scikit("data/cabs_dataset_0700_0715_anonymized_megadynamicswap_3_500_120_100_60.csv",  min_locations=1)
+anon_dataset.load_from_scikit("data/cabs_dataset_0700_0715_anonymized_SwapLocations_3_500_120_100_60.csv",  min_locations=1)
 
 stats = Stats(original_dataset, anon_dataset)

@@ -14,7 +14,7 @@ VALID_METHODS = ['mean_square_displacement',
                  'visits_per_location',
                  'distance_straight_line']
 
-VALID_MODES = ['average', 'report']
+VALID_MODES = ['average', 'export']
 
 
 def check_parameters_file(file_path: str) -> int:

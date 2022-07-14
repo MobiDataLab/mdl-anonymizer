@@ -4,9 +4,10 @@ import time
 import os
 import sys
 
+from mob_data_anonymizer.anonymization_methods.SwapLocations.SwapLocations import SwapLocations
+
 sys.path.append("../../../")
 
-from mob_data_anonymizer.anonymization_methods.MegaSwap.MegaSwap import MegaSwap
 from mob_data_anonymizer.anonymization_methods.SwapMob.SwapMob import SwapMob
 from mob_data_anonymizer.anonymization_methods.Microaggregation.Microaggregation import Microaggregation
 from mob_data_anonymizer.distances.trajectory.Martinez2021.Distance import Distance
@@ -21,9 +22,9 @@ logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', level=logg
 
 ############################## Settings ##############################
 ### Anonymization method selection and settings ###
-METHOD_NAME = "SwapMob"  # Options: ["SwapMob", "Microaggregation", "SwapLocations"]
-TEMPORAL_THLD = 30  # Only for SwapMob and SwapLocations
-SPATIAL_THLD = 0.2  # Only for SwapMob and SwapLocations
+METHOD_NAME = "SwapLocations"  # Options: ["SwapMob", "Microaggregation", "SwapLocations"]
+TEMPORAL_THLD = 30  # Only for SwapMob
+SPATIAL_THLD = 0.2  # Only for SwapMob
 MIN_N_SWAPS = 1  # Only for SwapMob
 SEED = 42  # Only for SwapMob
 K = 3  # Only for Microaggregation
@@ -34,14 +35,14 @@ DATA_FOLDER = os.path.join("..", "..", "data")
 DATASET_NAME = "cabs_dataset_20080608_0700_0715"
 DATASET_PATH = os.path.join(DATA_FOLDER, DATASET_NAME + ".csv")
 OUTPUT_FOLDER = os.path.join("..", "..", "outputs")
-FILTERED_PATH = os.path.join(OUTPUT_FOLDER, f"filtered_dataset_byCode.csv")
+PREPROCESSED_PATH = os.path.join(OUTPUT_FOLDER, f"preprocessed_dataset_byCode.csv")
 ANONYMIZED_PATH = os.path.join(OUTPUT_FOLDER, f"anonymized_{METHOD_NAME}_byCode.csv")
 
 ############################## Load dataset and export filtered ##############################
 dataset = Dataset()
 dataset.load_from_scikit(DATASET_PATH, min_locations=10, datetime_key="timestamp")
 dataset.filter_by_speed()
-dataset.export_to_scikit(filename=FILTERED_PATH)
+dataset.export_to_scikit(filename=PREPROCESSED_PATH)
 
 ############################## Anonymization ##############################
 #### Method initialization ###
@@ -55,7 +56,7 @@ elif METHOD_NAME == "Microaggregation":
     anonymizer = Microaggregation(dataset, k=K, clustering_method=clustering_method,
                                   distance=Martinez2021_distance, aggregation_method=aggregation_method)
 elif METHOD_NAME == "SwapLocations":
-    anonymizer = MegaSwap(dataset, R_t=TEMPORAL_THLD, R_s=SPATIAL_THLD)  # MegaSwap(dataset, R_t=60, R_s=0.5)
+    anonymizer = SwapLocations(dataset)
 else:
     raise Exception(f"Method [{METHOD_NAME}] is not available. Options: SwapMob, Microaggregation and SwapLocations")
 

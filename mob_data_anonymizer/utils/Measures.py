@@ -80,7 +80,7 @@ class Measures:
 
         print(f"Mean square displacement: Original={o} - Anonymized={a}")
 
-    def cmp_random_location_entropy(self, output='mean'):
+    def cmp_random_location_entropy(self, output='average'):
         '''
         ( See https://scikit-mobility.github.io/scikit-mobility/reference/collective_measures.html#skmob.measures.collective.random_location_entropy)
 
@@ -101,14 +101,14 @@ class Measures:
             a = dt_a['random_location_entropy'].mean()
             print(f"Average random location entropy: Original={o} - Anonymized={a}")
 
-        if output == 'report':
+        if output == 'export':
             report = pandas.merge(dt_o, dt_a, on=["lat", "lng"])
             report.rename(columns={"random_location_entropy_x": "orig", "random_location_entropy_y": "anon"},
                           inplace=True)
             report.to_csv(f"{self.output_folder}Random_location_entropy.csv", index=False)
 
 
-    def cmp_uncorrelated_location_entropy(self, output='mean'):
+    def cmp_uncorrelated_location_entropy(self, output='average'):
         '''
         ( See https://scikit-mobility.github.io/scikit-mobility/reference/collective_measures.html#skmob.measures.collective.uncorrelated_location_entropy)
 
@@ -129,13 +129,13 @@ class Measures:
             a = dt_a['uncorrelated_location_entropy'].mean()
             print(f"Average uncorrelated location entropy: Original={o} - Anonymized={a}")
 
-        if output == 'report':
+        if output == 'export':
             report = pandas.merge(dt_o, dt_a, on=["lat", "lng"])
             report.rename(columns={"uncorrelated_location_entropy_x": "orig", "uncorrelated_location_entropy_y": "anon"},
                           inplace=True)
             report.to_csv(f"{self.output_folder}uncorrelated_location_entropy.csv", index=False)
 
-    def cmp_visits_per_location(self, output='mean'):
+    def cmp_visits_per_location(self, output='average'):
         '''
         ( See https://scikit-mobility.github.io/scikit-mobility/reference/collective_measures.html#skmob.measures.collective.visits_per_location)
 
@@ -156,14 +156,14 @@ class Measures:
             a = dt_a['n_visits'].mean()
             print(f"Average visits per location: Original={o} - Anonymized={a}")
 
-        if output == 'report':
+        if output == 'export':
             report = pandas.merge(dt_o, dt_a, on=["lat", "lng"])
             report.rename(columns={"n_visits_x": "orig", "n_visits_y": "anon"},
                           inplace=True)
             report.to_csv(f"{self.output_folder}visits_per_location.csv", index=False)
 
     ### INDIVIDUAL
-    def cmp_distance_straight_line(self, output='mean'):
+    def cmp_distance_straight_line(self, output='average'):
         '''
         ( See https://scikit-mobility.github.io/scikit-mobility/reference/individual_measures.html#skmob.measures.individual.distance_straight_line)
 
@@ -184,7 +184,7 @@ class Measures:
             a = dt_a['distance_straight_line'].mean()
             print(f"Average distance straight line: Original={o} - Anonymized={a}")
 
-        if output == 'report':
+        if output == 'export':
             report = pandas.merge(dt_o, dt_a, on="uid")
             report.rename(columns={"distance_straight_line_x": "orig", "distance_straight_line_y": "anon"},
                           inplace=True)
