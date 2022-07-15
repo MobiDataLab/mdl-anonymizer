@@ -5,5 +5,6 @@
   "main_output_file": "anonymized_Microaggregation_CLI.csv",
   "save_preprocessed_dataset": true,
   "preprocessed_file": "preprocessed_dataset_CLI.csv",
-  "k": 3
+  "k": 3,
+  "lambda": 0
 }
