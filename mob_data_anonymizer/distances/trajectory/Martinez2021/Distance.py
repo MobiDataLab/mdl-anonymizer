@@ -14,7 +14,7 @@ class Distance(DistanceInterface):
         self.dataset = dataset
         self.spatial_distance = sp_type
         self.distance_matrix = defaultdict(dict)
-        if not landa:
+        if landa is None:
             logging.info("Computing weight parameter")
             self.landa = self.__set_weight_parameter()
             logging.info(f"\tlanda = {self.landa}")
