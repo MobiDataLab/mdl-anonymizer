@@ -1,6 +1,6 @@
 {
-  "input_1": "examples/outputs/filtered_dataset_CLI.csv",
-  "input_2": "examples/outputs/anonymized_SwapMob_CLI.csv",
+  "original_dataset": "examples/outputs/preprocessed_dataset_CLI.csv",
+  "anonymized_dataset": "examples/outputs/anonymized_SwapLocations_CLI.csv",
   "mode": "average",
   "methods": [
     "visits_per_location",

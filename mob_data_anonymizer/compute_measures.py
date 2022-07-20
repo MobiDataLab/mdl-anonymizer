@@ -3,6 +3,9 @@ import json
 import os
 import skmob
 import typer
+import warnings
+
+from shapely.errors import ShapelyDeprecationWarning
 
 from mob_data_anonymizer import PARAMETERS_FILE_DOESNT_EXIST, PARAMETERS_FILE_NOT_JSON, INPUT_FILE_NOT_EXIST, \
     OUTPUT_FOLDER_NOT_EXIST, PARAMETERS_NOT_VALID, SUCCESS, WRONG_METHOD, WRONG_MODE
@@ -15,6 +18,11 @@ VALID_METHODS = ['mean_square_displacement',
                  'distance_straight_line']
 
 VALID_MODES = ['average', 'export']
+
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+warnings.filterwarnings("ignore", category=FutureWarning)
+warnings.filterwarnings("ignore", category=UserWarning)
+warnings.filterwarnings("ignore", category=ShapelyDeprecationWarning)
 
 
 def check_parameters_file(file_path: str) -> int:
@@ -29,10 +37,10 @@ def check_parameters_file(file_path: str) -> int:
 
     try:
         # Check if input files exist
-        if not os.path.exists(data['input_1']):
+        if not os.path.exists(data['original_dataset']):
             return INPUT_FILE_NOT_EXIST
 
-        if not os.path.exists(data['input_2']):
+        if not os.path.exists(data['anonymized_dataset']):
             return INPUT_FILE_NOT_EXIST
 
         # Check if output folder exist
@@ -57,15 +65,15 @@ def compute_measures(file_path: str) -> int:
     with open(file_path) as param_file:
         data = json.load(param_file)
 
-    typer.secho(f'Loading first file')
-    tdf_1 = skmob.TrajDataFrame.from_file(data['input_1'],
+    typer.secho(f'Loading original dataset')
+    tdf_1 = skmob.TrajDataFrame.from_file(data['original_dataset'],
                                           latitude='lat',
                                           longitude='lon',
                                           user_id='user_id',
                                           datetime='timestamp')
 
-    typer.secho(f'Loading second file')
-    tdf_2 = skmob.TrajDataFrame.from_file(data['input_2'],
+    typer.secho(f'Loading anonymized dataset')
+    tdf_2 = skmob.TrajDataFrame.from_file(data['anonymized_dataset'],
                                           latitude='lat',
                                           longitude='lon',
                                           user_id='user_id',
