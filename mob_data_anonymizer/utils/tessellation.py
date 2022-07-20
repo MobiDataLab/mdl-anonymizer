@@ -25,12 +25,13 @@ def _get_bounding_box(tdf):
     return polygon
 
 
-def tessellate(tdf: TrajDataFrame, tiles_shape, meters=250, points=None) -> TrajDataFrame:
+def tessellate(tdf: TrajDataFrame, tiles_shape, meters=250, bounding_box=None) -> TrajDataFrame:
     # tdf = skmob.TrajDataFrame.from_file('dataset/actual_dataset_loaded.csv', latitude='lat', longitude='lon',
     #                                    datetime='timestamp', user_id='user_id')
 
     # Compute bounding_box
-    bounding_box = _get_bounding_box(tdf)
+    if bounding_box is None:
+        bounding_box = _get_bounding_box(tdf)
 
     # Build tiles
     tessellation = tilers.tiler.get(tiles_shape, base_shape=bounding_box, meters=meters)

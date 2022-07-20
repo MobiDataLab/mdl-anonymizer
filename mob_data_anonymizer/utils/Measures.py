@@ -15,7 +15,8 @@ from mob_data_anonymizer.utils.tessellation import tessellate
 
 
 class Measures:
-    def __init__(self, original_tdf: TrajDataFrame, anonymized_tdf: TrajDataFrame, sort=True, tesselation_meters=500, output_folder=""):
+    def __init__(self, original_tdf: TrajDataFrame, anonymized_tdf: TrajDataFrame, sort=True, tesselation_meters=500,
+                 output_folder=""):
 
         self.pre_original_tdf = original_tdf
         self.pre_anonymized_tdf = anonymized_tdf
@@ -29,25 +30,16 @@ class Measures:
             self.pre_anonymized_tdf.sort_values("datetime", inplace=True)
 
         # Tessellation
+        bounding_box = self.__get_bounding_box(self.pre_original_tdf)
         logging.info("Tessellating original dataset")
-        self.original_tdf = tessellate(self.pre_original_tdf, "h3_tessellation")
+        self.original_tdf = tessellate(self.pre_original_tdf, "h3_tessellation", bounding_box=bounding_box)
         logging.info("Tessellating anonymized dataset")
-        self.anonymized_tdf = tessellate(self.pre_anonymized_tdf, "h3_tessellation")
-        # bounding_box = self._get_bounding_box(self.pre_original_tdf)
-        # tessellation = tilers.tiler.get("squared", base_shape=bounding_box, meters=tesselation_meters)
-        #
-        # mOrig = self.pre_original_tdf.mapping(tessellation)
-        # mAnon = self.pre_anonymized_tdf.mapping(tessellation)
-
-
-
+        self.anonymized_tdf = tessellate(self.pre_anonymized_tdf, "h3_tessellation", bounding_box=bounding_box)
         self.output_folder = output_folder
 
         self.results = {}
 
-
-
-    def __get_bounding_box(tdf):
+    def __get_bounding_box(self, tdf):
         # Build bounding box for tesselation
         # Get max, min lat
         max_lat = tdf['lat'].max()
@@ -107,7 +99,6 @@ class Measures:
                           inplace=True)
             report.to_csv(f"{self.output_folder}Random_location_entropy.csv", index=False)
 
-
     def cmp_uncorrelated_location_entropy(self, output='average'):
         '''
         ( See https://scikit-mobility.github.io/scikit-mobility/reference/collective_measures.html#skmob.measures.collective.uncorrelated_location_entropy)
@@ -131,8 +122,9 @@ class Measures:
 
         if output == 'export':
             report = pandas.merge(dt_o, dt_a, on=["lat", "lng"])
-            report.rename(columns={"uncorrelated_location_entropy_x": "orig", "uncorrelated_location_entropy_y": "anon"},
-                          inplace=True)
+            report.rename(
+                columns={"uncorrelated_location_entropy_x": "orig", "uncorrelated_location_entropy_y": "anon"},
+                inplace=True)
             report.to_csv(f"{self.output_folder}uncorrelated_location_entropy.csv", index=False)
 
     def cmp_visits_per_location(self, output='average'):
