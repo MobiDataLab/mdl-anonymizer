@@ -10,12 +10,12 @@ Developed by [CRISES research group](https://crises-deim.urv.cat/web/) from [URV
   * [CLI](#cli)
     * [Anonymization methods](#anonymization-methods)
     * [Utility metrics](#utility-metrics)
-  * [By code](#by-code)
+  * [As a library](#as-a-library)
 
 ## Install
 To install the package, run the commands below in a terminal located at the root of this repository.
 This will create a <a href="https://docs.conda.io/projects/conda/en/latest/">Conda</a> environment, install the dependencies and setup the module.
-Setup is only required for importing the module into Python code, not for CLI usage (see [Usage section](#usage)).
+Setup is only required when using the module as a library in Python code, not for CLI usage (see [Usage section](#usage)).
 ```bash
 # Create and activate environment
 conda create --name mda_env -y
@@ -39,7 +39,7 @@ Tested to work with the following software versions:
 * Operating System: Ubuntu 20.04 and Windows 10
 
 ## Usage
-This module can be employed as a command line interface (CLI) or by Python code.
+This module can be used as an independent command line interface (CLI) tool or as a Python library.
 Following subsections illustrate their usage.
 
 ### CLI
@@ -121,8 +121,8 @@ Example using the given [configuration file](examples/configs/config_metrics.jso
 python -m mob_data_anonymizer measures -f examples/configs/config_metrics.json
 ```
 
-### By code
-Once the module is installed, its usage only requires from an import:
+### As a library
+Once the module is installed, its usage only requires an import:
 ```python
 import mob_data_anonymizer
 ```
