@@ -8,8 +8,9 @@ from mob_data_anonymizer import PARAMETERS_FILE_DOESNT_EXIST, SUCCESS, PARAMETER
 from mob_data_anonymizer.anonymization_methods.SwapLocations.SwapLocations import SwapLocations
 from mob_data_anonymizer.anonymization_methods.Microaggregation.Microaggregation import Microaggregation
 from mob_data_anonymizer.anonymization_methods.SwapMob.SwapMob import SwapMob
+from mob_data_anonymizer.anonymization_methods.Generalization.QuadTreeHeatMap import QuadTreeHeatMap
 
-VALID_METHODS = ['SwapLocations', 'SwapMob', 'Microaggregation']
+VALID_METHODS = ['SwapLocations', 'SwapMob', 'Microaggregation', 'QuadTreeHeatMap']
 
 
 def check_parameters_file(file_path: str) -> int:
@@ -51,6 +52,8 @@ def anonymizer(file_path: str) -> int:
         anonymizer_method = SwapMob.get_instance(data)
     elif method == 'Microaggregation':
         anonymizer_method = Microaggregation.get_instance(data)
+    elif method == 'QuadTreeHeatMap':
+        anonymizer_method = QuadTreeHeatMap.get_instance(data)
 
     output_folder = data.get('output_folder', '')
     if output_folder != '':
@@ -66,4 +69,8 @@ def anonymizer(file_path: str) -> int:
     output_dataset = anonymizer_method.get_anonymized_dataset()
 
     output_file = data.get('main_output_file', DEFAULT_OUTPUT_FILE)
-    output_dataset.export_to_scikit(f"{output_folder}{output_file}")
+
+    if method == 'QuadTreeHeatMap':
+        output_dataset.to_file(f"{output_folder}{output_file}")
+    else:
+        output_dataset.export_to_scikit(f"{output_folder}{output_file}")

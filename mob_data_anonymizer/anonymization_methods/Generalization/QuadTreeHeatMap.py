@@ -2,9 +2,12 @@ from mob_data_anonymizer.entities.Dataset import Dataset
 from mob_data_anonymizer.utils.pyqtree import Index
 import logging
 from tqdm import tqdm
+from shapely import geometry
+from geopandas import GeoDataFrame
+import matplotlib.pyplot as plt
 
 DEFAULT_VALUES = {
-    "min_k": 3,
+    "min_k": 5,
     "max_locations": 10,
     "max_depth": 30
 }
@@ -34,6 +37,8 @@ class QuadTreeHeatMap:
         self.max_depth = max_depth
         self.heatmap_nodes = []
 
+        self.anonymized_dataset = dataset.__class__()
+
     def run(self):
         # Reset heatmap and transform dataset to NumPy
         self.heatmap_nodes = []
@@ -50,32 +55,57 @@ class QuadTreeHeatMap:
 
         # Insert locations
         logging.info("Inserting locations to QuadTree...")
-        for location in tqdm(np_dataset):
-            [x, y, timestamp, id] = location
-            self.qtree.insert((x, y), (x, y, x, y)) # Args = Element, BoundingBox
+        for location in tqdm(np_dataset[:, :2]):
+            [x, y] = location
+            # Insert (Object, Bounding box) to QuadTree
+            self.qtree.insert((x, y),  # Object
+                              (x, y, x, y))  # Bounding box
 
         # Get QuadTree sectors that have at least min_k locations
         logging.info("Generalizing with QuadTree...")
-        self.qtree_to_heatmap(self.qtree, self.heatmap_nodes)
+        self.heatmap_nodes = self.qtree_to_heatmap(self.qtree)
         logging.info("Done!")
 
-        return self.heatmap_nodes
+        # Transform heatmap to GeoPandasFrame
+        idx = 0
+        gdf_dict = {"geometry": [], "n_location": []}
+        for (bbox, n_locations) in self.heatmap_nodes:
+            point_list = [[bbox[0], bbox[1]], [bbox[2], bbox[1]], [bbox[2], bbox[3]], [bbox[0], bbox[3]]]
+            polygon = geometry.Polygon(point_list)
+            gdf_dict["geometry"].append(polygon)
+            gdf_dict["n_location"].append(n_locations)
+        gdf = GeoDataFrame(gdf_dict)
+        self.anonymized_dataset = gdf
 
-    def qtree_to_heatmap(self, qtree_elem, heatmap: list):
-        for child in qtree_elem.children:
-            # If not enough locations add *parent* to heatmap
-            n_child_locations = len(child)
-            if n_child_locations < self.min_k:
-                n_parent_locations = len(qtree_elem)
-                heatmap.append((self.get_bbox(qtree_elem), n_parent_locations))
-            # Otherwise, has enough locations
-            else:
-                # If no grandchildren, add *child* to heatmap
-                if len(child.children) == 0:
-                    heatmap.append((self.get_bbox(child), n_child_locations))
-                # Otherwise, search in the grandchildren
+        # Plotting # TODO: Remove
+        fig, ax = plt.subplots(1, 1)
+        gdf.plot(column='n_location', cmap='OrRd', ax=ax, legend=True)
+        bdf = GeoDataFrame(geometry=gdf.boundary)
+        bdf.plot()
+        plt.show()
+
+
+    def qtree_to_heatmap(self, qtree_elem):
+        heatmap = []
+        # If no children, add *parent* to heatmap
+        if len(qtree_elem.children) == 0:
+            n_parent_locations = len(qtree_elem)
+            heatmap.append((self.get_bbox(qtree_elem), n_parent_locations))
+        # Otherwise, check children
+        else:
+            for child in qtree_elem.children:
+                n_child_locations = len(child)
+                # If not enough locations, ONLY add *parent* to heatmap and break
+                if n_child_locations < self.min_k:
+                    n_parent_locations = len(qtree_elem)
+                    heatmap = [] # Reset heatmap of nodes from other children
+                    heatmap = [(self.get_bbox(qtree_elem), n_parent_locations)]  # Add parent
+                    break
+                # Otherwise, has enough locations, search inside
                 else:
-                    self.qtree_to_heatmap(child, heatmap)
+                    heatmap += self.qtree_to_heatmap(child)
+
+        return heatmap
 
     def get_bbox(self, qtree_elem):
         (center_x, center_y) = qtree_elem.center
@@ -85,3 +115,28 @@ class QuadTreeHeatMap:
         min_y, max_y = center_y - half_height, center_y + half_height
         bbox = (min_x, min_y, max_x, max_y)
         return bbox
+
+    def get_anonymized_dataset(self) -> Dataset:
+        """Returns
+        -------
+        anonymized_dataset : Dataset
+            The anonymized dataset computed at the run method"""
+        return self.anonymized_dataset
+
+    @staticmethod
+    def get_instance(data):
+        required_fields = ["min_k", "max_locations", "max_depth"]
+        values = {}
+
+        for field in required_fields:
+            values[field] = data.get(field)
+            if not values[field]:
+                logging.info(f"No '{field}' provided. Using {DEFAULT_VALUES[field]}.")
+                values[field] = DEFAULT_VALUES[field]
+
+        dataset = Dataset()
+        dataset.load_from_scikit(data.get("input_file"), min_locations=5, datetime_key="timestamp")
+        dataset.filter_by_speed()
+
+        return QuadTreeHeatMap(dataset, values['min_k'],
+                               values['max_locations'], values["max_depth"])

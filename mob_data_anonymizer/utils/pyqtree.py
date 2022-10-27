@@ -187,7 +187,8 @@ class _QuadTree(object):
         return results
 
     def _insert_into_children(self, item, rect):
-        """ MODIFIED
+        """ MODIFIED METHOD """
+        """
         # if rect spans center then insert here
         if (rect[0] <= self.center[0] and rect[2] >= self.center[0] and
             rect[1] <= self.center[1] and rect[3] >= self.center[1]):
@@ -207,12 +208,15 @@ class _QuadTree(object):
                 self.children[3]._insert(item, rect)
 
     def _remove_from_children(self, item, rect):
-        """ MODIFIED# if rect spans center then insert here
+        """ MODIFIED METHOD """
+        """
+        # if rect spans center then insert here
         if (rect[0] <= self.center[0] and rect[2] >= self.center[0] and
             rect[1] <= self.center[1] and rect[3] >= self.center[1]):
             node = _QuadNode(item, rect)
             self.nodes.remove(node)
-        else:"""
+        else:
+        """
         # try to remove from children
         if rect[0] <= self.center[0]:
             if rect[1] <= self.center[1]:
