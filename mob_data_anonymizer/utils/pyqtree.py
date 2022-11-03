@@ -136,6 +136,9 @@ class _QuadTree(object):
         self.max_depth = max_depth
         self._depth = _depth
 
+        """ MODIFIED METHOD """
+        self.n_nodes = 0
+
     def __iter__(self):
         for child in _loopallchildren(self):
             yield child
@@ -151,6 +154,9 @@ class _QuadTree(object):
         else:
             self._insert_into_children(item, rect)
 
+        """ MODIFIED METHOD """
+        self.n_nodes += 1
+
     def _remove(self, item, bbox):
         rect = _normalize_rect(bbox)
         if len(self.children) == 0:
@@ -158,6 +164,9 @@ class _QuadTree(object):
             self.nodes.remove(node)
         else:
             self._remove_from_children(item, rect)
+
+        """ MODIFIED METHOD """
+        self.n_nodes -= 1
 
     def _intersect(self, rect, results=None, uniq=None):
         if results is None:
@@ -188,6 +197,7 @@ class _QuadTree(object):
 
     def _insert_into_children(self, item, rect):
         """ MODIFIED METHOD """
+        is_error = False
         """
         # if rect spans center then insert here
         if (rect[0] <= self.center[0] and rect[2] >= self.center[0] and
@@ -199,16 +209,26 @@ class _QuadTree(object):
         if rect[0] <= self.center[0]:
             if rect[1] <= self.center[1]:
                 self.children[0]._insert(item, rect)
-            if rect[3] >= self.center[1]:
+            elif rect[3] >= self.center[1]:
                 self.children[1]._insert(item, rect)
-        if rect[2] > self.center[0]:
+            else:
+                is_error = True
+        elif rect[2] > self.center[0]:
             if rect[1] <= self.center[1]:
                 self.children[2]._insert(item, rect)
-            if rect[3] >= self.center[1]:
+            elif rect[3] >= self.center[1]:
                 self.children[3]._insert(item, rect)
+            else:
+                is_error = True
+        else:
+            is_error = True
+
+        if is_error:
+            raise Exception(f"Error inserting item [{rect}]! It is outside the QuadTree rect.")
 
     def _remove_from_children(self, item, rect):
         """ MODIFIED METHOD """
+        is_error = False
         """
         # if rect spans center then insert here
         if (rect[0] <= self.center[0] and rect[2] >= self.center[0] and
@@ -221,13 +241,22 @@ class _QuadTree(object):
         if rect[0] <= self.center[0]:
             if rect[1] <= self.center[1]:
                 self.children[0]._remove(item, rect)
-            if rect[3] >= self.center[1]:
+            elif rect[3] >= self.center[1]:
                 self.children[1]._remove(item, rect)
-        if rect[2] > self.center[0]:
+            else:
+                is_error = False
+        elif rect[2] > self.center[0]:
             if rect[1] <= self.center[1]:
                 self.children[2]._remove(item, rect)
-            if rect[3] >= self.center[1]:
+            elif rect[3] >= self.center[1]:
                 self.children[3]._remove(item, rect)
+            else:
+                is_error = True
+        else:
+            is_error = True
+
+        if is_error:
+            raise Exception(f"Error removing item [{rect}]! It is outside the QuadTree rect.")
 
     def _split(self):
         quartwidth = self.width / 4.0
@@ -259,11 +288,15 @@ class _QuadTree(object):
         - A count of the total number of members/items/nodes inserted
         into this quadtree and all of its child trees.
         """
+        """ MODIFIED METHOD """
+        """
         size = 0
         for child in self.children:
             size += len(child)
         size += len(self.nodes)
         return size
+        """
+        return self.n_nodes
 
 
 MAX_ITEMS = 10
