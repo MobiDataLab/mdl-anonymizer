@@ -58,11 +58,12 @@ There are some common parameters to all the anonymization methods:
   * SwapMob
   * Microaggregation
   * SwapLocations
+  * QuadTreeHeatMap
 * input_file (string): The dataset to be anonymized
 * output_folder (string, optional): Folder to save the generated output datasets
 * main_output_file (string. optional): The name of the anonymized dataset 
-* save_filtered_dataset (boolean, optional): True: Export the pre-processed dataset
-* filtered_file (string, optional): The name of the pre-processed dataset
+* save_preprocessed_dataset (boolean, optional): True: Export the pre-processed dataset
+* preprocessed_file (string, optional): The name of the pre-processed dataset
 
 Each of the anonymization methods has some specific parameters that have to be added to the parameters file:
 * SwapMob:
@@ -95,6 +96,24 @@ Example using the given [configuration file](examples/configs/config_SwapLocatio
 ```bash
 python -m mob_data_anonymizer anonymize -f examples/configs/config_SwapLocations.json
 ```
+
+* QuadTreeHeatMap:
+  * min_k (int): Minimum number of locations allowed co-exist in a QuadTree sector.
+  The algorithm ensures K-anonymity using this k.
+  * min_sector_length (int): Minimum side length (in meters) for a QuadTree sector.
+  Equivalent to minimum resolution.
+  Due to the definition of the tree depth, empirical min_sector_length can be almost two times greater.
+  * merge_sectors (bool): If True, sectors with an insufficient number of locations will be merged with neighboring sectors.
+  This always preserves or enhances utility.
+  * split_n_locations (int): Maximum number of locations allowed in a QuadTree sector before it is split into 4 subsectors.
+  It must be greater than min_k. If lower or None, the value would be automatically set to min_k.
+  A value of min_k is expected to be the bests in terms of utility.
+
+Example using the given [configuration file](examples/configs/config_QuadTreeHeatMap.json):
+```bash
+python -m mob_data_anonymizer anonymize -f examples/configs/config_QuadTreeHeatMap.json
+```
+
 #### Utility metrics
 As previously mentioned, the anonymization module also includes a tool to compute and compare some utility metrics of original and anonymized datasets. We leverage on the well-known scikit-mobility library to compute these utility metrics. To compute some of these measures, the datasets to be compared are previously tessellated.
 

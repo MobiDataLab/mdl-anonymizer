@@ -2,9 +2,11 @@
   "method": "QuadTreeHeatMap",
   "input_file": "examples/data/cabs_dataset_0700_0715.csv",
   "output_folder": "examples/outputs",
-  "main_output_file": "anonymized_QuadTreeHeatMap_CLI.shp",
+  "main_output_file": "anonymized_QuadTreeHeatMap_CLI.json",
   "save_preprocessed_dataset": true,
   "preprocessed_file": "preprocessed_dataset_CLI.csv",
-  "min_k": 3,
+  "min_k": 5,
+  "max_locations": null,
+  "min_sector_length": 50,
   "merge_sectors": true
 }

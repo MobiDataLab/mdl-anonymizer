@@ -3,25 +3,30 @@ from mob_data_anonymizer.utils.pyqtree import Index, _QuadTree
 import logging
 from tqdm import tqdm
 from shapely import geometry
+from shapely.ops import transform
 from geopandas import GeoDataFrame
+import pyproj
+from functools import partial
+from haversine import haversine, Unit
+import math
 import matplotlib.pyplot as plt
-import numpy as np
 
 DEFAULT_VALUES = {
     "min_k": 5,
-    "max_locations": 10,
-    "max_depth": 30,
+    "min_sector_length": 100,
+    "split_n_locations": None,
     "merge_sectors": True
 }
 
 
 class QuadTreeHeatMap:
-    """Creates a heatmap of the data via a QuadTree (Klinger, A., & Dyer, C. R. 1976, https://www.sciencedirect.com/science/article/abs/pii/S0146664X76800068).
+    """Creates a heatmap of the data via a QuadTree (Klinger, A., & Dyer, C. R. 1976, https://www.sciencedirect.com/science/article/abs/pii/S0146664X76800068)
+    ensuring K-anonymity.
     Similar approach to the used in https://www.idescat.cat/sort/sort411/41.1.7.lagonigro-etal.prov.pdf
     """
 
-    def __init__(self, dataset: Dataset, min_k: int, max_locations: int,
-                 max_depth: int, merge_sectors: bool):
+    def __init__(self, dataset: Dataset, min_k: int, min_sector_length: int,
+                 merge_sectors: bool, split_n_locations: int):
         """
         Parameters
         ----------
@@ -29,37 +34,64 @@ class QuadTreeHeatMap:
             Dataset to anonymize.
         min_k : int
             Minimum number of locations allowed co-exist in a QuadTree sector.
-        max_locations : int
-            Maximum number of locations allowed in a QuadTree sector before it is split.
-            It must be greater than min_k.
-        max_depth : int
-            Maximum depth allowed for the QuadTree.
+            The algorithm ensures K-anonymity using this k.
+        min_sector_length : int
+            Minimum side length (in meters) for a QuadTree sector.
+            Equivalent to minimum resolution.
+            Due to the definition of the tree depth, empirical min_sector_length can be almost two times greater.
         merge_sectors : bool
             If True, sectors with an insufficient number of locations will be merged with neighboring sectors.
-            This should improve utility.
+            This always preserves or enhances utility.
+        split_n_locations : int
+            Maximum number of locations allowed in a QuadTree sector before it is split into 4 subsectors.
+            It must be greater than min_k. If lower or None, the value would be automatically set to min_k.
+            A value of min_k is expected to be the bests in terms of utility.
         """
         self.dataset = dataset
         self.min_k = min_k
-        self.max_locations = max_locations
-        assert max_locations > min_k
-        self.max_depth = max_depth
+        self.min_sector_length = min_sector_length
         self.merge_sectors = merge_sectors
-        print("INIT", self.merge_sectors)
+
+        if split_n_locations is None:
+            logging.info(f"NOTE: split_n_locations is None, setting to min_k [{min_k}]")
+            split_n_locations = min_k
+        elif split_n_locations < min_k:
+            logging.info(f"WARNING: split_n_locations [{split_n_locations}] lower than min_k [{min_k}], setting to min_k")
+            split_n_locations = min_k
+        self.split_n_locations = split_n_locations
+
         self.heatmap_nodes = None
         self.anonymized_dataset = None
 
     def run(self):
-        # Reset heatmap and transform dataset to NumPy
+        """Creates the K-anonymous heatmap based on a Quad-Tree.
+
+        During the execution will transform the original dataset to NumPy for faster processing.
+        It will create a GeoPandasFrame (heatmap) and assign it to the self.anonymized_dataset variable.
+        This new dataset can be obtained with the get_anonymized_dataset method.
+        Two tqdm progress bars are used.
+        """
+        # Transform dataset to NumPy
+        logging.info("Transforming dataset to NumPy...")
         np_dataset = self.dataset.to_numpy()
 
         # Initialize QuadTree with bounding box
+        logging.info("Initializing QuadTree...")
         min_x = min(np_dataset[:, 0])
         min_y = min(np_dataset[:, 1])
         max_x = max(np_dataset[:, 0])
         max_y = max(np_dataset[:, 1])
+        x_dist = haversine((min_x, min_y), (max_x, min_y), unit=Unit.METERS)
+        y_dist = haversine((min_x, min_y), (min_x, max_y), unit=Unit.METERS)
+        min_side_dist = min(x_dist, y_dist)
+        # min_sector_length = min_side_dist / 2**max_depth
+        max_depth = int(math.log(min_side_dist / self.min_sector_length, 2))
+        empirical_min_sector_length = min_side_dist / (2**max_depth)
+        logging.info(f"QuadTree maximum depth = {max_depth} | "
+                     f"Empirical mininum sector length = {empirical_min_sector_length:2f} meters")
         self.qtree = Index(bbox=(min_x, min_y, max_x, max_y),
-                           max_items=self.max_locations,
-                           max_depth=self.max_depth)
+                           max_items=self.split_n_locations,
+                           max_depth=max_depth)
 
         # Insert locations
         logging.info("Inserting locations to QuadTree...")
@@ -71,29 +103,37 @@ class QuadTreeHeatMap:
         # Get QuadTree sectors that have at least min_k locations
         logging.info("Transforming QuadTree to K-anonymous heatmap...")
         self.heatmap_nodes = self.qtree_to_heatmap(self.qtree)
-        logging.info("Done!")
 
         # Transform heatmap to GeoPandasFrame
         logging.info("Generating GeoPandasFrame...")
-        gdf_dict = {"geometry": [], "n_location": []}
-        for (bbox, n_locations) in self.heatmap_nodes:
+        gdf_dict = {"geometry": [], "n_locations": [], "density": []}
+        sq_coords_to_sq_mts = partial(pyproj.transform, pyproj.Proj(init='epsg:4326'), pyproj.Proj(init='epsg:3857'))   # https://gist.github.com/robinkraft/c6de2f988c9d3f01af3c
+        for (bbox, n_locations) in tqdm(self.heatmap_nodes):
             point_list = [[bbox[1], bbox[0]], [bbox[1], bbox[2]], [bbox[3], bbox[2]], [bbox[3], bbox[0]]]
             polygon = geometry.Polygon(point_list)
             gdf_dict["geometry"].append(polygon)
-            gdf_dict["n_location"].append(n_locations)
+            gdf_dict["n_locations"].append(n_locations)
+            area = transform(sq_coords_to_sq_mts, polygon).area  # Transform square coordinates area into square meters
+            gdf_dict["density"].append(n_locations/area)
         gdf = GeoDataFrame(gdf_dict)
         self.anonymized_dataset = gdf
-        logging.info("Done!")
+        logging.info("Heatmap done!")
 
-        # Plotting # TODO: Remove
-        plt.scatter(np_dataset[:, 1], np_dataset[:, 0])
-        fig, ax = plt.subplots(1, 1)
-        gdf.plot(column='n_location', cmap='OrRd', ax=ax, legend=True)
-        bdf = GeoDataFrame(geometry=gdf.boundary)
-        bdf.plot()
-        plt.show()
+    def qtree_to_heatmap(self, qtree_elem: _QuadTree) -> list:
+        """
+        Computes a list of heatmap nodes from the sectors of the QuadTree, always ensuring K-anonymity.
 
-    def qtree_to_heatmap(self, qtree_elem):
+        Parameters
+        ----------
+        qtree_elem : _QuadTree
+            QuadTree to get the sectors (and subsectors) from.
+
+        Returns
+        -------
+        heatmap : list
+            Heatmap nodes as tuples of (bounding box, number of locations)
+            See get_bbox documentation for the bounding box format.
+        """
         heatmap = []
 
         # If no children and enough locations, add *parent* to heatmap
@@ -105,7 +145,6 @@ class QuadTreeHeatMap:
         else:
             # If merge sectors
             if self.merge_sectors:
-                if qtree_elem == self.qtree: print("MERGING")
                 # Try to merge children with not enough locations
                 children_idxs = list(range(len(qtree_elem.children)))
                 children_nlocs = [len(child) for child in qtree_elem.children]
@@ -194,7 +233,6 @@ class QuadTreeHeatMap:
                     idx += 1
             # If no merge sectors
             else:
-                if qtree_elem == self.qtree: print("NO MERGING")
                 for child in qtree_elem.children:
                     n_child_locations = len(child)
                     # If not enough locations
@@ -212,11 +250,22 @@ class QuadTreeHeatMap:
                     else:
                         heatmap += self.qtree_to_heatmap(child)
 
-
-
         return heatmap
 
-    def get_bbox(self, qtree_elem: _QuadTree):
+    def get_bbox(self, qtree_elem: _QuadTree) -> tuple:
+        """
+        Computes the bounding box of a quadtree sector.
+
+        Parameters
+        ----------
+        qtree_elem : _QuadTree
+            QuadTree sector to get the bounding box from.
+
+        Returns
+        -------
+        bbox : tuple
+            Bounding box of the sector in the form (min_x, min_y, max_x, max_y)
+        """
         (center_x, center_y) = qtree_elem.center
         half_width = qtree_elem.width / 2.0
         min_x, max_x = center_x - half_width, center_x + half_width
@@ -225,16 +274,18 @@ class QuadTreeHeatMap:
         bbox = (min_x, min_y, max_x, max_y)
         return bbox
 
-    def get_anonymized_dataset(self) -> Dataset:
+    def get_anonymized_dataset(self) -> GeoDataFrame:
         """Returns
         -------
-        anonymized_dataset : Dataset
-            The anonymized dataset computed at the run method"""
+        anonymized_dataset : GeoDataFrame
+            The anonymized heatmap computed at the run method,
+            in this case as a GeoPandasFrame with the attributes: geometry (a Polygon), n_locations and density.
+        """
         return self.anonymized_dataset
 
     @staticmethod
     def get_instance(data):
-        required_fields = ["min_k", "max_locations", "max_depth", "merge_sectors"]
+        required_fields = ["min_k", "min_sector_length", "merge_sectors", "split_n_locations"]
         values = {}
 
         for field in required_fields:
@@ -247,5 +298,5 @@ class QuadTreeHeatMap:
         dataset.load_from_scikit(data.get("input_file"), min_locations=1, datetime_key="timestamp")
         dataset.filter_by_speed()
 
-        return QuadTreeHeatMap(dataset, values['min_k'], values['max_locations'],
-                               values["max_depth"], values["merge_sectors"])
+        return QuadTreeHeatMap(dataset, values['min_k'], values["min_sector_length"],
+                               values["merge_sectors"], values['split_n_locations'])

@@ -71,6 +71,6 @@ def anonymizer(file_path: str) -> int:
     output_file = data.get('main_output_file', DEFAULT_OUTPUT_FILE)
 
     if method == 'QuadTreeHeatMap':
-        output_dataset.to_file(f"{output_folder}{output_file}")
+        output_dataset.to_file(f"{output_folder}{output_file}", driver="GeoJSON")
     else:
         output_dataset.export_to_scikit(f"{output_folder}{output_file}")
