@@ -22,8 +22,9 @@ def build_dataset_dt(from_dt, to_dt, output_filename="out/dataset.csv"):
 
     with open(output_filename, mode='w', newline='') as new_file:
         writer = csv.writer(new_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-        writer.writerow(["lat", "lon", "timestamp", "user_id"])
+        writer.writerow(["lat", "lon", "timestamp", "trajectory_id", "user_id"])
         trajectory_id = 0
+        user_id = 0
         recording_trajectory = False
 
         locations_count = 0
@@ -34,7 +35,7 @@ def build_dataset_dt(from_dt, to_dt, output_filename="out/dataset.csv"):
             id = list[0]
             print(id)
             cab_file = open(f'{dataset_folder}new_{id}.txt', "r")
-
+            user_id += 1
             for j, cab_line in enumerate(cab_file):
 
                 cab_list = cab_line.split()
@@ -55,7 +56,7 @@ def build_dataset_dt(from_dt, to_dt, output_filename="out/dataset.csv"):
                         trajectory_id += 1
 
                     date_time = datetime.fromtimestamp(int(cab_list[3]))
-                    writer.writerow([cab_list[0], cab_list[1], date_time.strftime("%Y/%m/%d %H:%M:%S"), trajectory_id])
+                    writer.writerow([cab_list[0], cab_list[1], date_time.strftime("%Y/%m/%d %H:%M:%S"), trajectory_id, user_id])
                     locations_count += 1
 
                 else:
@@ -87,8 +88,9 @@ def build_dataset_t(from_t, to_t, list_of_days=[], output_filename="out/dataset.
 
     with open(output_filename, mode='w', newline='') as new_file:
         writer = csv.writer(new_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-        writer.writerow(["lat", "lon", "timestamp", "user_id"])
+        writer.writerow(["lat", "lon", "timestamp", "trajectory_id", "user_id"])
         trajectory_id = 0
+        user_id = 0
         recording_trajectory = False
 
         locations_count = 0
@@ -99,7 +101,7 @@ def build_dataset_t(from_t, to_t, list_of_days=[], output_filename="out/dataset.
             id = list[0]
             print(id)
             cab_file = open(f'{dataset_folder}new_{id}.txt', "r")
-
+            user_id += 1
             for j, cab_line in enumerate(cab_file):
 
                 cab_list = cab_line.split()
@@ -125,7 +127,7 @@ def build_dataset_t(from_t, to_t, list_of_days=[], output_filename="out/dataset.
                     date_time = datetime.fromtimestamp(int(cab_list[3]))
                     # Replace year,month and date. Just preserve time
                     date_time = date_time.replace(year=2022, month=1, day=1)
-                    writer.writerow([cab_list[0], cab_list[1], date_time.strftime("%Y/%m/%d %H:%M:%S"), trajectory_id])
+                    writer.writerow([cab_list[0], cab_list[1], date_time.strftime("%Y/%m/%d %H:%M:%S"), trajectory_id, user_id])
                     locations_count += 1
 
                 else:
@@ -139,31 +141,31 @@ def build_dataset_t(from_t, to_t, list_of_days=[], output_filename="out/dataset.
         return trajectory_id, locations_count
 
 
-# mode = MODE_TIME_INTERVAL
-#
-# if mode == MODE_DATE_TIME_INTERVAL:
-#     from_date_time = "2008/06/08 07:00:00"
-#     to_date_time = "2008/06/08 07:30:00"
-#     output_filename = "out/cabs_dataset_20080608_0700_0730.csv"
-#
-#     n_trajectories, n_locations = build_dataset_dt(from_date_time, to_date_time, output_filename)
-#
-#     logging.info(f"Dataset created with {n_trajectories} trajectories and {n_locations} locations")
-#
-# if mode == MODE_TIME_INTERVAL:
-#     from_time = "07:00:00"
-#     to_time = "07:15:00"
-#     output_filename = "out/cabs_dataset_0700_0715.csv"
-#
-#     n_trajectories, n_locations = build_dataset_t(from_time, to_time, output_filename=output_filename)
-#
-#     logging.info(f"Dataset created with {n_trajectories} trajectories and {n_locations} locations")
+mode = MODE_TIME_INTERVAL
+
+if mode == MODE_DATE_TIME_INTERVAL:
+    from_date_time = "2008/06/08 07:00:00"
+    to_date_time = "2008/06/08 07:30:00"
+    output_filename = "../../examples/out/cabs_dataset_20080608_0700_0730_uid.csv"
+
+    n_trajectories, n_locations = build_dataset_dt(from_date_time, to_date_time, output_filename)
+
+    logging.info(f"Dataset created with {n_trajectories} trajectories and {n_locations} locations")
+
+if mode == MODE_TIME_INTERVAL:
+    from_time = "07:00:00"
+    to_time = "07:15:00"
+    output_filename = "../../examples/out/cabs_dataset_0700_0715.csv"
+
+    n_trajectories, n_locations = build_dataset_t(from_time, to_time, output_filename=output_filename)
+
+    logging.info(f"Dataset created with {n_trajectories} trajectories and {n_locations} locations")
 
 # Filter the dataset
-dataset = Dataset()
-dataset.load_from_scikit("../../examples/data/cabs_dataset_all.csv", min_locations=5, datetime_key="timestamp")
-dataset.filter_by_speed(max_speed_kmh=150)
-
-filtered_filename = f"out/cabs_dataset_all_filtered_min5loc.csv"
-
-dataset.export_to_scikit(filename=filtered_filename)
+# dataset = Dataset()
+# dataset.load_from_scikit("../../examples/data/cabs_dataset_all.csv", min_locations=5, datetime_key="timestamp")
+# dataset.filter_by_speed(max_speed_kmh=150)
+#
+# filtered_filename = f"out/cabs_dataset_all_filtered_min5loc.csv"
+#
+# dataset.export_to_scikit(filename=filtered_filename)

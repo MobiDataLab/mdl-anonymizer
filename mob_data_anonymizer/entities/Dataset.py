@@ -23,19 +23,33 @@ class Dataset(ABC):
     #    def load(self):
     #        raise NotImplementedError
 
-    def load_from_scikit(self, filename, n_trajectories=None, min_locations=10,
-                         latitude_key="lat", longitude_key="lon", datetime_key="datetime", user_key="user_id",
-                         datetime_format="%Y/%m/%d %H:%M:%S"):
+    def from_file(self, filename, n_trajectories=None, min_locations=0,
+                 latitude_key="lat", longitude_key="lon", datetime_key="datetime", user_key="user_id",
+                 trajectory_key="trajectory_id",
+                 datetime_format="%Y/%m/%d %H:%M:%S"):
+
+        """
+        Import a dataset from a CSV or parquet file
+        """
 
         logging.info("Loading dataset...")
 
-        df = pandas.read_csv(filename)
+        if filename[-4:] == '.csv':
+            df = pandas.read_csv(filename)
+        elif filename[-8:] == '.parquet':
+            df = pandas.read_parquet(filename)
+        else:
+            raise Exception("File format not supported")
 
+        # Get the first trajectory and user id
+        traj_id = df.loc[0, trajectory_key]
         user_id = df.loc[0, user_key]
 
-        T = Trajectory(user_id)
+        users_count = 1
+
+        T = Trajectory(traj_id, user_id)
         for index, row in df.iterrows():
-            if user_id == row[user_key]:
+            if traj_id == row[trajectory_key]:
 
                 # Convert datetime to timestamp
                 element = datetime.datetime.strptime(row[datetime_key], datetime_format)
@@ -51,8 +65,13 @@ class Dataset(ABC):
                     if n_trajectories and len(self.trajectories) >= n_trajectories:
                         break
 
-                user_id = row[user_key]
-                T = Trajectory(user_id)
+                traj_id = row[trajectory_key]
+
+                if row[user_key] != user_id:
+                    users_count += 1
+                    user_id = row[user_key]
+
+                T = Trajectory(traj_id, user_id)
 
                 # Convert datetime to timestamp
                 element = datetime.datetime.strptime(row[datetime_key], datetime_format)
@@ -66,14 +85,14 @@ class Dataset(ABC):
 
         count_locations = sum([len(t) for t in self.trajectories])
 
-        logging.info(f"Dataset loaded: {len(self)} trajectories, {count_locations} locations. "
-                     f"Every trajectory has, at least, {min_locations} locations")
+        logging.info(
+            f"Dataset loaded: {len(self)} trajectories, {count_locations} locations, from {users_count} users. "
+            f"Every trajectory has, at least, {min_locations} locations")
 
-    '''
-        Export a loaded dataset as scikit dataset
-    '''
-
-    def export_to_scikit(self, filename="scikit_dataset.csv"):
+    def to_csv(self, filename="output_dataset.csv"):
+        """
+        Export a loaded dataset to a csv
+        """
         if not self.is_loaded():
             raise RuntimeError("Dataset is not loaded")
 
@@ -81,27 +100,11 @@ class Dataset(ABC):
 
         with open(filename, mode='w', newline='') as new_file:
             writer = csv.writer(new_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            writer.writerow(["lat", "lon", "datetime", "user_id"])
+            writer.writerow(["lat", "lon", "datetime", "trajectory_id", "user_id"])
             for t in self.trajectories:
                 for l in t.locations:
                     date_time = datetime.datetime.fromtimestamp(l.timestamp)
-                    writer.writerow([l.x, l.y, date_time.strftime("%Y/%m/%d %H:%M:%S"), t.id])
-
-    def to_tdf(self):
-
-        df = pandas.DataFrame()
-
-        for traj in self.trajectories:
-            for loc in traj.locations:
-                df2 = pandas.DataFrame(
-                    {'lat': [loc.x],
-                     'lng': [loc.y],
-                     'datetime': [loc.timestamp],
-                     'uid': [traj.id],
-                     })
-                df = pandas.concat([df, df2], ignore_index=True)
-
-        return TrajDataFrame(df, timestamp=True)
+                    writer.writerow([l.x, l.y, date_time.strftime("%Y/%m/%d %H:%M:%S"), t.id, t.user_id])
 
     def from_tdf(self, tdf: TrajDataFrame):
 
@@ -130,6 +133,48 @@ class Dataset(ABC):
         T.locations.sort(key=lambda x: x.timestamp)
         self.add_trajectory(T)
 
+    def to_tdf(self):
+
+        df = pandas.DataFrame()
+
+        for traj in self.trajectories:
+            for loc in traj.locations:
+                df2 = pandas.DataFrame(
+                    {'lat': [loc.x],
+                     'lng': [loc.y],
+                     'datetime': [loc.timestamp],
+                     'uid': [traj.id],
+                     })
+                df = pandas.concat([df, df2], ignore_index=True)
+
+        return TrajDataFrame(df, timestamp=True)
+
+    def from_numpy(self, np_dataset: np.array):
+        """Loads the dataset from a NumPy array like the generated by
+        the self.to_numpy method.
+        CAUTION 1: It removes all the current trajectories from the dataset.
+        CAUTION 2: Additional parameters of the location object will not be loaded."""
+        self.trajectories = []
+
+        # Sort matrix by user_id
+        np_dataset = np_dataset[np_dataset[:, 3].argsort()]
+
+        # Get and store trajectories
+        current_traj = None
+        for record in np_dataset:
+            if current_traj is None:  # First trajectory
+                current_traj = Trajectory(record[3])
+            elif record[3] != current_traj.id:  # ID changed
+                self.add_trajectory(current_traj)  # Store trajectory
+                current_traj = Trajectory(record[3])  # New trajectory
+            # Add location
+            loc = TimestampedLocation(record[2], record[0], record[1])
+            current_traj.add_location(loc)
+
+        # Add last trajectory
+        if current_traj is not None:
+            self.add_trajectory(current_traj)
+
     def to_numpy(self, sort_by_timestamp=False):
         """Transforms the dataset to a NumPy array for faster processing.
         Columns correspond to lat, long, timestamp and user_id.
@@ -156,32 +201,6 @@ class Dataset(ABC):
 
         return np_dataset
 
-    def from_numpy(self, np_dataset):
-        """Loads the dataset from a NumPy array like the generated by
-        the self.to_numpy method.
-        CAUTION 1: It removes all the current trajectories from the dataset.
-        CAUTION 2: Additional parameters of the location object will not be loaded."""
-        self.trajectories = []
-
-        # Sort matrix by user_id
-        np_dataset = np_dataset[np_dataset[:, 3].argsort()]
-
-        # Get and store trajectories
-        current_traj = None
-        for record in np_dataset:
-            if current_traj is None:  # First trajectory
-                current_traj = Trajectory(record[3])
-            elif record[3] != current_traj.id:  # ID changed
-                self.add_trajectory(current_traj)  # Store trajectory
-                current_traj = Trajectory(record[3])  # New trajectory
-            # Add location
-            loc = TimestampedLocation(record[2], record[0], record[1])
-            current_traj.add_location(loc)
-
-        # Add last trajectory
-        if current_traj is not None:
-            self.add_trajectory(current_traj)
-
     def is_loaded(self):
         return len(self.trajectories) > 0
 
@@ -202,8 +221,12 @@ class Dataset(ABC):
 
     def filter(self, min_locations=3):
         self.trajectories = [t for t in self.trajectories if len(t) >= min_locations]
+
+        count_locations = sum([len(t) for t in self.trajectories])
+
         logging.info(
-            f"Dataset filtered. Removed trajectories with less than {min_locations} locations. Now it has {len(self)} trajectories.")
+            f"Dataset filtered. Removed trajectories with less than {min_locations} locations. "
+            f"Now it has {len(self)} trajectories and {count_locations} locations.")
 
     def filter_by_speed(self, max_speed_kmh=300):
         """

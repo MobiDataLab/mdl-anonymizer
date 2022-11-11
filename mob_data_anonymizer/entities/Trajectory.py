@@ -2,8 +2,9 @@ from mob_data_anonymizer.entities.TimestampedLocation import TimestampedLocation
 
 
 class Trajectory:
-    def __init__(self, id):
+    def __init__(self, id, user_id=None):
         self.id = id
+        self.user_id = user_id
         self.locations = []
 
     def add_location(self, location: TimestampedLocation):
