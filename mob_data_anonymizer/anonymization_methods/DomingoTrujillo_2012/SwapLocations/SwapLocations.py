@@ -4,6 +4,7 @@ import time
 
 from mob_data_anonymizer.aggregation.Martinez2021.Aggregation import Aggregation
 from mob_data_anonymizer.aggregation.TrajectoryAggregationInterface import TrajectoryAggregationInterface
+from mob_data_anonymizer.anonymization_methods.AnonymizationSchemeInterface import AnonymizationSchemeInterface
 from mob_data_anonymizer.clustering.ClusteringInterface import ClusteringInterface
 from mob_data_anonymizer.clustering.MDAV.SimpleMDAV import SimpleMDAV
 from mob_data_anonymizer.clustering.MDAV.SimpleMDAVDataset import SimpleMDAVDataset
@@ -14,7 +15,7 @@ from mob_data_anonymizer.entities.TimestampedLocation import TimestampedLocation
 from mob_data_anonymizer.entities.Trajectory import Trajectory
 
 
-class SwapLocations:
+class SwapLocations(AnonymizationSchemeInterface):
     def __init__(self, dataset: Dataset, k, R_t, R_s, clustering_method: ClusteringInterface = None,
                  distance: DistanceInterface = None, aggregation_method: TrajectoryAggregationInterface = None):
         '''

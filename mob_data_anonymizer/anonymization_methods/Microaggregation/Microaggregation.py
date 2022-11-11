@@ -3,6 +3,7 @@ import random
 import time
 from mob_data_anonymizer.aggregation import TrajectoryAggregationInterface
 from mob_data_anonymizer.aggregation.Martinez2021.Aggregation import Aggregation
+from mob_data_anonymizer.anonymization_methods.AnonymizationSchemeInterface import AnonymizationSchemeInterface
 from mob_data_anonymizer.clustering.ClusteringInterface import ClusteringInterface
 from mob_data_anonymizer.clustering.MDAV.SimpleMDAV import SimpleMDAV
 from mob_data_anonymizer.clustering.MDAV.SimpleMDAVDataset import SimpleMDAVDataset
@@ -15,7 +16,8 @@ DEFAULT_VALUES = {
     "k": 3
 }
 
-class Microaggregation:
+
+class Microaggregation(AnonymizationSchemeInterface):
     def __init__(self, dataset: Dataset, k=DEFAULT_VALUES['k'], clustering_method: ClusteringInterface = None,
                  distance: DistanceInterface = None, aggregation_method: TrajectoryAggregationInterface = None):
         """
@@ -63,7 +65,6 @@ class Microaggregation:
 
         logging.info('Anonymization finished!')
 
-
     def process_clusters(self):
         for c in self.clusters:
             cluster_trajectories = self.clusters[c]
@@ -105,7 +106,7 @@ class Microaggregation:
         dataset.load_from_scikit(data.get("input_file"), min_locations=5, datetime_key="timestamp")
         dataset.filter_by_speed()
 
-        #Trajectory Distance
+        # Trajectory Distance
         l = data.get('lambda')
 
         martinez21_distance = Distance(dataset, landa=l)
