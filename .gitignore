@@ -8,5 +8,7 @@
 /examples/data/cabs_dataset_all.csv
 *.pyc
 /utilities/Geolife_dataset_to_CSV/data/
-/examples/data/full_SF_cabs_dataset/
+/utilities/Cab_dataset_to_CSV/full_SF_cabs_dataset/
 /examples/out/
+/utilities/Cab_dataset_to_CSV/full_SF_cabs_dataset/
+/examples/outputs/
