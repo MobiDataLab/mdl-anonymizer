@@ -295,7 +295,7 @@ class QuadTreeHeatMap:
                 values[field] = DEFAULT_VALUES[field]
 
         dataset = Dataset()
-        dataset.load_from_scikit(data.get("input_file"), min_locations=1, datetime_key="timestamp")
+        dataset.from_file(data.get("input_file"), min_locations=1, datetime_key="timestamp")
         dataset.filter_by_speed()
 
         return QuadTreeHeatMap(dataset, values['min_k'], values["min_sector_length"],
