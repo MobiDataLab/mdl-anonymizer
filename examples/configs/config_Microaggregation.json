@@ -1,6 +1,6 @@
 {
   "method": "Microaggregation",
-  "input_file": "examples/data/cabs_dataset_0700_0715.csv",
+  "input_file": "examples/data/cabs_dataset_0700_0715.parquet",
   "output_folder": "examples/outputs",
   "main_output_file": "anonymized_Microaggregation_CLI.csv",
   "save_preprocessed_dataset": true,

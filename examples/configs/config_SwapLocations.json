@@ -1,6 +1,6 @@
 {
   "method": "SwapLocations",
-  "input_file": "examples/data/cabs_dataset_0700_0715.csv",
+  "input_file": "examples/data/cabs_dataset_20080608_0800_1200.parquet",
   "output_folder": "examples/outputs",
   "main_output_file": "anonymized_SwapLocations_CLI.csv",
   "save_preprocessed_dataset": true,
