@@ -5,7 +5,6 @@ from tqdm import tqdm
 
 from mob_data_anonymizer.anonymization_methods.AnonymizationSchemeInterface import AnonymizationSchemeInterface
 from mob_data_anonymizer.entities.Dataset import Dataset
-from mob_data_anonymizer.entities.Trajectory import Trajectory
 from mob_data_anonymizer.entities.TimestampedLocation import TimestampedLocation
 
 DEFAULT_VALUES = {
