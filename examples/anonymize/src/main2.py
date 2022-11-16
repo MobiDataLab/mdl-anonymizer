@@ -29,7 +29,7 @@ TEMPORAL_THLD = 30  # Only for SwapMob
 SPATIAL_THLD = 0.2  # Only for SwapMob
 MIN_N_SWAPS = 1  # Only for SwapMob
 SEED = 42  # Only for SwapMob
-K = 5  # Only for Microaggregation
+K = 10  # Only for Microaggregation
 DISTANCE_LANDA = 1.0480570490488479  # Only for Microaggregation
 INTERVAL = 60 # Only for Microaggregation2 (seconds)
 
