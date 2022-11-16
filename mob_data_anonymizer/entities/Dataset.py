@@ -5,6 +5,7 @@ from functools import reduce
 
 import pandas
 import numpy as np
+import pyarrow.parquet as pq
 
 from abc import ABC
 
@@ -37,7 +38,8 @@ class Dataset(ABC):
         if filename[-4:] == '.csv':
             df = pandas.read_csv(filename)
         elif filename[-8:] == '.parquet':
-            df = pandas.read_parquet(filename)
+            #df = pandas.read_parquet(filename)
+            df = pq.read_table(filename).to_pandas()
         else:
             raise Exception("File format not supported")
 
