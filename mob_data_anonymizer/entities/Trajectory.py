@@ -65,6 +65,8 @@ class Trajectory:
                 avg_speed += (l1.spatial_distance(l2, sp_type) / l1.temporal_distance(l2))
             except IndexError:
                 avg_speed /= (len(self.locations) - 1)
+            except ZeroDivisionError:
+                avg_speed += 0
 
         # Return km/h
         if unit == 'kmh':
