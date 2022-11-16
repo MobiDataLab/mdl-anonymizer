@@ -15,6 +15,7 @@ class SimpleMDAV(ClusteringInterface):
     centroid.
     This allows to speed the execution up.
     '''
+
     def __init__(self, mdav_dataset: MDAVDatasetInterface):
         self.mdav_dataset = mdav_dataset
 
@@ -23,8 +24,8 @@ class SimpleMDAV(ClusteringInterface):
 
     def run(self, k: int):
 
-        if 2*k > len(self.mdav_dataset):
-            raise Exception(f"Only one cluster will be generated: Dataset length={len(self.mdav_dataset)}")
+        # if 2*k > len(self.mdav_dataset):
+        #     raise Exception(f"Only one cluster will be generated: Dataset length={len(self.mdav_dataset)}")
 
         if k < 2:
             raise Exception("k < 2, does not make sense")
@@ -35,18 +36,18 @@ class SimpleMDAV(ClusteringInterface):
         centroid = self.mdav_dataset.compute_centroid()
         logging.debug(f'Centroid: {centroid}')
         pbar = tqdm(total=expected_clusters)
-        while self.mdav_dataset.unselected_length() >= 3*k:
+        while self.mdav_dataset.unselected_length() >= 3 * k:
             t1 = timer()
             farthest_r = self.mdav_dataset.farthest_from(centroid)
             t2 = timer()
-            #print(f"farthest: {t2-t1}")
+            # print(f"farthest: {t2-t1}")
             self.mdav_dataset.make_cluster(farthest_r, k)
             t3 = timer()
-            #print(f"make cluster: {t3-t2}")
+            # print(f"make cluster: {t3-t2}")
 
             # logging.info(f"\tCluster made! {self.mdav_dataset.cluster_id}")
             pbar.update(1)
-            #exit()
+            # exit()
             farthest_s = self.mdav_dataset.farthest_from(farthest_r)
 
             self.mdav_dataset.make_cluster(farthest_s, k)
@@ -54,7 +55,7 @@ class SimpleMDAV(ClusteringInterface):
             pbar.update(1)
 
         logging.debug(f'Unselected_length: {self.mdav_dataset.unselected_length()}')
-        if self.mdav_dataset.unselected_length() >= 2*k:
+        if self.mdav_dataset.unselected_length() >= 2 * k:
             farthest_r = self.mdav_dataset.farthest_from(centroid)
             logging.debug(f'Farthest: {farthest_r}')
             self.mdav_dataset.make_cluster(farthest_r, k)
@@ -79,6 +80,6 @@ class SimpleMDAV(ClusteringInterface):
                 clusters[c] = [t]
 
         return clusters
-        
+
 
 

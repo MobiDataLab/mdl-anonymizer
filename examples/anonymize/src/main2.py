@@ -10,6 +10,7 @@ sys.path.append("../../../")
 
 from mob_data_anonymizer.anonymization_methods.SwapMob.SwapMob import SwapMob
 from mob_data_anonymizer.anonymization_methods.Microaggregation.Microaggregation import Microaggregation
+from mob_data_anonymizer.anonymization_methods.Microaggregation.Microaggregation2 import Microaggregation2
 from mob_data_anonymizer.distances.trajectory.Martinez2021.Distance import Distance
 from mob_data_anonymizer.aggregation.Martinez2021.Aggregation import Aggregation
 from mob_data_anonymizer.clustering.MDAV.SimpleMDAV import SimpleMDAV
@@ -23,18 +24,20 @@ logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', level=logg
 ############################## Settings ##############################
 ### Anonymization method selection and settings ###
 # METHOD_NAME = "SwapLocations"  # Options: ["SwapMob", "Microaggregation", "SwapLocations"]
-METHOD_NAME = "Microaggregation"  # Options: ["SwapMob", "Microaggregation", "SwapLocations"]
+METHOD_NAME = "Microaggregation2"  # Options: ["SwapMob", "Microaggregation", "Microaggregation2", "SwapLocations"]
 TEMPORAL_THLD = 30  # Only for SwapMob
 SPATIAL_THLD = 0.2  # Only for SwapMob
 MIN_N_SWAPS = 1  # Only for SwapMob
 SEED = 42  # Only for SwapMob
-K = 3  # Only for Microaggregation
+K = 5  # Only for Microaggregation
 DISTANCE_LANDA = 1.0480570490488479  # Only for Microaggregation
+INTERVAL = 60 # Only for Microaggregation2 (seconds)
 
 ### Paths ###
 DATA_FOLDER = os.path.join("..", "..", "data")
-DATASET_NAME = "cabs_dataset_0700_0715.parquet"
 # DATASET_NAME = "cabs_dataset_0000_2359.parquet"
+DATASET_NAME = "cabs_dataset_20080608.parquet"
+# DATASET_NAME = "cabs_dataset_20080608_0700_0715"
 DATASET_PATH = os.path.join(DATA_FOLDER, DATASET_NAME)
 OUTPUT_FOLDER = os.path.join("..", "..", "outputs")
 PREPROCESSED_PATH = os.path.join(OUTPUT_FOLDER, f"preprocessed_dataset_byCode.csv")
@@ -60,6 +63,13 @@ elif METHOD_NAME == "Microaggregation":
     clustering_method = SimpleMDAV(SimpleMDAVDataset(dataset, Martinez2021_distance, aggregation_method))
     anonymizer = Microaggregation(dataset, k=K, clustering_method=clustering_method,
                                   distance=Martinez2021_distance, aggregation_method=aggregation_method)
+elif METHOD_NAME == "Microaggregation2":
+    Martinez2021_distance = Distance(dataset, landa=0)
+    aggregation_method = Aggregation
+    clustering_method = SimpleMDAV(SimpleMDAVDataset(dataset, Martinez2021_distance, aggregation_method))
+    anonymizer = Microaggregation2(dataset, k=K, clustering_method=clustering_method,
+                                   distance=Martinez2021_distance, aggregation_method=aggregation_method,
+                                   interval = INTERVAL)
 elif METHOD_NAME == "SwapLocations":
     anonymizer = SwapLocations(dataset)
 else:
@@ -81,3 +91,5 @@ anon_dataset.to_csv(filename=ANONYMIZED_PATH)
 stats = Stats(dataset, anon_dataset)
 print(f'Removed trajectories: {round(stats.get_perc_of_removed_trajectories() * 100, 2)}%')
 print(f'Removed locations: {round(stats.get_perc_of_removed_locations() * 100, 2)}%')
+# print(f'rsme: {round(stats.get_rsme(Martinez2021_distance), 4)}')
+print(f'rsme: {round(stats.get_rsme_ordered(Martinez2021_distance), 4)}')

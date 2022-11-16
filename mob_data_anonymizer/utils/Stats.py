@@ -1,3 +1,4 @@
+from collections import defaultdict
 from math import sqrt
 
 from mob_data_anonymizer.entities.Dataset import Dataset
@@ -26,6 +27,21 @@ class Stats:
         dist = 0.0
         for t1 in self.original_dataset.trajectories:
             t1_anon = self.anonymized_dataset.get_trajectory(t1.id)
+            if t1_anon:
+                d = distance.compute(t1, t1_anon)
+                if d and d != 9999999999999:
+                    dist += pow(d, 2)
+
+        dist = sqrt(dist) / len(self.anonymized_dataset)
+
+        return dist
+
+    def get_rsme_ordered(self, distance):
+        # TODO: Y como se mide la diferencia cuando una trayectoría ha sido eliminada?
+        distance.distance_matrix = defaultdict(dict)
+        dist = 0.0
+        for i, t1 in enumerate(self.original_dataset.trajectories):
+            t1_anon = self.anonymized_dataset.trajectories[i]
             if t1_anon:
                 d = distance.compute(t1, t1_anon)
                 if d and d != 9999999999999:

@@ -9,14 +9,17 @@ from mob_data_anonymizer.distances.trajectory.DistanceInterface import DistanceI
 from mob_data_anonymizer.distances.trajectory.Martinez2021.Distance import Distance
 from mob_data_anonymizer.entities.Dataset import Dataset
 from mob_data_anonymizer.entities.Trajectory import Trajectory
+from tqdm import tqdm
 
 DEFAULT_VALUES = {
     "k": 3
 }
 
-class Microaggregation:
+
+class Microaggregation2:
     def __init__(self, dataset: Dataset, k=DEFAULT_VALUES['k'], clustering_method: ClusteringInterface = None,
-                 distance: DistanceInterface = None, aggregation_method: TrajectoryAggregationInterface = None):
+                 distance: DistanceInterface = None, aggregation_method: TrajectoryAggregationInterface = None,
+                 interval: int = None):
         """
                 Parameters
                 ----------
@@ -43,25 +46,47 @@ class Microaggregation:
         self.anonymized_dataset = dataset.__class__()
 
         self.k = k
+        self.interval = interval
 
     def run(self):
 
+        # Partition
+        # TODO: Test if the time_interval is suitable for the dataset
+        datasets = []
+        ordered_trajectories = sorted(self.dataset.trajectories, key=lambda t: t.locations[0].timestamp)
+        while len(ordered_trajectories) >= self.k:
+            partition = []
+            current_t = ordered_trajectories[0].locations[0].timestamp
+            final_t = current_t + self.interval
+            index = 0
+            while current_t <= final_t and index < len(ordered_trajectories)-1:
+                partition.append(ordered_trajectories[index])
+                index += 1
+                current_t = ordered_trajectories[index].locations[0].timestamp
+            if len(partition) < self.k:
+                while len(partition) < self.k:
+                    partition.append(ordered_trajectories[index])
+                    index += 1
+            dataset = Dataset()
+            dataset.trajectories = partition
+            datasets.append(dataset)
+            ordered_trajectories = ordered_trajectories[index:]
+        datasets[-1].trajectories.extend(ordered_trajectories)
+
         # Clustering
-        logging.info("Starting clustering...")
         start = time.time()
-        self.clustering_method.set_dataset(self.dataset)
-        self.clustering_method.run(self.k)
+        for i, dataset in enumerate(datasets):
+            logging.info(f"Starting clustering...{i+1} of {len(datasets)}")
+            self.clustering_method.set_dataset(dataset)
+            self.clustering_method.run(self.k)
+            logging.info("Building anonymized dataset...")
+            self.clusters = self.clustering_method.get_clusters()
+            self.process_clusters()
+        self.anonymized_dataset.trajectories.sort(key=lambda t: t.id)
         end = time.time()
         logging.info(f"Clustering finished! Time: {end - start}")
         logging.debug(self.clustering_method.mdav_dataset.assigned_to)
-
-        logging.info("Building anonymized dataset...")
-        self.clusters = self.clustering_method.get_clusters()
-
-        self.process_clusters()
-
         logging.info('Anonymization finished!')
-
 
     def process_clusters(self):
         for c in self.clusters:
@@ -101,12 +126,12 @@ class Microaggregation:
                 values[field] = DEFAULT_VALUES[field]
 
         dataset = Dataset()
-        dataset.from_file(data.get("input_file"), min_locations=5, datetime_key="timestamp")
+        dataset.load_from_scikit(data.get("input_file"), min_locations=5, datetime_key="timestamp")
         dataset.filter_by_speed()
 
-        #Trajectory Distance
+        # Trajectory Distance
         l = data.get('lambda')
 
         martinez21_distance = Distance(dataset, landa=l)
 
-        return Microaggregation(dataset, k=values['k'], distance=martinez21_distance)
+        return Microaggregation2(dataset, k=values['k'], distance=martinez21_distance)
