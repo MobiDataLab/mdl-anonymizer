@@ -10,6 +10,7 @@ import pyarrow.parquet as pq
 from abc import ABC
 
 from skmob import TrajDataFrame
+from tqdm import tqdm
 
 from mob_data_anonymizer.entities.Trajectory import Trajectory
 from mob_data_anonymizer.entities.TimestampedLocation import TimestampedLocation
@@ -49,6 +50,8 @@ class Dataset(ABC):
 
         users_count = 1
 
+        pbar = tqdm(total=len(df))
+
         T = Trajectory(traj_id, user_id)
         for index, row in df.iterrows():
             if traj_id == row[trajectory_key]:
@@ -80,6 +83,8 @@ class Dataset(ABC):
                 timestamp = datetime.datetime.timestamp(element)
                 location = TimestampedLocation(timestamp, row[latitude_key], row[longitude_key])
                 T.add_location(location)
+
+            pbar.update(1)
         else:
             if len(T.locations) >= min_locations:
                 T.locations.sort(key=lambda x: x.timestamp)
