@@ -22,26 +22,28 @@ class SwapLocations(AnonymizationSchemeInterface):
     def __init__(self, dataset: Dataset, k=DEFAULT_VALUES['k'],
                  max_r_s=DEFAULT_VALUES['max_r_s'], max_r_t=DEFAULT_VALUES['max_r_t'],
                  min_r_s=DEFAULT_VALUES['min_r_s'], min_r_t=DEFAULT_VALUES['min_r_t'],
-                 step_s=None, step_t=None):
+                 step_s=None, step_t=None, seed: int = None):
         """
         Parameters
         ----------
         dataset : Dataset
             Dataset to anonymize.
-        k : int
+        k : int, optional
             Minimum number of locations of a swapping cluster (default is 3)
-        max_r_s: int
-            Maximum spatial radius of the swapping cluster (in meters)
-        max_r_t: int
-            Maximum temporal threshold of the swapping cluster (in seconds)
-        min_r_s: int
-            Minimum spatial radius of the swapping cluster (in meters)
-        min_r_t: int
-            Minimum temporal threshold of the swapping cluster (in seconds)
-        step_s: int
+        max_r_s: int, optional
+            Maximum spatial radius of the swapping cluster (in meters, default is 500)
+        max_r_t: int, optional
+            Maximum temporal threshold of the swapping cluster (in seconds, default is 100)
+        min_r_s: int, optional
+            Minimum spatial radius of the swapping cluster (in meters, default is 120)
+        min_r_t: int, optional
+            Minimum temporal threshold of the swapping cluster (in seconds, default is 60)
+        step_s: int, optional
             In meters
-        step_t: int
+        step_t: int, optional
             In seconds
+        seed : int, optional
+            Seed for the random swapping process (default is None, so seed is not fixed)
         """
 
         self.dataset = dataset
@@ -56,6 +58,8 @@ class SwapLocations(AnonymizationSchemeInterface):
 
         if not step_t:
             self.step_t = int(abs(max_r_t - min_r_t) / 5)
+
+        self.seed = seed
 
     def __build_cluster(self, remaining_locations, chosen_location):
 
@@ -104,6 +108,10 @@ class SwapLocations(AnonymizationSchemeInterface):
         return None
 
     def run(self):
+
+        # Set seed
+        if self.seed is not None:
+            random.seed(self.seed)
 
         # Create anon trajectories
         for t in self.dataset.trajectories:
