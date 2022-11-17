@@ -54,8 +54,8 @@ class SwapMob(AnonymizationSchemeInterface):
         # Get the original dataset as NumPy array sort by timestamp
         np_dataset = self.dataset.to_numpy(sort_by_timestamp=True)
 
-        # Create dictionary for count amount of swaps per user
-        swaps_per_user = self.create_swaps_per_user_dict(np_dataset)
+        # Create dictionary for count amount of swaps per trajectory
+        swaps_per_traj = self.create_swaps_per_traj_dict(np_dataset)
 
         # Get first and last timestamp of the dataset
         first_timestamp, last_timestamp = self.get_first_and_last_timestamps(np_dataset)
@@ -85,12 +85,12 @@ class SwapMob(AnonymizationSchemeInterface):
                     # Random matching of possible swaps
                     swaps = self.select_random_swaps(possible_swaps, locs_in_interval)
 
-                    # Perform all swaps on np_dataset, returning also a dictionary with the number of swaps performed per user
-                    performed_swaps_per_user = self.do_swaps(np_dataset, swaps, ini_idx)
+                    # Perform all swaps on np_dataset, returning also a dictionary with the number of swaps performed per trajectory
+                    performed_swaps_per_traj = self.do_swaps(np_dataset, swaps, ini_idx)
 
-                    # Update swaps_per_user_dict
-                    for (user_id, count) in performed_swaps_per_user.items():
-                        swaps_per_user[user_id] += count
+                    # Update swaps_per_traj_dict
+                    for (traj_id, count) in performed_swaps_per_traj.items():
+                        swaps_per_traj[traj_id] += count
 
                 # Increment interval index
                 interval_idx += 1
@@ -102,10 +102,10 @@ class SwapMob(AnonymizationSchemeInterface):
 
         # Remove trajectories without swaps
         logging.info("Remove trajectories without swaps")
-        for (user_id, count) in swaps_per_user.items():
+        for (trajectory_id, count) in swaps_per_traj.items():
             if count < self.min_n_swaps:
-                user_id = int(user_id)
-                np_dataset = np_dataset[np.argwhere(np_dataset[:, 3] != user_id)[:, 0], :]
+                idxs_to_preserve = np.argwhere(np_dataset[:, 3] != trajectory_id)[:, 0]
+                np_dataset = np_dataset[idxs_to_preserve, :]
 
         # Transform np_dataset to the anonymized dataset
         logging.info("Transforming NumPy matrix to anonymized dataset")
@@ -113,8 +113,8 @@ class SwapMob(AnonymizationSchemeInterface):
 
         logging.info("Done!")
 
-    def create_swaps_per_user_dict(self, np_dataset: np.array) -> dict:
-        """Creates a dictionary for counting the number of swaps per user id.
+    def create_swaps_per_traj_dict(self, np_dataset: np.array) -> dict:
+        """Creates a dictionary for counting the number of swaps per trajectory_id.
         Used for min_n_swaps filtering.
 
         Parameters
@@ -124,12 +124,12 @@ class SwapMob(AnonymizationSchemeInterface):
 
         Returns
         -------
-        swaps_per_user : dict
-            A dictionary with integer user_ids passed to string as keys and
+        swaps_per_traj : dict
+            A dictionary with integer trajectory_ids passed to string as keys and
             values intialized to zero.
         """
-        users_ids = np.unique(np_dataset[:, 3]).astype(int)
-        return {str(user_id): 0 for user_id in users_ids}
+        trajectory_ids = np.unique(np_dataset[:, 3])
+        return {traj_id: 0 for traj_id in trajectory_ids}
 
     def get_first_and_last_timestamps(self, np_dataset: np.array) -> tuple:
         """Obtains the first and last timestamps of the dataset.
@@ -196,7 +196,7 @@ class SwapMob(AnonymizationSchemeInterface):
         """Obtains all the crossing trajectories in the time interval.
 
         CAUTION: locs_in_interval is assumed to be ordered by timestamp.
-        It avoids swaps between locations of the same user, but redundant cases (such as a->b and b->a) are kept
+        It avoids swaps between locations of the same trajectory, but redundant cases (such as a->b and b->a) are kept
         for its usage at the select_random_swaps method.
         This redundancy is required for maxmimizing the number of swaps.
 
@@ -223,7 +223,7 @@ class SwapMob(AnonymizationSchemeInterface):
             # Get close locations
             close_locations = []
             for idx2, l2 in enumerate(locations):
-                # If not comparing with the same location or user
+                # If not comparing with the same location or another location of the trajectory
                 if idx1 != idx2 and locs_in_interval[idx1, 3] != locs_in_interval[idx2, 3]:
                     # If locations are closer than the threshold
                     if l1.spatial_distance(l2) < self.spatial_thold:
@@ -238,7 +238,7 @@ class SwapMob(AnonymizationSchemeInterface):
         """Randomly selects the swaps to perform from the possible_swaps list.
 
         Equivalent to the random matching method from the SwapMob article.
-        Avoids problematic swaps such as those with already swapped users or between locations from the same user.
+        Avoids problematic swaps such as those with already swapped trajectories or between locations from the same trajectory.
         Due to that it is not guaranteed that every location in possible_swaps obtains a swap.
 
         Parameters
@@ -276,14 +276,14 @@ class SwapMob(AnonymizationSchemeInterface):
             # Add to swaps list
             swaps.append((idx1, idx2))
 
-            # Remove user ids from swaps of future possible swaps
+            # Remove trajectory_ids from swaps of future possible swaps
             id1 = locs_in_interval[idx1, 3]
             id2 = locs_in_interval[idx2, 3]
             j = i + 1
             while j < len(possible_swaps):
                 (idx3, close_locations) = possible_swaps[j]
 
-                # If repeated location index or user_id, remove possible swap
+                # If repeated location index or trajectory_id, remove possible swap
                 id3 = locs_in_interval[idx3, 3]
                 if idx3 == idx1 or id3 == id1 or idx3 == idx2 or id3 == id2:
                     del possible_swaps[j]
@@ -294,7 +294,7 @@ class SwapMob(AnonymizationSchemeInterface):
                     while k < len(close_locations):
                         idx4 = close_locations[k]
                         id4 = locs_in_interval[idx4, 3]
-                        # If repeated location index or user_id, remove close location
+                        # If repeated location index or trajectory_id, remove close location
                         if idx4 == idx1 or id4 == id1 or idx4 == idx2 or id4 == id2:
                             del close_locations[k]
                             k -= 1  # Decrement index because of the removing
@@ -313,7 +313,8 @@ class SwapMob(AnonymizationSchemeInterface):
     def do_swaps(self, np_dataset: np.array, swaps: list, ini_idx: int) -> dict:
         """Performs the swaps as defined in the SwapMob article.
 
-        For each pair of indexes of locations from the swaps list, swaps the user ids of all the previous locations.
+        For each pair of indexes of locations from the swaps list,
+        swaps the trajectory_ids (and user_ids) of all the previous locations.
         Directly modifies the np_dataset during the swaps.
 
         Parameters
@@ -328,12 +329,12 @@ class SwapMob(AnonymizationSchemeInterface):
 
         Returns
         -------
-        swaps_per_user : dict
-            Dictionary containing the number of swaps for each user_id (as integer transformed to string).
-            Used for updating the global swaps_per_user dictionary in the run method.
+        swaps_per_traj : dict
+            Dictionary containing the number of swaps for each trajectory_id.
+            Used for updating the global swaps_per_traj dictionary in the run method.
         """
-        # Dictionary for storing number of swaps per user (used outside for filtering)
-        swaps_per_user = {}
+        # Dictionary for storing number of swaps per trajectory (used outside for filtering)
+        swaps_per_traj = {}
 
         # Perform all swaps
         for (raw_idx1, raw_idx2) in swaps:
@@ -341,25 +342,27 @@ class SwapMob(AnonymizationSchemeInterface):
             idx1 = ini_idx + raw_idx1
             idx2 = ini_idx + raw_idx2
 
-            # Get user ids corresponding the swap
-            id1 = np_dataset[idx1, 3]
-            id2 = np_dataset[idx2, 3]
+            # Get trajectory_ids and user_ids corresponding the swap
+            trajectory_id1 = np_dataset[idx1, 3]
+            user_id1 = np_dataset[idx1, 4]
+            trajectory_id2 = np_dataset[idx2, 3]
+            user_id2 = np_dataset[idx2, 4]
 
             # Get previous indices of the trajectories
-            prev_indices_1 = np.where(np_dataset[:idx1 + 1, 3] == id1)[0]
-            prev_indices_2 = np.where(np_dataset[:idx2 + 1, 3] == id2)[0]
+            prev_indices_1 = np.where(np_dataset[:idx1 + 1, 3] == trajectory_id1)[0]
+            prev_indices_2 = np.where(np_dataset[:idx2 + 1, 3] == trajectory_id2)[0]
 
             # Perform swap
-            np_dataset[prev_indices_1, 3] = id2
-            np_dataset[prev_indices_2, 3] = id1
+            np_dataset[prev_indices_1, 3] = trajectory_id2
+            np_dataset[prev_indices_1, 4] = user_id2
+            np_dataset[prev_indices_2, 3] = trajectory_id1
+            np_dataset[prev_indices_2, 4] = user_id1
 
-            # Increment number of swaps per user (used outside for filtering)
-            id1_str = str(int(id1))
-            swaps_per_user[id1_str] = swaps_per_user.get(id1_str, 0) + 1
-            id2_str = str(int(id2))
-            swaps_per_user[id2_str] = swaps_per_user.get(id2_str, 0) + 1
+            # Increment number of swaps per trajectory (used in the run method for filtering)
+            swaps_per_traj[trajectory_id1] = swaps_per_traj.get(trajectory_id1, 0) + 1
+            swaps_per_traj[trajectory_id2] = swaps_per_traj.get(trajectory_id2, 0) + 1
 
-        return swaps_per_user
+        return swaps_per_traj
 
     def get_anonymized_dataset(self) -> Dataset:
         """Returns

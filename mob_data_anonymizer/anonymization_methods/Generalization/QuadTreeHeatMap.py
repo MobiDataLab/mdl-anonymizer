@@ -9,7 +9,6 @@ import pyproj
 from functools import partial
 from haversine import haversine, Unit
 import math
-import matplotlib.pyplot as plt
 
 DEFAULT_VALUES = {
     "min_k": 5,
