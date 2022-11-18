@@ -26,9 +26,9 @@ class Dataset(ABC):
     #        raise NotImplementedError
 
     def from_file(self, filename, n_trajectories=None, min_locations=0,
-                 latitude_key="lat", longitude_key="lon", datetime_key="datetime", user_key="user_id",
-                 trajectory_key="trajectory_id",
-                 datetime_format="%Y/%m/%d %H:%M:%S"):
+                  latitude_key="lat", longitude_key="lon", datetime_key="datetime", user_key="user_id",
+                  trajectory_key="trajectory_id",
+                  datetime_format="%Y/%m/%d %H:%M:%S"):
 
         """
         Import a dataset from a CSV or parquet file
@@ -39,16 +39,19 @@ class Dataset(ABC):
         if filename[-4:] == '.csv':
             df = pandas.read_csv(filename)
         elif filename[-8:] == '.parquet':
-            #df = pandas.read_parquet(filename)
+            # df = pandas.read_parquet(filename)
             df = pq.read_table(filename).to_pandas()
         else:
             raise Exception("File format not supported")
+
+        # Order by traj_id
+        df.sort_values(trajectory_key, inplace=True)
 
         # Get the first trajectory and user id
         traj_id = df.loc[0, trajectory_key]
         user_id = df.loc[0, user_key]
 
-        users_count = 1
+        users = set([])
 
         pbar = tqdm(total=len(df))
 
@@ -71,10 +74,8 @@ class Dataset(ABC):
                         break
 
                 traj_id = row[trajectory_key]
-
-                if row[user_key] != user_id:
-                    users_count += 1
-                    user_id = row[user_key]
+                user_id = row[user_key]
+                users.add(user_id)
 
                 T = Trajectory(traj_id, user_id)
 
@@ -93,7 +94,7 @@ class Dataset(ABC):
         count_locations = sum([len(t) for t in self.trajectories])
 
         logging.info(
-            f"Dataset loaded: {len(self)} trajectories, {count_locations} locations, from {users_count} users. "
+            f"Dataset loaded: {len(self)} trajectories, {count_locations} locations, from {len(users)} users. "
             f"Every trajectory has, at least, {min_locations} locations")
 
     def to_csv(self, filename="output_dataset.csv"):
