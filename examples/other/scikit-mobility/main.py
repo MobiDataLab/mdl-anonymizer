@@ -5,7 +5,7 @@ from skmob.measures.individual import radius_of_gyration, home_location
 from skmob.utils import plot
 import numpy as np
 
-tdf = skmob.TrajDataFrame.from_file('../anonymize/out/actual_dataset_loaded.csv', latitude='lat', longitude='lon', datetime='timestamp', user_id='user_id')
+tdf = skmob.TrajDataFrame.from_file('../anonymize/output/actual_dataset_loaded.csv', latitude='lat', longitude='lon', datetime='timestamp', user_id='user_id')
 
 # First trajectories
 n_users = 20
@@ -26,7 +26,7 @@ heatmap.save('maps/heatmap_orig.html')
 
 
 
-tdf = skmob.TrajDataFrame.from_file('../anonymize/out/cabs_scikit_anonymized.csv', latitude='lat', longitude='lon', datetime='timestamp', user_id='user_id')
+tdf = skmob.TrajDataFrame.from_file('../anonymize/output/cabs_scikit_anonymized.csv', latitude='lat', longitude='lon', datetime='timestamp', user_id='user_id')
 
 # First usaers
 nth_user_id = np.sort(np.unique(tdf['uid']))[n_users]

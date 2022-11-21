@@ -3,7 +3,7 @@ import random
 import time
 from mob_data_anonymizer.aggregation import TrajectoryAggregationInterface
 from mob_data_anonymizer.aggregation.Martinez2021.Aggregation import Aggregation
-from mob_data_anonymizer.anonymization_methods.AnonymizationSchemeInterface import AnonymizationSchemeInterface
+from mob_data_anonymizer.anonymization_methods.AnonymizationMethodInterface import AnonymizationMethodInterface
 from mob_data_anonymizer.clustering.ClusteringInterface import ClusteringInterface
 from mob_data_anonymizer.clustering.MDAV.SimpleMDAV import SimpleMDAV
 from mob_data_anonymizer.clustering.MDAV.SimpleMDAVDataset import SimpleMDAVDataset
@@ -17,7 +17,7 @@ DEFAULT_VALUES = {
 }
 
 
-class Microaggregation(AnonymizationSchemeInterface):
+class Microaggregation(AnonymizationMethodInterface):
     def __init__(self, dataset: Dataset, k=DEFAULT_VALUES['k'], clustering_method: ClusteringInterface = None,
                  distance: DistanceInterface = None, aggregation_method: TrajectoryAggregationInterface = None):
         """

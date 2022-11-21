@@ -1,8 +1,8 @@
 {
   "method": "QuadTreeHeatMap",
   "input_file": "examples/data/cabs_dataset_0700_0715.parquet",
-  "output_folder": "examples/outputs",
-  "main_output_file": "anonymized_QuadTreeHeatMap_CLI.json",
+  "output_folder": "examples/output",
+  "main_output_file": "anonymous_QuadTreeHeatMap_CLI.json",
   "save_preprocessed_dataset": true,
   "preprocessed_file": "preprocessed_dataset_CLI.csv",
   "min_k": 5,

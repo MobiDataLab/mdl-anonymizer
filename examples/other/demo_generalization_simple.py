@@ -9,9 +9,9 @@ from mob_data_anonymizer.utils.Stats import Stats
 
 logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', level=logging.INFO)
 
-out_folder = "../out/"
+out_folder = "../output/"
 
-dataset_to_load = "../out/cabs_dataset_20080608_0700_0730_uid.parquet"
+dataset_to_load = "../output/cabs_dataset_20080608_0700_0730_uid.parquet"
 
 filename = dataset_to_load.split('/')[-1]
 filename_wo_ext = filename.split('.')[0]

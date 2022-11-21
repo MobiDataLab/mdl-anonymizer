@@ -23,7 +23,7 @@ logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', level=logg
 ############################## Settings ##############################
 ### Anonymization method selection and settings ###
 # METHOD_NAME = "SwapLocations"  # Options: ["SwapMob", "Microaggregation", "SwapLocations"]
-METHOD_NAME = "Microaggregation"  # Options: ["SwapMob", "Microaggregation", "SwapLocations"]
+METHOD_NAME = "SwapLocations"  # Options: ["SwapMob", "Microaggregation", "SwapLocations"]
 TEMPORAL_THLD = 30  # Only for SwapMob
 SPATIAL_THLD = 0.2  # Only for SwapMob
 MIN_N_SWAPS = 1  # Only for SwapMob
@@ -33,10 +33,9 @@ DISTANCE_LANDA = 1.0480570490488479  # Only for Microaggregation
 
 ### Paths ###
 DATA_FOLDER = os.path.join("..", "..", "data")
-DATASET_NAME = "cabs_dataset_0700_0715.parquet"
-# DATASET_NAME = "cabs_dataset_0000_2359.parquet"
+DATASET_NAME = "cabs_dataset_20080608_0700_0715.csv"
 DATASET_PATH = os.path.join(DATA_FOLDER, DATASET_NAME)
-OUTPUT_FOLDER = os.path.join("..", "..", "outputs")
+OUTPUT_FOLDER = os.path.join("..", "..", "output")
 PREPROCESSED_PATH = os.path.join(OUTPUT_FOLDER, f"preprocessed_dataset_byCode.csv")
 ANONYMIZED_PATH = os.path.join(OUTPUT_FOLDER, f"anonymized_{METHOD_NAME}_byCode.csv")
 

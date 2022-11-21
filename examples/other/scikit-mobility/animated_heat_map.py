@@ -26,7 +26,7 @@ from skmob.utils import plot, constants
 #         to_ts = from_ts + timedelta(seconds=lapse)
 
 
-tdf = skmob.TrajDataFrame.from_file('../anonymize/out/actual_dataset_loaded.csv', latitude='lat', longitude='lon', datetime='timestamp', user_id='user_id')
+tdf = skmob.TrajDataFrame.from_file('../anonymize/output/actual_dataset_loaded.csv', latitude='lat', longitude='lon', datetime='timestamp', user_id='user_id')
 
 
 # create_maps(tdf)

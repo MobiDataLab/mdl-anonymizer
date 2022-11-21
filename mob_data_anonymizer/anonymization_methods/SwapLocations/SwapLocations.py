@@ -4,7 +4,7 @@ import random
 from haversine import Unit
 from tqdm import tqdm
 
-from mob_data_anonymizer.anonymization_methods.AnonymizationSchemeInterface import AnonymizationSchemeInterface
+from mob_data_anonymizer.anonymization_methods.AnonymizationMethodInterface import AnonymizationMethodInterface
 from mob_data_anonymizer.entities.Dataset import Dataset
 from mob_data_anonymizer.entities.Trajectory import Trajectory
 from mob_data_anonymizer.utils import utils
@@ -18,7 +18,7 @@ DEFAULT_VALUES = {
 }
 
 
-class SwapLocations(AnonymizationSchemeInterface):
+class SwapLocations(AnonymizationMethodInterface):
     def __init__(self, dataset: Dataset, k=DEFAULT_VALUES['k'],
                  max_r_s=DEFAULT_VALUES['max_r_s'], max_r_t=DEFAULT_VALUES['max_r_t'],
                  min_r_s=DEFAULT_VALUES['min_r_s'], min_r_t=DEFAULT_VALUES['min_r_t'],

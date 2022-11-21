@@ -11,7 +11,7 @@ from mob_data_anonymizer.entities.Dataset import Dataset
 from mob_data_anonymizer.io.scikit import Scikit
 from mob_data_anonymizer.utils.Stats import Stats
 
-def plot_cluster(cluster_id, filename="out/cluster.html"):
+def plot_cluster(cluster_id, filename="output/cluster.html"):
     cluster = microaggregation.get_clusters()[cluster_id]
     centroid = microaggregation.get_centroids()[cluster_id]
 
@@ -41,7 +41,7 @@ logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', level=logg
 dataset = Dataset()
 dataset.load_from_scikit('../anonymize/data/cabs_dataset_20080608_0800_1200.csv', min_locations=10, datetime_key="timestamp")
 dataset.filter_by_speed()
-dataset.export_to_scikit(filename="out/actual_dataset_loaded.csv")
+dataset.export_to_scikit(filename="output/actual_dataset_loaded.csv")
 
 Martinez2021_distance = Distance(dataset, landa=0.6506385836188395)
 microaggregation = Microaggregation(dataset, k=3, distance=Martinez2021_distance)
@@ -49,12 +49,12 @@ microaggregation.run()
 
 anon_dataset = microaggregation.get_anonymized_dataset()
 anon_dataset.set_description("DATASET ANONYMIZED - MICROAGGREGATION")
-anon_dataset.export_to_scikit(filename="out/cabs_scikit_anonymized_Micro_Martinez.csv")
+anon_dataset.export_to_scikit(filename="output/cabs_scikit_anonymized_Micro_Martinez.csv")
 
-plot_cluster(cluster_id=0, filename='out/first_cluster.html')
+plot_cluster(cluster_id=0, filename='output/first_cluster.html')
 
 last_cluster_id = list(microaggregation.get_centroids())[-1]
-plot_cluster(cluster_id=last_cluster_id, filename='out/last_cluster.html')
+plot_cluster(cluster_id=last_cluster_id, filename='output/last_cluster.html')
 
 
 

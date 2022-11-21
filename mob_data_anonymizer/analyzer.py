@@ -1,6 +1,7 @@
 import io
 import json
 import os
+import sys
 
 from mob_data_anonymizer import PARAMETERS_FILE_DOESNT_EXIST, SUCCESS, PARAMETERS_FILE_NOT_JSON, PARAMETERS_NOT_VALID, \
     WRONG_METHOD, INPUT_FILE_NOT_EXIST, OUTPUT_FOLDER_NOT_EXIST, DEFAULT_OUTPUT_FILE, DEFAULT_SAVE_FILTERED_DATASET, \
@@ -12,7 +13,7 @@ from mob_data_anonymizer.anonymization_methods.Microaggregation.Microaggregation
 from mob_data_anonymizer.anonymization_methods.SwapMob.SwapMob import SwapMob
 from mob_data_anonymizer.analysis_methods.QuadTreeHeatMap import QuadTreeHeatMap
 
-VALID_METHODS = ['SwapLocations', 'SwapMob', 'Microaggregation']
+VALID_METHODS = ['QuadTreeHeatMap']
 
 
 def check_parameters_file(file_path: str) -> int:
@@ -43,18 +44,13 @@ def check_parameters_file(file_path: str) -> int:
     return SUCCESS
 
 
-def anonymizer(file_path: str) -> int:
+def run_analysis(file_path: str) -> int:
     with open(file_path) as param_file:
         data = json.load(param_file)
 
     # Get instance of requested method
-    method_name = data['method']
-    if method_name == 'SwapLocations':
-        method = SwapLocations.get_instance(data)
-    elif method_name == 'SwapMob':
-        method = SwapMob.get_instance(data)
-    elif method_name == 'Microaggregation':
-        method = Microaggregation.get_instance(data)
+    class_object = getattr(sys.modules[__name__], data['method'])
+    method = class_object.get_instance(data)
 
     # Filtered dataset
     output_folder = data.get('output_folder', '')
@@ -72,5 +68,4 @@ def anonymizer(file_path: str) -> int:
     # Save output file
     output_file = data.get('main_output_file', DEFAULT_OUTPUT_FILE)
 
-    output = method.get_anonymized_dataset()
-    output.to_csv(f"{output_folder}{output_file}")
+    method.export_result(f"{output_folder}{output_file}")

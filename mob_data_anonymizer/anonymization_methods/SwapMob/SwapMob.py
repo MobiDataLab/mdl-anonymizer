@@ -3,7 +3,7 @@ import random
 import numpy as np
 from tqdm import tqdm
 
-from mob_data_anonymizer.anonymization_methods.AnonymizationSchemeInterface import AnonymizationSchemeInterface
+from mob_data_anonymizer.anonymization_methods.AnonymizationMethodInterface import AnonymizationMethodInterface
 from mob_data_anonymizer.entities.Dataset import Dataset
 from mob_data_anonymizer.entities.TimestampedLocation import TimestampedLocation
 
@@ -12,7 +12,7 @@ DEFAULT_VALUES = {
     "temporal_thold": 30,
 }
 
-class SwapMob(AnonymizationSchemeInterface):
+class SwapMob(AnonymizationMethodInterface):
     """Implements the SwapMob anonymization method from Julián Salas, David Megías & Vicenç Torra ( https://doi.org/10.1007/978-3-319-99771-1_22 )"""
 
     def __init__(self, dataset: Dataset, spatial_thold: float, temporal_thold: float,

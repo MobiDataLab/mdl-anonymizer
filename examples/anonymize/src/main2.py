@@ -39,7 +39,7 @@ DATA_FOLDER = os.path.join("..", "..", "data")
 DATASET_NAME = "cabs_dataset_20080608.parquet"
 # DATASET_NAME = "cabs_dataset_20080608_0700_0715"
 DATASET_PATH = os.path.join(DATA_FOLDER, DATASET_NAME)
-OUTPUT_FOLDER = os.path.join("..", "..", "outputs")
+OUTPUT_FOLDER = os.path.join("..", "..", "output")
 PREPROCESSED_PATH = os.path.join(OUTPUT_FOLDER, f"preprocessed_dataset_byCode.csv")
 ANONYMIZED_PATH = os.path.join(OUTPUT_FOLDER, f"anonymized_{METHOD_NAME}_byCode.csv")
 

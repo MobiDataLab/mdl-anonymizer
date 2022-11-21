@@ -1,3 +1,4 @@
+from mob_data_anonymizer.analysis_methods.AnalysisMethodInterface import AnalysisMethodInterface
 from mob_data_anonymizer.entities.Dataset import Dataset
 from mob_data_anonymizer.utils.pyqtree import Index, _QuadTree
 import logging
@@ -18,14 +19,19 @@ DEFAULT_VALUES = {
 }
 
 
-class QuadTreeHeatMap:
+class QuadTreeHeatMap(AnalysisMethodInterface):
     """Creates a heatmap of the data via a QuadTree (Klinger, A., & Dyer, C. R. 1976, https://www.sciencedirect.com/science/article/abs/pii/S0146664X76800068)
     ensuring K-anonymity.
     Similar approach to the used in https://www.idescat.cat/sort/sort411/41.1.7.lagonigro-etal.prov.pdf
     """
 
-    def __init__(self, dataset: Dataset, min_k: int, min_sector_length: int,
-                 merge_sectors: bool, split_n_locations: int):
+    def __init__(self,
+                 dataset: Dataset,
+                 min_k: int = DEFAULT_VALUES['min_k'],
+                 min_sector_length: int = DEFAULT_VALUES['min_sector_length'],
+                 merge_sectors: bool = DEFAULT_VALUES['merge_sectors'],
+                 split_n_locations: int = DEFAULT_VALUES['split_n_locations']
+                 ):
         """
         Parameters
         ----------
@@ -60,13 +66,13 @@ class QuadTreeHeatMap:
         self.split_n_locations = split_n_locations
 
         self.heatmap_nodes = None
-        self.anonymized_dataset = None
+        self.result = None
 
     def run(self):
         """Creates the K-anonymous heatmap based on a Quad-Tree.
 
         During the execution will transform the original dataset to NumPy for faster processing.
-        It will create a GeoPandasFrame (heatmap) and assign it to the self.anonymized_dataset variable.
+        It will create a GeoPandasFrame (heatmap) and assign it to the self.result variable.
         This new dataset can be obtained with the get_anonymized_dataset method.
         Two tqdm progress bars are used.
         """
@@ -115,7 +121,7 @@ class QuadTreeHeatMap:
             area = transform(sq_coords_to_sq_mts, polygon).area  # Transform square coordinates area into square meters
             gdf_dict["density"].append(n_locations/area)
         gdf = GeoDataFrame(gdf_dict)
-        self.anonymized_dataset = gdf
+        self.result = gdf
         logging.info("Heatmap done!")
 
     def qtree_to_heatmap(self, qtree_elem: _QuadTree) -> list:
@@ -271,16 +277,20 @@ class QuadTreeHeatMap:
         half_height = qtree_elem.height / 2.0
         min_y, max_y = center_y - half_height, center_y + half_height
         bbox = (min_x, min_y, max_x, max_y)
+
         return bbox
 
-    def get_anonymized_dataset(self) -> GeoDataFrame:
+    def get_result(self) -> GeoDataFrame:
         """Returns
         -------
-        anonymized_dataset : GeoDataFrame
+        result : GeoDataFrame
             The anonymized heatmap computed at the run method,
             in this case as a GeoPandasFrame with the attributes: geometry (a Polygon), n_locations and density.
         """
-        return self.anonymized_dataset
+        return self.result
+
+    def export_result(self, filepath):
+        self.result.to_file(f"{filepath}", driver="GeoJSON")
 
     @staticmethod
     def get_instance(data):

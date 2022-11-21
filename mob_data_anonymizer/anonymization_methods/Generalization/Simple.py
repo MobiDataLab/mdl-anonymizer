@@ -1,11 +1,11 @@
 from skmob import TrajDataFrame
 
-from mob_data_anonymizer.anonymization_methods.AnonymizationSchemeInterface import AnonymizationSchemeInterface
+from mob_data_anonymizer.anonymization_methods.AnonymizationMethodInterface import AnonymizationMethodInterface
 from mob_data_anonymizer.entities.Dataset import Dataset
 from mob_data_anonymizer.utils.tessellation import tessellate
 
 
-class Simple(AnonymizationSchemeInterface):
+class Simple(AnonymizationMethodInterface):
     def __init__(self, dataset: Dataset):
         self.dataset = dataset
         self.anonymized_dataset = dataset.__class__()

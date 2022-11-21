@@ -9,11 +9,11 @@ logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', level=logg
 MODE_DATE_TIME_INTERVAL = 1
 MODE_TIME_INTERVAL = 2
 
-dataset_folder = "../../examples/data/full_SF_cabs_dataset/"
+dataset_folder = "full_SF_cabs_dataset/"
 main_file = open(f'{dataset_folder}_cabs.txt', "r")
 
 
-def build_dataset_dt(from_dt, to_dt, output_filename="out/dataset.csv"):
+def build_dataset_dt(from_dt, to_dt, output_filename="output/dataset.csv"):
     element = datetime.strptime(from_dt, "%Y/%m/%d %H:%M:%S")
     from_timestamp = datetime.timestamp(element)
 
@@ -70,7 +70,7 @@ def build_dataset_dt(from_dt, to_dt, output_filename="out/dataset.csv"):
         return trajectory_id, locations_count
 
 
-def build_dataset_t(from_t, to_t, list_of_days=[], output_filename="out/dataset.csv"):
+def build_dataset_t(from_t, to_t, list_of_days=[], output_filename="output/dataset.csv"):
 
     def check_time(time_to_check, from_time, to_time):
 
@@ -144,18 +144,18 @@ def build_dataset_t(from_t, to_t, list_of_days=[], output_filename="out/dataset.
 mode = MODE_TIME_INTERVAL
 
 if mode == MODE_DATE_TIME_INTERVAL:
-    from_date_time = "2008/06/08 07:00:00"
-    to_date_time = "2008/06/08 07:30:00"
-    output_filename = "../../examples/out/cabs_dataset_20080608_0700_0730_uid.csv"
+    from_date_time = "2000/06/08 08:00:00"
+    to_date_time = "2020/06/08 12:00:00"
+    output_filename = "../../examples/data/cabs_dataset_all.csv"
 
     n_trajectories, n_locations = build_dataset_dt(from_date_time, to_date_time, output_filename)
 
     logging.info(f"Dataset created with {n_trajectories} trajectories and {n_locations} locations")
 
 if mode == MODE_TIME_INTERVAL:
-    from_time = "07:00:00"
-    to_time = "07:15:00"
-    output_filename = "../../examples/out/cabs_dataset_0700_0715.csv"
+    from_time = "00:00:00"
+    to_time = "23:59:59"
+    output_filename = "../../examples/output/cabs_dataset_0000_2359.csv"
 
     n_trajectories, n_locations = build_dataset_t(from_time, to_time, output_filename=output_filename)
 
@@ -166,6 +166,6 @@ if mode == MODE_TIME_INTERVAL:
 # dataset.load_from_scikit("../../examples/data/cabs_dataset_all.csv", min_locations=5, datetime_key="timestamp")
 # dataset.filter_by_speed(max_speed_kmh=150)
 #
-# filtered_filename = f"out/cabs_dataset_all_filtered_min5loc.csv"
+# filtered_filename = f"output/cabs_dataset_all_filtered_min5loc.csv"
 #
 # dataset.export_to_scikit(filename=filtered_filename)

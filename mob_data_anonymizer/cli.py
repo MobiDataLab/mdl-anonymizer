@@ -2,7 +2,7 @@ import typer
 
 from typing import Optional
 from mob_data_anonymizer import __app_name__, __version__, DEFAULT_PARAMETERS_FILE, ERRORS, SUCCESS, anonymizer, \
-    compute_measures
+    compute_measures, analyzer
 
 app = typer.Typer()
 
@@ -28,12 +28,32 @@ def anonymize(
         anonymizer.anonymizer(parameters_file)
 
 @app.command()
+def analysis(
+        parameters_file: str = typer.Option(
+            str(DEFAULT_PARAMETERS_FILE),
+            "--parameters_file",
+            "-f",
+            prompt="Analysis parameters file location"
+        ),
+) -> None:
+    code = analyzer.check_parameters_file(parameters_file)
+    if code != SUCCESS:
+        typer.secho(
+            f'Analysis failed with "{ERRORS[code]}"',
+            fg=typer.colors.RED,
+        )
+
+        raise typer.Exit(1)
+    else:
+        analyzer.run_analysis(parameters_file)
+
+@app.command()
 def measures(
         parameters_file: str = typer.Option(
             str(DEFAULT_PARAMETERS_FILE),
             "--parameters_file",
             "-f",
-            prompt="Stats parameters file location"
+            prompt="Measures parameters file location"
         ),
 ) -> None:
     code = compute_measures.check_parameters_file(parameters_file)

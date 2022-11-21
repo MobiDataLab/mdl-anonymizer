@@ -24,7 +24,7 @@ class TestSwapLocations(unittest.TestCase):
         anon_dataset = swap_locations.get_anonymized_dataset()
         anon_dataset.set_description("ANONYMIZED DATASET")
 
-        anon_dataset.export_to_scikit(filename="../../out/cabs_scikit_anonymized.csv")
+        anon_dataset.export_to_scikit(filename="../../output/cabs_scikit_anonymized.csv")
 
         # print(anon_dataset)
 
