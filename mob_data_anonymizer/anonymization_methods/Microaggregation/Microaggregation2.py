@@ -52,6 +52,8 @@ class Microaggregation2:
 
         # Partition
         # TODO: Test if the time_interval is suitable for the dataset
+        for i, t in enumerate(self.dataset.trajectories):
+            t.index = i
         datasets = []
         ordered_trajectories = sorted(self.dataset.trajectories, key=lambda t: t.locations[0].timestamp)
         while len(ordered_trajectories) >= self.k:
@@ -74,6 +76,7 @@ class Microaggregation2:
         datasets[-1].trajectories.extend(ordered_trajectories)
 
         # Clustering
+        self.clustering_method.set_original_dataset(self.dataset)
         start = time.time()
         for i, dataset in enumerate(datasets):
             logging.info(f"Starting clustering...{i+1} of {len(datasets)}")

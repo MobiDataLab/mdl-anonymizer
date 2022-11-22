@@ -2,7 +2,7 @@ import csv
 import datetime
 import logging
 from functools import reduce
-
+import random
 import pandas
 import numpy as np
 import pyarrow.parquet as pq
@@ -28,7 +28,8 @@ class Dataset(ABC):
     def from_file(self, filename, n_trajectories=None, min_locations=0,
                   latitude_key="lat", longitude_key="lon", datetime_key="datetime", user_key="user_id",
                   trajectory_key="trajectory_id",
-                  datetime_format="%Y/%m/%d %H:%M:%S"):
+                  datetime_format="%Y/%m/%d %H:%M:%S",
+                  sample=None):
 
         """
         Import a dataset from a CSV or parquet file
@@ -90,6 +91,9 @@ class Dataset(ABC):
             if len(T.locations) >= min_locations:
                 T.locations.sort(key=lambda x: x.timestamp)
                 self.add_trajectory(T)
+
+        if sample is not None:
+            self.trajectories = random.sample(self.trajectories, sample)
 
         count_locations = sum([len(t) for t in self.trajectories])
 

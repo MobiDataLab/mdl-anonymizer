@@ -5,6 +5,7 @@ class Trajectory:
     def __init__(self, id, user_id=None):
         self.id = id
         self.user_id = user_id
+        self.index = 0
         self.locations = []
 
     def add_location(self, location: TimestampedLocation):

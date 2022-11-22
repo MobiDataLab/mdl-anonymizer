@@ -51,6 +51,9 @@ class Microaggregation(AnonymizationMethodInterface):
 
         # Clustering
         logging.info("Starting clustering...")
+        for i, t in enumerate(self.dataset.trajectories):
+            t.index = i
+        self.clustering_method.set_original_dataset(self.dataset)
         start = time.time()
         self.clustering_method.set_dataset(self.dataset)
         self.clustering_method.run(self.k)
