@@ -15,8 +15,7 @@ from mob_data_anonymizer.distances.trajectory.Martinez2021.Distance import Dista
 from mob_data_anonymizer.aggregation.Martinez2021.Aggregation import Aggregation
 from mob_data_anonymizer.clustering.MDAV.SimpleMDAV import SimpleMDAV
 from mob_data_anonymizer.clustering.MDAV.SimpleMDAVDataset import SimpleMDAVDataset
-from mob_data_anonymizer.clustering.MDAV.SimpleMDAV_ant import SimpleMDAV_ant
-from mob_data_anonymizer.clustering.MDAV.SimpleMDAVDataset_ant import SimpleMDAVDataset_ant
+
 
 from mob_data_anonymizer.entities.Dataset import Dataset
 from mob_data_anonymizer.utils.Stats import Stats
