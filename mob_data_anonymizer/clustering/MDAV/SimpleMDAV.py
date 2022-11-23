@@ -49,6 +49,7 @@ class SimpleMDAV(ClusteringInterface):
             self.mdav_dataset.distances = self.mdav_dataset.distances[:i]+self.mdav_dataset.distances[i+1:]
             # create cluster with r
             self.mdav_dataset.make_cluster(farthest_r, k)
+            pbar.update(1)
             # create cluster with s
             self.mdav_dataset.calculate_distances(farthest_s)
             self.mdav_dataset.make_cluster(farthest_s, k)
@@ -57,8 +58,7 @@ class SimpleMDAV(ClusteringInterface):
         logging.debug(f'Unselected_length: {self.mdav_dataset.unselected_length()}')
         if self.mdav_dataset.unselected_length() >= 2 * k:
             # calculate r (farthest from centroid)
-            farthest_r = self.mdav_dataset.farthest_from(centroid)
-            self.mdav_dataset.trajectories_elegible = np.delete(self.mdav_dataset.trajectories_elegible, farthest_r.index)
+            farthest_r, _ = self.mdav_dataset.farthest_from(centroid)
             self.mdav_dataset.calculate_distances(farthest_r)
             # create cluster with r
             self.mdav_dataset.make_cluster(farthest_r, k)

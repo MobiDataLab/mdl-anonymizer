@@ -25,6 +25,7 @@ class SimpleMDAVDataset(MDAVDatasetInterface):
 
     def set_dataset(self, dataset: Dataset):
         self.dataset = dataset
+        self.trajectories_elegible = np.array(self.dataset.trajectories)
         self.unselected_len = len(dataset)
         self.assigned_to = {}
         self.cluster_id = 0
@@ -46,9 +47,6 @@ class SimpleMDAVDataset(MDAVDatasetInterface):
         closest = [traj]
         closest.extend(self.trajectories_elegible[:k-1])
         self.trajectories_elegible = self.trajectories_elegible[k-1:]
-
-        if self.cluster_id == 4:
-            pass
 
         for t in closest:
             self.assigned_to[t.index] = self.cluster_id

@@ -104,7 +104,6 @@ class Microaggregation2:
             # Add to anonymized dataset
             for T in anon_trajectories:
                 T.add_locations(aggregate_trajectory.locations)
-
                 self.anonymized_dataset.add_trajectory(T)
 
     def get_clusters(self):
