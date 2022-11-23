@@ -16,7 +16,6 @@ from mob_data_anonymizer.aggregation.Martinez2021.Aggregation import Aggregation
 from mob_data_anonymizer.clustering.MDAV.SimpleMDAV import SimpleMDAV
 from mob_data_anonymizer.clustering.MDAV.SimpleMDAVDataset import SimpleMDAVDataset
 
-
 from mob_data_anonymizer.entities.Dataset import Dataset
 from mob_data_anonymizer.utils.Stats import Stats
 
@@ -63,7 +62,7 @@ if METHOD_NAME == "SwapMob":
 elif METHOD_NAME == "Microaggregation":
     Martinez2021_distance = Distance(dataset, landa=DISTANCE_LANDA)
     aggregation_method = Aggregation
-    clustering_method = SimpleMDAV_ant(SimpleMDAVDataset_ant(dataset, Martinez2021_distance, aggregation_method))
+    clustering_method = SimpleMDAV(SimpleMDAVDataset(dataset, Martinez2021_distance, aggregation_method))
     anonymizer = Microaggregation(dataset, k=K, clustering_method=clustering_method,
                                   distance=Martinez2021_distance, aggregation_method=aggregation_method)
 elif METHOD_NAME == "Microaggregation2":
