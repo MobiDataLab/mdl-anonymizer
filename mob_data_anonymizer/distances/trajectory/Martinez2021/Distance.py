@@ -2,7 +2,8 @@ import itertools
 import logging
 from collections import defaultdict
 from math import sqrt
-
+from tqdm import tqdm
+import random
 from mob_data_anonymizer.entities.Dataset import Dataset
 from mob_data_anonymizer.entities.Trajectory import Trajectory
 from mob_data_anonymizer.distances.trajectory.DistanceInterface import DistanceInterface
@@ -24,6 +25,30 @@ class Distance(DistanceInterface):
             logging.info(f"\tTaking landa = {self.landa}")
 
     def __set_weight_parameter(self):
+        porcen_sample = 25
+        num_sample = int((len(self.dataset.trajectories) * porcen_sample) / 100)
+        logging.info(f"\tTaking sample for landa = {num_sample} ({porcen_sample}%)")
+        sample = random.sample(self.dataset.trajectories, num_sample)
+        rsme_dist = 0
+        rsme_temp = 0
+        for t1 in tqdm(sample):
+            dist = 0
+            temp = 0
+            for t2 in sample:
+                d1 = self.__compute_spatial_distance(t1, t2)
+                d2 = self.__compute_temporal_distance(t1, t2)
+                dist += pow(d1, 2)
+                temp += pow(d2, 2)
+            rsme_dist += sqrt(dist) / len(self.dataset.trajectories)
+            rsme_temp += sqrt(temp) / len(self.dataset.trajectories)
+        rsme_dist /= len(self.dataset.trajectories)
+        rsme_temp /= len(self.dataset.trajectories)
+
+        landa = rsme_dist / rsme_temp
+
+        return landa
+
+    def __set_weight_parameter_ant(self):
 
         # We need the maximum distance between points in the data set, maximum time difference between points in
         # the data set and the avg velocity of the trajectories in the data set
@@ -90,8 +115,11 @@ class Distance(DistanceInterface):
                 loc_1 = trajectory1.locations[i]
                 loc_2 = trajectory2.locations[j]
 
-                d += (loc_1.spatial_distance(loc_2, type=self.spatial_distance) +
-                      self.landa * (loc_1.temporal_distance(loc_2)) * avg_speed)
+                # d1 = loc_1.spatial_distance(loc_2, type=self.spatial_distance)
+                # d2 = self.landa * (loc_1.temporal_distance(loc_2)) * avg_speed
+
+                d += pow((loc_1.spatial_distance(loc_2, type=self.spatial_distance) +
+                          self.landa * (loc_1.temporal_distance(loc_2)) * avg_speed), 2)
 
                 index_1 += gap_1
                 index_2 += gap_2
@@ -106,6 +134,80 @@ class Distance(DistanceInterface):
         # Store the distance for later use
         self.distance_matrix[trajectory1.id][trajectory2.id] = d
         self.distance_matrix[trajectory2.id][trajectory1.id] = d
+
+        return d
+
+    def __compute_spatial_distance(self, trajectory1: Trajectory, trajectory2: Trajectory) -> float:
+        h = round((len(trajectory1) + len(trajectory2)) / 2)
+        gap_1 = len(trajectory1) / h
+        gap_2 = len(trajectory2) / h
+
+        index_1 = index_2 = 0
+        i = j = 0
+
+        d = 0
+
+        for k in range(h):
+
+            if i == len(trajectory1):
+                i = len(trajectory1) - 1
+
+            if j == len(trajectory2):
+                j = len(trajectory2) - 1
+
+            loc_1 = trajectory1.locations[i]
+            loc_2 = trajectory2.locations[j]
+
+            d += pow(loc_1.spatial_distance(loc_2, type=self.spatial_distance), 2)
+
+            index_1 += gap_1
+            index_2 += gap_2
+
+            i = round(index_1)
+            j = round(index_2)
+
+        d /= h
+
+        d = sqrt(d)
+
+        return d
+
+    def __compute_temporal_distance(self, trajectory1: Trajectory, trajectory2: Trajectory) -> float:
+        avg_speed_1 = trajectory1.get_avg_speed(sp_type=self.spatial_distance)
+        avg_speed_2 = trajectory2.get_avg_speed(sp_type=self.spatial_distance)
+        avg_speed = (avg_speed_1 + avg_speed_2) / 2
+
+        h = round((len(trajectory1) + len(trajectory2)) / 2)
+        gap_1 = len(trajectory1) / h
+        gap_2 = len(trajectory2) / h
+
+        index_1 = index_2 = 0
+        i = j = 0
+
+        d = 0
+
+        for k in range(h):
+
+            if i == len(trajectory1):
+                i = len(trajectory1) - 1
+
+            if j == len(trajectory2):
+                j = len(trajectory2) - 1
+
+            loc_1 = trajectory1.locations[i]
+            loc_2 = trajectory2.locations[j]
+
+            d += pow(loc_1.temporal_distance(loc_2) * avg_speed, 2)
+
+            index_1 += gap_1
+            index_2 += gap_2
+
+            i = round(index_1)
+            j = round(index_2)
+
+        d /= h
+
+        d = sqrt(d)
 
         return d
 

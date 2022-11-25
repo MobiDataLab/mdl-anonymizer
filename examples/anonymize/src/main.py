@@ -15,6 +15,8 @@ from mob_data_anonymizer.distances.trajectory.Martinez2021.Distance import Dista
 from mob_data_anonymizer.aggregation.Martinez2021.Aggregation import Aggregation
 from mob_data_anonymizer.clustering.MDAV.SimpleMDAV import SimpleMDAV
 from mob_data_anonymizer.clustering.MDAV.SimpleMDAVDataset import SimpleMDAVDataset
+from mob_data_anonymizer.clustering.MDAV.SimpleMDAV_ant import SimpleMDAV_ant
+from mob_data_anonymizer.clustering.MDAV.SimpleMDAVDataset_ant import SimpleMDAVDataset_ant
 
 from mob_data_anonymizer.entities.Dataset import Dataset
 from mob_data_anonymizer.utils.Stats import Stats
@@ -31,14 +33,14 @@ MIN_N_SWAPS = 1  # Only for SwapMob
 SEED = 42  # Only for SwapMob
 K = 3  # Only for Microaggregation
 DISTANCE_LANDA = 1.0480570490488479  # Only for Microaggregation
-INTERVAL = 24*60*60 # Only for Microaggregation2 (seconds)
+INTERVAL = 60*60 # Only for Microaggregation2 (seconds)
 
 ### Paths ###
 DATA_FOLDER = os.path.join("..", "..", "data")
-# DATASET_NAME = "cabs_dataset_0000_2359.parquet"
-# DATASET_NAME = "cabs_dataset_20080608.parquet"
-DATASET_NAME = "cabs_dataset_20080608_0800_1200.parquet"
-# DATASET_NAME = "cabs_dataset_20080608_0700_0715.csv"
+# DATASET_NAME = "cabs_dataset_0000_2359.parquet" # DISTANCE_LANDA =
+DATASET_NAME = "cabs_dataset_20080608.parquet"  # DISTANCE_LANDA =
+# DATASET_NAME = "cabs_dataset_20080608_0800_1200.parquet" # DISTANCE_LANDA =
+# DATASET_NAME = "cabs_dataset_20080608_0700_0715.csv" # DISTANCE_LANDA =
 DATASET_PATH = os.path.join(DATA_FOLDER, DATASET_NAME)
 OUTPUT_FOLDER = os.path.join("..", "..", "output")
 PREPROCESSED_PATH = os.path.join(OUTPUT_FOLDER, f"preprocessed_dataset_byCode.csv")
@@ -60,7 +62,8 @@ if METHOD_NAME == "SwapMob":
     anonymizer = SwapMob(dataset, temporal_thold=TEMPORAL_THLD, spatial_thold=SPATIAL_THLD,
                          min_n_swaps=MIN_N_SWAPS, seed=SEED)
 elif METHOD_NAME == "Microaggregation":
-    Martinez2021_distance = Distance(dataset, landa=DISTANCE_LANDA)
+    # Martinez2021_distance = Distance(dataset, landa=DISTANCE_LANDA)
+    Martinez2021_distance = Distance(dataset)
     aggregation_method = Aggregation
     clustering_method = SimpleMDAV(SimpleMDAVDataset(dataset, Martinez2021_distance, aggregation_method))
     anonymizer = Microaggregation(dataset, k=K, clustering_method=clustering_method,
