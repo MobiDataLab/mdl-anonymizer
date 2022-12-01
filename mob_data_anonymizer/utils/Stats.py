@@ -31,8 +31,8 @@ class Stats:
                 d = distance.compute(t1, t1_anon)
                 if d and d != 9999999999999:
                     dist += pow(d, 2)
-
-        dist = sqrt(dist) / len(self.anonymized_dataset)
+        dist /= len(self.anonymized_dataset)
+        dist = sqrt(dist)
 
         return dist
 
@@ -40,13 +40,14 @@ class Stats:
         # TODO: Y como se mide la diferencia cuando una trayectoría ha sido eliminada?
         distance.distance_matrix = defaultdict(dict)
         dist = 0.0
+        dist2 = 0
         for i, t1 in enumerate(self.original_dataset.trajectories):
             t1_anon = self.anonymized_dataset.trajectories[i]
             if t1_anon:
                 d = distance.compute(t1, t1_anon)
                 if d and d != 9999999999999:
                     dist += pow(d, 2)
-
-        dist = sqrt(dist) / len(self.anonymized_dataset)
+        dist /= len(self.anonymized_dataset)
+        dist = sqrt(dist)
 
         return dist

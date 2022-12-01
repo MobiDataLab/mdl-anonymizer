@@ -20,6 +20,7 @@ class Dataset(ABC):
     def __init__(self):
         self.trajectories = []
         self.description = None
+        self.sample = None
 
     #    @abstractmethod
     #    def load(self):
@@ -36,6 +37,7 @@ class Dataset(ABC):
         """
 
         logging.info("Loading dataset...")
+        self.sample = sample
 
         if filename[-4:] == '.csv':
             df = pandas.read_csv(filename)
@@ -91,9 +93,6 @@ class Dataset(ABC):
             if len(T.locations) >= min_locations:
                 T.locations.sort(key=lambda x: x.timestamp)
                 self.add_trajectory(T)
-
-        if sample is not None:
-            self.trajectories = random.sample(self.trajectories, sample)
 
         count_locations = sum([len(t) for t in self.trajectories])
 
@@ -254,6 +253,12 @@ class Dataset(ABC):
 
         logging.info(f"Dataset filtered. Removed trajectories with some one-time speed above {max_speed_kmh}. "
                      f"Now it has {len(self)} trajectories and {count_locations} locations.")
+        if self.sample is not None:
+            self.trajectories = random.sample(self.trajectories, self.sample)
+            count_locations = sum([len(t) for t in self.trajectories])
+            logging.info(
+                f"Dataset sampled. "
+                f"Now it has {len(self)} trajectories and {count_locations} locations.")
 
     def __len__(self):
         return len(self.trajectories)

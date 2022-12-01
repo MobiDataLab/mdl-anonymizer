@@ -4,6 +4,7 @@ from mob_data_anonymizer.clustering.ClusteringInterface import ClusteringInterfa
 from mob_data_anonymizer.clustering.MDAV.SimpleMDAVDataset import SimpleMDAVDataset
 from mob_data_anonymizer.clustering.MDAV.interfaces.MDAVDatasetInterface import MDAVDatasetInterface
 from mob_data_anonymizer.entities.Dataset import Dataset
+import inspect
 
 from timeit import default_timer as timer
 from tqdm import tqdm
@@ -37,10 +38,17 @@ class SimpleMDAV(ClusteringInterface):
 
         expected_clusters = len(self.mdav_dataset) / k
 
+        stack = inspect.stack()
+        the_class = stack[1][0].f_locals["self"].__class__.__name__
+        progress = True
+        if the_class == "Microaggregation2":
+            progress = True
+
         # We compute the centroid just one time
         centroid = self.mdav_dataset.compute_centroid()
         logging.debug(f'Centroid: {centroid}')
-        pbar = tqdm(total=expected_clusters)
+        if progress:
+            pbar = tqdm(total=expected_clusters)
         while self.mdav_dataset.unselected_length() >= 3 * k:
             # calculate r (farthest from centroid)
             farthest_r, _ = self.mdav_dataset.farthest_from(centroid)
@@ -49,11 +57,13 @@ class SimpleMDAV(ClusteringInterface):
             self.mdav_dataset.distances = self.mdav_dataset.distances[:i]+self.mdav_dataset.distances[i+1:]
             # create cluster with r
             self.mdav_dataset.make_cluster(farthest_r, k)
-            pbar.update(1)
+            if progress:
+                pbar.update(1)
             # create cluster with s
             self.mdav_dataset.calculate_distances(farthest_s)
             self.mdav_dataset.make_cluster(farthest_s, k)
-            pbar.update(1)
+            if progress:
+                pbar.update(1)
 
         logging.debug(f'Unselected_length: {self.mdav_dataset.unselected_length()}')
         if self.mdav_dataset.unselected_length() >= 2 * k:
@@ -62,13 +72,14 @@ class SimpleMDAV(ClusteringInterface):
             self.mdav_dataset.calculate_distances(farthest_r)
             # create cluster with r
             self.mdav_dataset.make_cluster(farthest_r, k)
-            pbar.update(1)
+            if progress:
+                pbar.update(1)
 
         self.mdav_dataset.make_cluster_unselected()
         # logging.info("\tLast cluster made!")
-        pbar.update(1)
-
-        pbar.close()
+        if progress:
+            pbar.update(1)
+            pbar.close()
 
     def get_clusters(self) -> list:
         clusters = {}

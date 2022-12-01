@@ -79,6 +79,7 @@ class Microaggregation2:
         self.clustering_method.set_original_dataset(self.dataset)
         start = time.time()
         for i, dataset in enumerate(datasets):
+        # for i, dataset in enumerate(tqdm(datasets)):
             logging.info(f"Starting clustering...{i+1} of {len(datasets)}")
             self.clustering_method.set_dataset(dataset)
             self.clustering_method.run(self.k)
