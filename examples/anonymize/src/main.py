@@ -26,16 +26,16 @@ logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', level=logg
 ############################## Settings ##############################
 ### Anonymization method selection and settings ###
 # METHOD_NAME = "SwapLocations"  # Options: ["SwapMob", "Microaggregation", "SwapLocations"]
-METHOD_NAME = "Microaggregation2"  # Options: ["SwapMob", "Microaggregation", "Microaggregation2", "SwapLocations"]
+METHOD_NAME = "Microaggregation"  # Options: ["SwapMob", "Microaggregation", "Microaggregation2", "SwapLocations"]
 TEMPORAL_THLD = 30  # Only for SwapMob
 SPATIAL_THLD = 0.2  # Only for SwapMob
 MIN_N_SWAPS = 1  # Only for SwapMob
 SEED = 42  # Only for SwapMob
-K = 3  # Only for Microaggregation
+K = 5  # Only for Microaggregation
 # DISTANCE_LANDA = 1.0480570490488479  # Only for Microaggregation
 DISTANCE_LANDA = 0.00657901067783612  # Only for Microaggregation
 MAX_DIST = 125193.634080271    # For normalization
-INTERVAL = 24*60*60 # Only for Microaggregation2 (seconds)
+INTERVAL = 60 # Only for Microaggregation2 (seconds)
 
 ### Paths ###
 DATA_FOLDER = os.path.join("..", "..", "data")

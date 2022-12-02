@@ -42,7 +42,7 @@ class SimpleMDAV(ClusteringInterface):
         the_class = stack[1][0].f_locals["self"].__class__.__name__
         progress = True
         if the_class == "Microaggregation2":
-            progress = True
+            progress = False
 
         # We compute the centroid just one time
         centroid = self.mdav_dataset.compute_centroid()
