@@ -31,18 +31,19 @@ TEMPORAL_THLD = 30  # Only for SwapMob
 SPATIAL_THLD = 0.2  # Only for SwapMob
 MIN_N_SWAPS = 1  # Only for SwapMob
 SEED = 42  # Only for SwapMob
-K = 5  # Only for Microaggregation
-# DISTANCE_LANDA = 1.0480570490488479  # Only for Microaggregation
-DISTANCE_LANDA = 0.00657901067783612  # Only for Microaggregation
-MAX_DIST = 125193.634080271    # For normalization
-INTERVAL = 60 # Only for Microaggregation2 (seconds)
+K = 3  # Only for Microaggregation
+DISTANCE_LANDA = 1.5687583243223124  # Only for Microaggregation
+# DISTANCE_LANDA = 0.00657901067783612  # Only for Microaggregation
+# MAX_DIST = 125193.634080271    # For normalization
+MAX_DIST = 66908.66750605461    # For normalization
+INTERVAL = 60*60 # Only for Microaggregation2 (seconds)
 
 ### Paths ###
 DATA_FOLDER = os.path.join("..", "..", "data")
 # DATASET_NAME = "cabs_dataset_0000_2359.parquet" # DISTANCE_LANDA =
-DATASET_NAME = "cabs_dataset_20080608.parquet"  # DISTANCE_LANDA =
+# DATASET_NAME = "cabs_dataset_20080608.parquet"  # DISTANCE_LANDA = 0.00657901067783612; MAX_DIST = 125193.634080271
 # DATASET_NAME = "cabs_dataset_20080608_0800_1200.parquet" # DISTANCE_LANDA =
-# DATASET_NAME = "cabs_dataset_20080608_0700_0715.csv" # DISTANCE_LANDA =
+DATASET_NAME = "cabs_dataset_20080608_0700_0715.csv" # DISTANCE_LANDA = 1.5687583243223124; MAX_DIST = 66908.66750605461
 DATASET_PATH = os.path.join(DATA_FOLDER, DATASET_NAME)
 OUTPUT_FOLDER = os.path.join("..", "..", "output")
 PREPROCESSED_PATH = os.path.join(OUTPUT_FOLDER, f"preprocessed_dataset_byCode.csv")
@@ -105,3 +106,6 @@ Martinez2021_distance = Distance(dataset, landa=DISTANCE_LANDA)
 print(f'rsme: {round(stats.get_rsme_ordered(Martinez2021_distance), 4)}')
 Martinez2021_distance = Distance(dataset, landa=DISTANCE_LANDA, max_dist=MAX_DIST, normalized=True)
 print(f'rsme normalized: {round(stats.get_rsme_ordered(Martinez2021_distance), 4)}')
+Martinez2021_distance = Distance(dataset, landa=DISTANCE_LANDA)
+print(f'Privacy metric (% record linkage): {round(stats.get_record_linkage(Martinez2021_distance), 4)}')
+

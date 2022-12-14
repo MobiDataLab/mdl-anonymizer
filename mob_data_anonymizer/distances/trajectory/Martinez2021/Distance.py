@@ -22,6 +22,7 @@ class Distance(DistanceInterface):
         self.normalized = normalized
         self.average_speed = self.__compute_average_speed()
         self.max_dist = 0  # for normalization [0,1]
+        self.reference_trajectory = None
         if landa is None:
             logging.info("Computing weight parameter and max distance")
             self.landa, self.max_dist = self.__set_weight_parameter()   # max_dist for normalization [0,1]
@@ -142,6 +143,34 @@ class Distance(DistanceInterface):
         d2 = l12.spatial_distance(l22) * 1000  # m
         self.mean_spatial_distance = max(d1, d2) / 2
         self.mean_temporal_distance = (t_max - t_min) / 2
+
+    def compute_reference_trajectory(self):
+        x_max = float("-inf")
+        x_min = float("inf")
+        y_max = float("-inf")
+        y_min = float("inf")
+        t_max = float("-inf")
+        t_min = float("inf")
+        for traj in tqdm(self.dataset.trajectories):
+            for loc in traj.locations:
+                if loc.x > x_max:
+                    x_max = loc.x
+                if loc.x < x_min:
+                    x_min = loc.x
+                if loc.y > y_max:
+                    y_max = loc.y
+                if loc.y < y_min:
+                    y_min = loc.y
+                if loc.timestamp > t_max:
+                    t_max = loc.timestamp
+                if loc.timestamp < t_min:
+                    t_min = loc.timestamp
+        l = TimestampedLocation(t_min, x_min, y_min)
+        self.reference_trajectory = Trajectory(0)
+        self.reference_trajectory.add_location(l)
+
+    def compute_distance_to_reference_trajectory(self, trajectory):
+        return self.compute(trajectory, self.reference_trajectory)
 
     def __set_weight_parameter_ant(self):
         # porcen_sample = 50

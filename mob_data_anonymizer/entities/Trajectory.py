@@ -7,6 +7,7 @@ class Trajectory:
         self.user_id = user_id
         self.index = 0
         self.locations = []
+        self.distance_to_reference_trajectory = 0
 
     def add_location(self, location: TimestampedLocation):
         if len(self.locations) > 0 and location.timestamp <= self.get_last_timestamp():
@@ -65,7 +66,10 @@ class Trajectory:
                 l2 = self.locations[i + 1]
                 avg_speed += (l1.spatial_distance(l2, sp_type) / l1.temporal_distance(l2))
             except IndexError:
-                avg_speed /= (len(self.locations) - 1)
+                if len(self.locations) == 1:
+                    avg_speed += 0
+                else:
+                    avg_speed /= (len(self.locations) - 1)
             except ZeroDivisionError:
                 avg_speed += 0
 
@@ -102,6 +106,16 @@ class Trajectory:
             string += "..."
 
         return string
+
+    def __hash__(self):
+        string = ""
+        for loc in self.locations:
+            string += f'[{loc.timestamp}: {loc.x}, {loc.y}] '
+
+        return hash(string)
+
+    def __eq__(self, other):
+        return hash(hash(self) == hash(other))
 
     def __repr__(self):
         return str(self)
