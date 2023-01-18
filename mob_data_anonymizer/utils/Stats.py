@@ -60,7 +60,7 @@ class Stats:
         for traj_anom in tqdm(self.anonymized_dataset.trajectories):
             min_dist = float('inf')
             for traj_ori in self.original_dataset.trajectories:
-                dist = distance.compute(traj_ori, traj_anom)
+                dist = distance.compute_without_map(traj_ori, traj_anom)
                 if dist < min_dist:
                     min_dist = dist
                     min_traj = traj_ori
@@ -97,17 +97,22 @@ class Stats:
 
         self.original_dataset.trajectories.sort(key=lambda x: x.distance_to_reference_trajectory)
         distances = [trajectory.distance_to_reference_trajectory for trajectory in self.original_dataset.trajectories]
-
         min_traj = None
         total_prob = 0
         for trajectory_anom in tqdm(self.anonymized_dataset.trajectories):
+            if trajectory_anom.id == 353:
+                pass
+            if trajectory_anom.id == 420:
+                pass
+            trajectory_anom.distance_to_reference_trajectory = \
+                distance.compute_distance_to_reference_trajectory(trajectory_anom)
             closest_trajectories = Stats.take_closest_window(distances,
                                                              trajectory_anom.distance_to_reference_trajectory,
                                                              window_size)
             min_dist = float('inf')
             for pos in closest_trajectories:
                 trajectory = self.original_dataset.trajectories[pos]
-                dist = distance.compute(trajectory, trajectory_anom)
+                dist = distance.compute_without_map(trajectory, trajectory_anom)
                 if dist < min_dist:
                     min_dist = dist
                     min_traj = trajectory

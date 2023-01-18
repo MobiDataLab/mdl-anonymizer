@@ -170,7 +170,7 @@ class Distance(DistanceInterface):
         self.reference_trajectory.add_location(l)
 
     def compute_distance_to_reference_trajectory(self, trajectory):
-        return self.compute(trajectory, self.reference_trajectory)
+        return self.compute_without_map(trajectory, self.reference_trajectory)
 
     def __set_weight_parameter_ant(self):
         # porcen_sample = 50
@@ -286,6 +286,51 @@ class Distance(DistanceInterface):
         # Store the distance for later use
         self.distance_matrix[trajectory1.id][trajectory2.id] = d
         self.distance_matrix[trajectory2.id][trajectory1.id] = d
+
+        return d
+
+    def compute_without_map(self, trajectory1: Trajectory, trajectory2: Trajectory) -> float:
+        avg_speed_1 = trajectory1.get_avg_speed(sp_type=self.spatial_distance)
+        avg_speed_2 = trajectory2.get_avg_speed(sp_type=self.spatial_distance)
+        avg_speed = (avg_speed_1 + avg_speed_2) / 2
+        avg_speed /= 3.6  # m/s
+
+        h = round((len(trajectory1) + len(trajectory2)) / 2)
+        gap_1 = len(trajectory1) / h
+        gap_2 = len(trajectory2) / h
+
+        index_1 = index_2 = 0
+        i = j = 0
+
+        d = 0
+
+        for k in range(h):
+
+            if i == len(trajectory1):
+                i = len(trajectory1) - 1
+
+            if j == len(trajectory2):
+                j = len(trajectory2) - 1
+
+            loc_1 = trajectory1.locations[i]
+            loc_2 = trajectory2.locations[j]
+
+            d1 = loc_1.spatial_distance(loc_2, type=self.spatial_distance) * 1000  # meters
+            d2 = self.landa * (loc_1.temporal_distance(loc_2)) * avg_speed  # meters
+            d += pow(d1 + d2, 2)
+
+            index_1 += gap_1
+            index_2 += gap_2
+
+            i = round(index_1)
+            j = round(index_2)
+
+        d /= h
+
+        d = sqrt(d)
+
+        if self.normalized:
+            d /= self.max_dist  # normalization [0,1]
 
         return d
 
