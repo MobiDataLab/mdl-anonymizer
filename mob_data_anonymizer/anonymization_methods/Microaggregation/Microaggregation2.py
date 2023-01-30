@@ -52,6 +52,8 @@ class Microaggregation2:
 
         # Partition
         # TODO: Test if the time_interval is suitable for the dataset
+        for i, t in enumerate(self.dataset.trajectories):
+            t.index = i
         datasets = []
         ordered_trajectories = sorted(self.dataset.trajectories, key=lambda t: t.locations[0].timestamp)
         while len(ordered_trajectories) >= self.k:
@@ -74,14 +76,18 @@ class Microaggregation2:
         datasets[-1].trajectories.extend(ordered_trajectories)
 
         # Clustering
+        self.clustering_method.set_original_dataset(self.dataset)
         start = time.time()
-        for i, dataset in enumerate(datasets):
-            logging.info(f"Starting clustering...{i+1} of {len(datasets)}")
+        logging.info("Starting clustering...")
+        # for i, dataset in enumerate(datasets):
+        for i, dataset in enumerate(tqdm(datasets)):
+            # logging.info(f"Starting clustering...{i+1} of {len(datasets)}")
             self.clustering_method.set_dataset(dataset)
             self.clustering_method.run(self.k)
-            logging.info("Building anonymized dataset...")
+            # logging.info("Building anonymized dataset...")
             self.clusters = self.clustering_method.get_clusters()
             self.process_clusters()
+        logging.info("Building anonymized dataset...")
         self.anonymized_dataset.trajectories.sort(key=lambda t: t.id)
         end = time.time()
         logging.info(f"Clustering finished! Time: {end - start}")
@@ -101,7 +107,6 @@ class Microaggregation2:
             # Add to anonymized dataset
             for T in anon_trajectories:
                 T.add_locations(aggregate_trajectory.locations)
-
                 self.anonymized_dataset.add_trajectory(T)
 
     def get_clusters(self):

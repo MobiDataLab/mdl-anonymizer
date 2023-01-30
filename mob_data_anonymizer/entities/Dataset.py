@@ -2,7 +2,7 @@ import csv
 import datetime
 import logging
 from functools import reduce
-
+import random
 import pandas
 import numpy as np
 import pyarrow.parquet as pq
@@ -20,6 +20,7 @@ class Dataset(ABC):
     def __init__(self):
         self.trajectories = []
         self.description = None
+        self.sample = None
 
     #    @abstractmethod
     #    def load(self):
@@ -28,13 +29,15 @@ class Dataset(ABC):
     def from_file(self, filename, n_trajectories=None, min_locations=0,
                   latitude_key="lat", longitude_key="lon", datetime_key="datetime", user_key="user_id",
                   trajectory_key="trajectory_id",
-                  datetime_format="%Y/%m/%d %H:%M:%S"):
+                  datetime_format="%Y/%m/%d %H:%M:%S",
+                  sample=None):
 
         """
         Import a dataset from a CSV or parquet file
         """
 
         logging.info("Loading dataset...")
+        self.sample = sample
 
         if filename[-4:] == '.csv':
             df = pandas.read_csv(filename)
@@ -250,6 +253,12 @@ class Dataset(ABC):
 
         logging.info(f"Dataset filtered. Removed trajectories with some one-time speed above {max_speed_kmh}. "
                      f"Now it has {len(self)} trajectories and {count_locations} locations.")
+        if self.sample is not None:
+            self.trajectories = random.sample(self.trajectories, self.sample)
+            count_locations = sum([len(t) for t in self.trajectories])
+            logging.info(
+                f"Dataset sampled. "
+                f"Now it has {len(self)} trajectories and {count_locations} locations.")
 
     def __len__(self):
         return len(self.trajectories)

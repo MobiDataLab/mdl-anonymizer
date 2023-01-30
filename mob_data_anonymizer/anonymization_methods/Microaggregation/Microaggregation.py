@@ -51,6 +51,9 @@ class Microaggregation(AnonymizationMethodInterface):
 
         # Clustering
         logging.info("Starting clustering...")
+        for i, t in enumerate(self.dataset.trajectories):
+            t.index = i
+        self.clustering_method.set_original_dataset(self.dataset)
         start = time.time()
         self.clustering_method.set_dataset(self.dataset)
         self.clustering_method.run(self.k)
@@ -62,6 +65,7 @@ class Microaggregation(AnonymizationMethodInterface):
         self.clusters = self.clustering_method.get_clusters()
 
         self.process_clusters()
+        self.anonymized_dataset.trajectories.sort(key=lambda t: t.id)
 
         logging.info('Anonymization finished!')
 
@@ -78,7 +82,6 @@ class Microaggregation(AnonymizationMethodInterface):
             # Add to anonymized dataset
             for T in anon_trajectories:
                 T.add_locations(aggregate_trajectory.locations)
-
                 self.anonymized_dataset.add_trajectory(T)
 
     def get_clusters(self):

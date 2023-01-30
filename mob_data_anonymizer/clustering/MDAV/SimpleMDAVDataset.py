@@ -4,14 +4,17 @@ from mob_data_anonymizer.clustering.MDAV.interfaces.MDAVDatasetInterface import 
 from mob_data_anonymizer.entities.Dataset import Dataset
 from mob_data_anonymizer.entities.Trajectory import Trajectory
 from mob_data_anonymizer.distances.trajectory.DistanceInterface import DistanceInterface
+import numpy as np
 
 
 class SimpleMDAVDataset(MDAVDatasetInterface):
 
-    def __init__(self, dataset: Dataset, distance: DistanceInterface, aggregation_method: TrajectoryAggregationInterface = None):
+    def __init__(self, dataset: Dataset, distance: DistanceInterface,
+                 aggregation_method: TrajectoryAggregationInterface = None):
         self.dataset = dataset
         self.distance = distance
-        self.selected_trajectories = []                   # Ids of trajectories already been clustered
+        self.trajectories_elegible = np.array(self.dataset.trajectories)
+        self.distances = None
         self.unselected_len = len(dataset)
         self.assigned_to = {}                             # Cluster assigned to every trajectory
         self.cluster_id = 0
@@ -22,13 +25,12 @@ class SimpleMDAVDataset(MDAVDatasetInterface):
 
     def set_dataset(self, dataset: Dataset):
         self.dataset = dataset
-        self.selected_trajectories = []
+        self.trajectories_elegible = np.array(self.dataset.trajectories)
         self.unselected_len = len(dataset)
         self.assigned_to = {}
         self.cluster_id = 0
 
     def reset(self):
-        self.selected_trajectories = []              # Mark if a trajectory has already been clustered
         self.unselected_len = len(self.dataset)
         self.assigned_to = {}                        # Cluster assigned to every trajectory
         self.cluster_id = 0
@@ -41,59 +43,33 @@ class SimpleMDAVDataset(MDAVDatasetInterface):
         raise NotImplementedError
 
     def make_cluster(self, traj: Trajectory, k):
-        closest = self.__get_n_closest(traj, k)
-        for t_id in closest:
-            self.assigned_to[t_id] = self.cluster_id
-            self.selected_trajectories.append(t_id)
+        self.trajectories_elegible = self.trajectories_elegible[np.argpartition(self.distances, k-1)]
+        closest = [traj]
+        closest.extend(self.trajectories_elegible[:k-1])
+        self.trajectories_elegible = self.trajectories_elegible[k-1:]
 
+        for t in closest:
+            self.assigned_to[t.index] = self.cluster_id
         self.cluster_id += 1
-        self.unselected_len -= k
 
     def make_cluster_unselected(self):
-
-        unselected_trajectories = [t for idx, t in enumerate(self.dataset.trajectories) if t.id not in self.selected_trajectories]
-
-        for t in unselected_trajectories:
-            self.assigned_to[t.id] = self.cluster_id
-            self.selected_trajectories.append(t.id)
-
+        for t in self.trajectories_elegible:
+            self.assigned_to[t.index] = self.cluster_id
         self.cluster_id += 1
-        self.unselected_len -= len(unselected_trajectories)
 
     def farthest_from(self, traj: Trajectory) -> Trajectory:
+        self.calculate_distances(traj)
+        index = np.argmax(self.distances)
+        farthest = self.trajectories_elegible[index]
+        self.trajectories_elegible = np.delete(self.trajectories_elegible, index)
 
-        # Get just unselected trajectories
-        unselected_trajectories = [t for idx, t in enumerate(self.dataset.trajectories) if t.id not in self.selected_trajectories]
+        return farthest, index
 
-        max_d = -1
-        farthest = None
-        for t in unselected_trajectories:
-            d = self.distance.compute(traj, t)
-            # print(f'Distance {traj.id}-{t.id}: {d}')
-            if d and d > max_d:
-                max_d = d
-                farthest = t
-
-        # print(f'Farthest from {traj.id}: {farthest}. Distance: {max_d}')
-        return farthest
+    def calculate_distances(self, traj: Trajectory):
+        self.distances = [self.distance.compute(traj, t) for t in self.trajectories_elegible]
 
     def unselected_length(self):
-        return self.unselected_len
-
-    '''
-    Return the id of the N closest trajectories (self-included)
-    '''
-    def __get_n_closest(self, traj: Trajectory, n) -> list:
-
-        # Get just unselected trajectories
-        unselected_trajectories = [t for idx, t in enumerate(self.dataset.trajectories) if t.id not in self.selected_trajectories]
-
-        distances = [(t.id, self.distance.compute(traj, t)) for t in unselected_trajectories]
-
-        distances.sort(key=lambda x: x[1])
-        closest = distances[:n]
-
-        return [x[0] for x in closest]
+        return len(self.trajectories_elegible)
 
     def get_num_clusters(self):
         return self.cluster_id
