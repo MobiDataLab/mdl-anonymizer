@@ -1,6 +1,12 @@
 from collections import defaultdict
+from datetime import datetime
 from math import sqrt
 import logging
+
+import pandas
+import pytz
+from pandas import DateOffset
+from skmob.tessellation import tilers
 from tqdm import tqdm
 from mob_data_anonymizer.entities.Dataset import Dataset
 from bisect import bisect_left
@@ -72,8 +78,8 @@ class Stats:
 
         return (total_prob / len(self.original_dataset)) * 100
 
-    def get_fast_record_linkage(self, distance, window_size = None):
-        WINDOW_SIZE = 1 # it indicates the % of the num of trajectories in the dataset
+    def get_fast_record_linkage(self, distance, window_size=None):
+        WINDOW_SIZE = 1  # it indicates the % of the num of trajectories in the dataset
         if window_size is None:
             window_size = (len(self.original_dataset) * WINDOW_SIZE) / 100
             if window_size < 1.0:
@@ -127,7 +133,7 @@ class Stats:
 
         return (total_prob / len(self.original_dataset)) * 100
 
-    def take_closest(myList, myNumber):
+    def __take_closest(myList, myNumber):
         """
         Assumes myList is sorted. Returns the index of the closest value to myNumber.
         If two numbers are equally close, return the index of the smallest number.
@@ -152,7 +158,7 @@ class Stats:
             # return before
             return pos - 1
 
-    def take_closest_window(myList, myNumber, window_size):
+    def __take_closest_window(myList, myNumber, window_size):
         """
         Assumes myList is sorted. Returns a list of positions of my list with size window_size.
         The window_size positions of the closest values in mylist to myNumber.
@@ -180,3 +186,90 @@ class Stats:
         pos_after += rest_before
 
         return [x for x in range(pos_before, pos_after + 1)]
+
+    def get_propensity_score(self, tiles_size=200, time_interval=None):
+
+        # Compute tessellation and data ranges for the original dataset
+        logging.info(f"Tessellation")
+
+        tessellation = tilers.tiler.get("squared", base_shape=self.original_dataset.get_bounding_box(),
+                                        meters=tiles_size)
+        tessellation['tile_ID'] = pandas.to_numeric(tessellation['tile_ID'])
+
+        datetime_ranges = None
+        if time_interval:
+            logging.info("Time tessellation")
+            offset = DateOffset(seconds=time_interval)
+
+            min_datetime = datetime.fromtimestamp(self.original_dataset.get_min_timestamp(), self.original_dataset.timezone)
+            max_datetime = datetime.fromtimestamp(self.original_dataset.get_max_timestamp(), self.original_dataset.timezone)
+
+            datetime_ranges = pandas.date_range(min_datetime, max_datetime, freq=offset)
+
+        original_sequences = self.__compute_trajectory_sequences(self.original_dataset, tessellation, datetime_ranges)
+        anonymized_sequences = self.__compute_trajectory_sequences(self.anonymized_dataset, tessellation, datetime_ranges)
+
+        # Check the max len of the sequences and repadding if necessary
+        max_orig = max([len(original_sequences[i]) for i in original_sequences.keys()])
+        max_anon = max([len(anonymized_sequences[i]) for i in anonymized_sequences.keys()])
+
+        if max_orig > max_anon:
+            for i in anonymized_sequences.keys():
+                anonymized_sequences[i] = [0] * (max_orig - len(anonymized_sequences[i])) + anonymized_sequences[i]
+
+        if max_anon > max_orig:
+            for i in original_sequences.keys():
+                original_sequences[i] = [0] * (max_anon - len(original_sequences[i])) + original_sequences[i]
+
+    def __compute_trajectory_sequences(self, dataset, tessellation, datetime_ranges=None):
+
+        tdf = dataset.to_tdf()
+
+        max_tile_id = tessellation['tile_ID'].max()
+        print(f'MAX tile: {max_tile_id}')
+        # Map locations to spatial tiles
+        st_tdf = tdf.mapping(tessellation, remove_na=True)
+
+
+        # Modify tiles_id based on time
+        if datetime_ranges is not None:
+            st_tdf['tile_ID'] = st_tdf.apply(
+                lambda row: row['tile_ID'] + (max_tile_id * (bisect_left(datetime_ranges, row['datetime'].tz_localize("UTC")) - 1)),
+                axis=1)
+
+            # Update the max tile id
+            max_tile_id = max_tile_id * len(datetime_ranges)
+            print(f'New MAX tile: {max_tile_id}')
+
+        # Scale ids
+        tile_ids = st_tdf['tile_ID']
+        tile_ids.drop_duplicates(inplace=True)
+
+        new_tile_ids = (tile_ids - 0) / (max_tile_id - 0)
+
+        mapping = pandas.Series(new_tile_ids.tolist(), index=tile_ids.tolist()).to_dict()
+        st_tdf['tile_ID'] = st_tdf['tile_ID'].map(mapping)
+
+        # Compute tiles sequences
+        logging.info("Computing tile sequences")
+        sequences = {}
+
+        for index, l in st_tdf.iterrows():
+            try:
+                if l['tile_ID'] not in sequences[l['tid']]:
+                    sequences[l['tid']].append(l['tile_ID'])
+            except KeyError:
+                sequences[l['tid']] = [l['tile_ID']]
+
+        # Padding
+
+        # max length
+        max_length = 0
+        for i in sequences.keys():
+            if len(sequences[i]) > max_length:
+                max_length = len(sequences[i])
+
+        for i in sequences.keys():
+            sequences[i] = [0] * (max_length - len(sequences[i])) + sequences[i]
+
+        return sequences

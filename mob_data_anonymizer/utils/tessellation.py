@@ -25,7 +25,7 @@ def _get_bounding_box(tdf):
     return polygon
 
 
-def tessellate(tdf: TrajDataFrame, tiles_shape, meters=250, bounding_box=None) -> TrajDataFrame:
+def spatial_tessellation(tdf: TrajDataFrame, tiles_shape, meters=250, bounding_box=None) -> TrajDataFrame:
     # tdf = skmob.TrajDataFrame.from_file('dataset/actual_dataset_loaded.csv', latitude='lat', longitude='lon',
     #                                    datetime='timestamp', user_id='user_id')
 
@@ -54,9 +54,9 @@ def tessellate(tdf: TrajDataFrame, tiles_shape, meters=250, bounding_box=None) -
     new_tdf.rename(columns={
         'lat': 'orig_lat',
         'lng': 'orig_lng',
-        'x': 'lng',
+        'x': 'lon',
         'y': 'lat',
     }, inplace=True)
-    new_tdf = new_tdf[['lng', 'lat', 'datetime', 'uid', 'tile_ID', 'orig_lng', 'orig_lat']]
+    new_tdf = new_tdf[['lon', 'lat', 'datetime', 'uid', 'tid', 'tile_ID', 'orig_lon', 'orig_lat']]
 
     return new_tdf

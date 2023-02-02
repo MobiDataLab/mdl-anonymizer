@@ -9,18 +9,23 @@ import pyarrow.parquet as pq
 
 from abc import ABC
 
+import pytz
+from geopandas import GeoDataFrame
+from shapely import geometry
 from skmob import TrajDataFrame
+from skmob.utils.constants import DEFAULT_CRS
 from tqdm import tqdm
 
 from mob_data_anonymizer.entities.Trajectory import Trajectory
 from mob_data_anonymizer.entities.TimestampedLocation import TimestampedLocation
-
 
 class Dataset(ABC):
     def __init__(self):
         self.trajectories = []
         self.description = None
         self.sample = None
+
+        self.timezone = pytz.timezone("UTC")
 
     #    @abstractmethod
     #    def load(self):
@@ -33,7 +38,9 @@ class Dataset(ABC):
                   sample=None):
 
         """
-        Import a dataset from a CSV or parquet file
+        Load a dataset from a CSV or parquet file
+
+        Note: datetimes are always considered in UTC timezone
         """
 
         logging.info("Loading dataset...")
@@ -64,9 +71,10 @@ class Dataset(ABC):
 
                 # Convert datetime to timestamp
                 element = datetime.datetime.strptime(row[datetime_key], datetime_format)
+                element = self.timezone.localize(element)
                 timestamp = datetime.datetime.timestamp(element)
 
-                location = TimestampedLocation(timestamp, row[latitude_key], row[longitude_key])
+                location = TimestampedLocation(timestamp, row[longitude_key], row[latitude_key])
                 T.add_location(location)
             else:
                 if len(T.locations) >= min_locations:
@@ -84,8 +92,9 @@ class Dataset(ABC):
 
                 # Convert datetime to timestamp
                 element = datetime.datetime.strptime(row[datetime_key], datetime_format)
+                element = self.timezone.localize(element)
                 timestamp = datetime.datetime.timestamp(element)
-                location = TimestampedLocation(timestamp, row[latitude_key], row[longitude_key])
+                location = TimestampedLocation(timestamp, row[longitude_key], row[latitude_key])
                 T.add_location(location)
 
             pbar.update(1)
@@ -103,6 +112,8 @@ class Dataset(ABC):
     def to_csv(self, filename="output_dataset.csv"):
         """
         Export a loaded dataset to a csv
+
+        Note: Datetimes are written in UTC timezone
         """
         if not self.is_loaded():
             raise RuntimeError("Dataset is not loaded")
@@ -111,33 +122,35 @@ class Dataset(ABC):
 
         with open(filename, mode='w', newline='') as new_file:
             writer = csv.writer(new_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            writer.writerow(["lat", "lon", "datetime", "trajectory_id", "user_id"])
+            writer.writerow(["lon", "lat", "datetime", "trajectory_id", "user_id"])
             for t in self.trajectories:
                 for l in t.locations:
-                    date_time = datetime.datetime.fromtimestamp(l.timestamp)
+                    date_time = datetime.datetime.fromtimestamp(l.timestamp, self.timezone)
                     writer.writerow([l.x, l.y, date_time.strftime("%Y/%m/%d %H:%M:%S"), t.id, t.user_id])
 
     def from_tdf(self, tdf: TrajDataFrame):
 
         # Sort by uid
-        tdf.sort_values('uid')
+        tdf.sort_values('tid')
 
         user_id = tdf.loc[0, 'uid']
+        traj_id = tdf.loc[0, 'tid']
 
-        T = Trajectory(user_id)
+        T = Trajectory(traj_id, user_id)
 
         for index, row in tdf.iterrows():
             # Change of trajectory
-            if user_id != row['uid']:
+            if traj_id != row['tid']:
                 T.locations.sort(key=lambda x: x.timestamp)
                 self.add_trajectory(T)
 
+                traj_id = row['tid']
                 user_id = row['uid']
-                T = Trajectory(user_id)
+                T = Trajectory(traj_id, user_id)
 
             # Add new location
             timestamp = row['datetime'].timestamp()
-            location = TimestampedLocation(timestamp, row['lat'], row['lng'])
+            location = TimestampedLocation(timestamp, row['lng'], row['lat'])
             T.add_location(location)
 
         # Add the last trajectory
@@ -151,14 +164,17 @@ class Dataset(ABC):
         for traj in self.trajectories:
             for loc in traj.locations:
                 df2 = pandas.DataFrame(
-                    {'lat': [loc.x],
-                     'lng': [loc.y],
+                    {'lon': [loc.x],
+                     'lat': [loc.y],
                      'datetime': [loc.timestamp],
-                     'uid': [traj.id],
+                     'uid': [traj.user_id],
+                     'tid': [traj.id]
                      })
                 df = pandas.concat([df, df2], ignore_index=True)
 
-        return TrajDataFrame(df, timestamp=True)
+        tdf = TrajDataFrame(df, timestamp=True)
+
+        return tdf
 
     def to_numpy(self, sort_by_timestamp=False):
         """Transforms the dataset to a NumPy array for faster processing.
@@ -230,6 +246,49 @@ class Dataset(ABC):
 
     def get_number_of_locations(self):
         return sum([len(t) for t in self.trajectories])
+
+    def get_max_trajectory_length(self):
+        return max([len(t) for t in self.trajectories])
+
+    def get_max_timestamp(self):
+        timestamp = None
+        for t in self.trajectories:
+            for l in t.locations:
+                if timestamp is None or l.timestamp > timestamp:
+                    timestamp = l.timestamp
+
+        return timestamp
+
+    def get_min_timestamp(self):
+        timestamp = None
+        for t in self.trajectories:
+            for l in t.locations:
+                if timestamp is None or l.timestamp < timestamp:
+                    timestamp = l.timestamp
+
+        return timestamp
+
+    def get_bounding_box(self):
+        max_lng = max_lat = min_lat = min_lng = None
+
+        for t in self.trajectories:
+            for l in t.locations:
+                if max_lat is None or l.y > max_lat:
+                    max_lat = l.y
+                if max_lng is None or l.x > max_lng:
+                    max_lng = l.x
+                if min_lat is None or l.y < min_lat:
+                    min_lat = l.y
+                if min_lng is None or l.x < min_lng:
+                    min_lng = l.x
+
+        point_list = [[max_lng, max_lat], [max_lng, min_lat], [min_lng, min_lat], [min_lng, max_lat]]
+
+        poly = geometry.Polygon(point_list)
+
+        polygon = GeoDataFrame(index=[0], crs=DEFAULT_CRS, geometry=[poly])
+
+        return polygon
 
     def filter(self, min_locations=3):
         self.trajectories = [t for t in self.trajectories if len(t) >= min_locations]
