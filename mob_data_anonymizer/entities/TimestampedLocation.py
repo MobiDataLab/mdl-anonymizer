@@ -13,7 +13,11 @@ class TimestampedLocation:
         return [self.timestamp, self.x, self.y]
 
     def get_coordinates(self):
-        return (self.x, self.y)
+        """ Get the coordinates of the location as tuple of (latitude, longitude)
+
+        :return: coordinates, as a tuple.
+        """
+        return self.y, self.x
 
     def __repr__(self):
         return f'[{self.timestamp}: {self.x}, {self.y}]'
