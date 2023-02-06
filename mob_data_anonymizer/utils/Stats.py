@@ -79,7 +79,7 @@ class Stats:
         return (total_prob / len(self.original_dataset)) * 100
 
     def get_fast_record_linkage(self, distance, window_size=None):
-        WINDOW_SIZE = 1  # it indicates the % of the num of trajectories in the dataset
+        WINDOW_SIZE = 0.1  # it indicates the % of the num of trajectories in the dataset
         if window_size is None:
             window_size = (len(self.original_dataset) * WINDOW_SIZE) / 100
             if window_size < 1.0:
@@ -112,7 +112,7 @@ class Stats:
                 pass
             trajectory_anom.distance_to_reference_trajectory = \
                 distance.compute_distance_to_reference_trajectory(trajectory_anom)
-            closest_trajectories = Stats.take_closest_window(distances,
+            closest_trajectories = Stats.__take_closest_window(distances,
                                                              trajectory_anom.distance_to_reference_trajectory,
                                                              window_size)
             min_dist = float('inf')
@@ -168,7 +168,7 @@ class Stats:
         :return: The list of indexes of myList of the closest value to myNumber
         :rtype: list of int
         """
-        pos = Stats.take_closest(myList, myNumber)
+        pos = Stats.__take_closest(myList, myNumber)
         cut = int(window_size / 2)
         rest_before = 0
         rest_after = 0

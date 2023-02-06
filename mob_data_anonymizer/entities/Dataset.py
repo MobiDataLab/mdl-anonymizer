@@ -13,6 +13,7 @@ import pytz
 from geopandas import GeoDataFrame
 from shapely import geometry
 from skmob import TrajDataFrame
+from skmob.utils import constants
 from skmob.utils.constants import DEFAULT_CRS
 from tqdm import tqdm
 
@@ -131,26 +132,26 @@ class Dataset(ABC):
     def from_tdf(self, tdf: TrajDataFrame):
 
         # Sort by uid
-        tdf.sort_values('tid')
+        tdf.sort_values(constants.TID)
 
-        user_id = tdf.loc[0, 'uid']
-        traj_id = tdf.loc[0, 'tid']
+        user_id = tdf.loc[0, constants.UID]
+        traj_id = tdf.loc[0, constants.TID]
 
         T = Trajectory(traj_id, user_id)
 
         for index, row in tdf.iterrows():
             # Change of trajectory
-            if traj_id != row['tid']:
+            if traj_id != row[constants.TID]:
                 T.locations.sort(key=lambda x: x.timestamp)
                 self.add_trajectory(T)
 
-                traj_id = row['tid']
-                user_id = row['uid']
+                traj_id = row[constants.TID]
+                user_id = row[constants.UID]
                 T = Trajectory(traj_id, user_id)
 
             # Add new location
-            timestamp = row['datetime'].timestamp()
-            location = TimestampedLocation(timestamp, row['lng'], row['lat'])
+            timestamp = row[constants.DATETIME].timestamp()
+            location = TimestampedLocation(timestamp, row[constants.LONGITUDE], row[ constants.LATITUDE])
             T.add_location(location)
 
         # Add the last trajectory
@@ -164,11 +165,11 @@ class Dataset(ABC):
         for traj in self.trajectories:
             for loc in traj.locations:
                 df2 = pandas.DataFrame(
-                    {'lon': [loc.x],
-                     'lat': [loc.y],
-                     'datetime': [loc.timestamp],
-                     'uid': [traj.user_id],
-                     'tid': [traj.id]
+                    {constants.LONGITUDE: [loc.x],
+                     constants.LATITUDE: [loc.y],
+                     constants.DATETIME: [loc.timestamp],
+                     constants.UID: [traj.user_id],
+                     constants.TID: [traj.id]
                      })
                 df = pandas.concat([df, df2], ignore_index=True)
 
