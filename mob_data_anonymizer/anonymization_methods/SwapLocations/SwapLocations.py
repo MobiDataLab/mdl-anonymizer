@@ -1,8 +1,9 @@
 import logging
 import random
 
-from haversine import Unit
+from haversine import Unit, haversine, haversine_vector
 from tqdm import tqdm
+import numpy as np
 
 from mob_data_anonymizer.anonymization_methods.AnonymizationMethodInterface import AnonymizationMethodInterface
 from mob_data_anonymizer.entities.Dataset import Dataset
@@ -61,7 +62,7 @@ class SwapLocations(AnonymizationMethodInterface):
 
         self.seed = seed
 
-    def __build_cluster(self, remaining_locations, chosen_location):
+    def __build_cluster_old(self, remaining_locations, chosen_location):
 
         spatial_distances_computed = {}
         temporal_distances_computed = {}
@@ -88,6 +89,63 @@ class SwapLocations(AnonymizationMethodInterface):
                         try:
                             distance = spatial_distances_computed[i]
                         except KeyError:
+                            distance = chosen_location[1].spatial_distance(l[1], unit=Unit.METERS)
+                            spatial_distances_computed[i] = distance
+
+                        if 0 <= distance <= R_s:
+                            U_prima.append(l)
+
+                # Just one location for trajectory
+                # TODO: Keep the temporal closest location to 'chosen_location'
+                used_trajectories = set()
+                U_prima = [x for x in U_prima if
+                           x[0] not in used_trajectories and (used_trajectories.add(x[0]) or True)]
+
+                # Do we have enough locations?
+                if len(U_prima) >= self.k - 1:
+                    return U_prima
+
+        # No existing cluster
+        return None
+
+    def __build_cluster(self, remaining_locations, chosen_location):
+
+
+        p = chosen_location[1].get_coordinates()
+
+        a = list(map(lambda x: x[1].get_coordinates(), remaining_locations))
+        b = np.array(list(map(np.array, a)))
+        spatial_distances_computed = haversine_vector(np.array(p), b, comb=True).flatten()
+        # spatial_distances_computed = [haversine(p, l[1].get_coordinates(), unit=Unit.METERS) for l in remaining_locations]
+
+        c = np.array(list(map(lambda x: x[1].timestamp, remaining_locations)))
+        temporal_distances_computed = np.abs(c-chosen_location[1].timestamp)
+        # temporal_distances_computed = [chosen_location[1].temporal_distance(l[1]) for l in remaining_locations]
+
+        for R_t in utils.inclusive_range(self.min_r_t, self.max_r_t, self.step_t if self.step_t > 0 else None):
+            for R_s in utils.inclusive_range(self.min_r_s, self.max_r_s, self.step_s if self.step_s > 0 else None):
+                U_prima = []
+
+                for i, l in enumerate(remaining_locations):
+
+                    # We don't consider locations of the same trajectory
+                    if chosen_location[0] == l[0]:
+                        continue
+
+                    # Check temporal distance from 'chosen_location' to 'l'
+                    try:
+                        temporal_distance = temporal_distances_computed[i]
+                    except KeyError:
+                        print(':(')
+                        temporal_distance = chosen_location[1].temporal_distance(l[1])
+                        temporal_distances_computed[i] = temporal_distance
+
+                    if temporal_distance <= R_t:
+                        # Check spatial distance from 'chosen_location' to 'l'
+                        try:
+                            distance = spatial_distances_computed[i]
+                        except KeyError:
+                            print('>:(')
                             distance = chosen_location[1].spatial_distance(l[1], unit=Unit.METERS)
                             spatial_distances_computed[i] = distance
 

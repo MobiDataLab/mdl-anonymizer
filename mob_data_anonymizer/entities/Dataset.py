@@ -160,22 +160,32 @@ class Dataset(ABC):
 
     def to_tdf(self):
 
-        df = pandas.DataFrame()
-
-        for traj in self.trajectories:
-            for loc in traj.locations:
-                df2 = pandas.DataFrame(
-                    {constants.LONGITUDE: [loc.x],
-                     constants.LATITUDE: [loc.y],
-                     constants.DATETIME: [loc.timestamp],
-                     constants.UID: [traj.user_id],
-                     constants.TID: [traj.id]
-                     })
-                df = pandas.concat([df, df2], ignore_index=True)
-
+        rows = [[loc.x, loc.y, loc.timestamp, traj.user_id, traj.id] for traj in self.trajectories
+                for loc in traj.locations]
+        df = pandas.DataFrame(rows, columns=[constants.LONGITUDE, constants.LATITUDE, constants.DATETIME,
+                                             constants.UID, constants.TID])
         tdf = TrajDataFrame(df, timestamp=True)
 
         return tdf
+
+    # def to_tdf(self):
+    #
+    #     df = pandas.DataFrame()
+    #
+    #     for traj in tqdm(self.trajectories):
+    #         for loc in traj.locations:
+    #             df2 = pandas.DataFrame(
+    #                 {constants.LONGITUDE: [loc.x],
+    #                  constants.LATITUDE: [loc.y],
+    #                  constants.DATETIME: [loc.timestamp],
+    #                  constants.UID: [traj.user_id],
+    #                  constants.TID: [traj.id]
+    #                  })
+    #             df = pandas.concat([df, df2], ignore_index=True)
+    #
+    #     tdf = TrajDataFrame(df, timestamp=True)
+    #
+    #     return tdf
 
     def to_numpy(self, sort_by_timestamp=False):
         """Transforms the dataset to a NumPy array for faster processing.
