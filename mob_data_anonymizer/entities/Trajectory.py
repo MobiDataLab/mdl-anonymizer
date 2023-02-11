@@ -9,13 +9,11 @@ class Trajectory:
         self.locations = []
         self.distance_to_reference_trajectory = 0
 
-    def add_location(self, location: TimestampedLocation):
-        if len(self.locations) > 0 and location.timestamp <= self.get_last_timestamp():
-            # Keep the list of trajectories sorted
-            self.locations.append(location)
+    def add_location(self, location: TimestampedLocation, sort=True):
+        self.locations.append(location)
+        if sort:
             self.locations.sort(key=lambda x: x.timestamp)
-        else:
-            self.locations.append(location)
+
 
     def add_locations(self, locations: list):
         locations.sort(key=lambda l: l.timestamp)

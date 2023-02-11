@@ -69,6 +69,7 @@ class Dataset(ABC):
         T = Trajectory(traj_id, user_id)
         for index, row in df.iterrows():
             if traj_id == row[trajectory_key]:
+                # Add location to current trajectory
 
                 # Convert datetime to timestamp
                 element = datetime.datetime.strptime(row[datetime_key], datetime_format)
@@ -76,8 +77,9 @@ class Dataset(ABC):
                 timestamp = datetime.datetime.timestamp(element)
 
                 location = TimestampedLocation(timestamp, row[longitude_key], row[latitude_key])
-                T.add_location(location)
+                T.add_location(location, sort=False)
             else:
+                # Sort locations and add trajectory
                 if len(T.locations) >= min_locations:
                     T.locations.sort(key=lambda x: x.timestamp)
                     self.add_trajectory(T)
@@ -85,6 +87,7 @@ class Dataset(ABC):
                     if n_trajectories and len(self.trajectories) >= n_trajectories:
                         break
 
+                # Create another trajectory
                 traj_id = row[trajectory_key]
                 user_id = row[user_key]
                 users.add(user_id)
@@ -96,10 +99,11 @@ class Dataset(ABC):
                 element = self.timezone.localize(element)
                 timestamp = datetime.datetime.timestamp(element)
                 location = TimestampedLocation(timestamp, row[longitude_key], row[latitude_key])
-                T.add_location(location)
+                T.add_location(location, sort=False)
 
             pbar.update(1)
         else:
+            # Sort and add last trajectory
             if len(T.locations) >= min_locations:
                 T.locations.sort(key=lambda x: x.timestamp)
                 self.add_trajectory(T)
@@ -152,7 +156,7 @@ class Dataset(ABC):
             # Add new location
             timestamp = row[constants.DATETIME].timestamp()
             location = TimestampedLocation(timestamp, row[constants.LONGITUDE], row[ constants.LATITUDE])
-            T.add_location(location)
+            T.add_location(location, sort=False)
 
         # Add the last trajectory
         T.locations.sort(key=lambda x: x.timestamp)
@@ -234,11 +238,13 @@ class Dataset(ABC):
                 current_traj = Trajectory(id=record[3], user_id=record[4])  # New trajectory
             # Add location
             loc = TimestampedLocation(record[2], record[0], record[1])
-            current_traj.add_location(loc)
+            current_traj.add_location(loc, sort=False)
 
         # Add last trajectory
         if current_traj is not None:
             self.add_trajectory(current_traj)
+
+        self.sort_trajectories()
 
     def is_loaded(self):
         return len(self.trajectories) > 0
@@ -278,6 +284,14 @@ class Dataset(ABC):
                     timestamp = l.timestamp
 
         return timestamp
+
+    def sort_trajectories(self):
+        """
+        Sort the locations of all the trajectories in the dataset by timestamp
+        :return:
+        """
+        for t in self.trajectories:
+            t.locations.sort(key=lambda x: x.timestamp)
 
     def get_bounding_box(self):
         max_lng = max_lat = min_lat = min_lng = None
