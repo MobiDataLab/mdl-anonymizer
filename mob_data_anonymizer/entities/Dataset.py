@@ -20,6 +20,7 @@ from tqdm import tqdm
 from mob_data_anonymizer.entities.Trajectory import Trajectory
 from mob_data_anonymizer.entities.TimestampedLocation import TimestampedLocation
 
+
 class Dataset(ABC):
     def __init__(self):
         self.trajectories = []
@@ -44,16 +45,23 @@ class Dataset(ABC):
         Note: datetimes are always considered in UTC timezone
         """
 
-        logging.info("Loading dataset...")
         self.sample = sample
 
-        if filename[-4:] == '.csv':
-            df = pandas.read_csv(filename)
-        elif filename[-8:] == '.parquet':
-            # df = pandas.read_parquet(filename)
-            df = pq.read_table(filename).to_pandas()
-        else:
-            raise Exception("File format not supported")
+        if type(filename) is str:
+            logging.info("Loading dataset...")
+            if filename[-4:] == '.csv':
+                df = pandas.read_csv(filename)
+            elif filename[-8:] == '.parquet':
+                # df = pandas.read_parquet(filename)
+                df = pq.read_table(filename).to_pandas()
+            else:
+                raise Exception("File format not supported")
+        else:  # file object from api
+            logging.info("Loading dataset from file object...")
+            with open("temp.csv", 'wb') as out_file:
+                content = filename.read()  # async read
+                out_file.write(content)  # async write
+            df = pandas.read_csv("temp.csv")
 
         # Order by traj_id
         df.sort_values(trajectory_key, inplace=True)
@@ -127,7 +135,7 @@ class Dataset(ABC):
 
         with open(filename, mode='w', newline='') as new_file:
             writer = csv.writer(new_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            writer.writerow(["lon", "lat", "datetime", "trajectory_id", "user_id"])
+            writer.writerow(["lon", "lat", "timestamp", "trajectory_id", "user_id"])
             for t in self.trajectories:
                 for l in t.locations:
                     date_time = datetime.datetime.fromtimestamp(l.timestamp, self.timezone)
@@ -155,7 +163,7 @@ class Dataset(ABC):
 
             # Add new location
             timestamp = row[constants.DATETIME].timestamp()
-            location = TimestampedLocation(timestamp, row[constants.LONGITUDE], row[ constants.LATITUDE])
+            location = TimestampedLocation(timestamp, row[constants.LONGITUDE], row[constants.LATITUDE])
             T.add_location(location, sort=False)
 
         # Add the last trajectory

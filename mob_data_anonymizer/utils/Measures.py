@@ -11,7 +11,7 @@ from skmob.measures.individual import distance_straight_line
 from skmob.tessellation import tilers
 from skmob.utils.constants import DEFAULT_CRS
 
-from mob_data_anonymizer.utils.tessellation import tessellate
+from mob_data_anonymizer.utils.tessellation import spatial_tessellation
 
 
 class Measures:
@@ -32,9 +32,10 @@ class Measures:
         # Tessellation
         bounding_box = self.__get_bounding_box(self.pre_original_tdf)
         logging.info("Tessellating original dataset")
-        self.original_tdf = tessellate(self.pre_original_tdf, "h3_tessellation", bounding_box=bounding_box)
+        self.original_tdf = spatial_tessellation(self.pre_original_tdf, "h3_tessellation", bounding_box=bounding_box)
         logging.info("Tessellating anonymized dataset")
-        self.anonymized_tdf = tessellate(self.pre_anonymized_tdf, "h3_tessellation", bounding_box=bounding_box)
+        self.anonymized_tdf = spatial_tessellation(self.pre_anonymized_tdf, "h3_tessellation",
+                                                   bounding_box=bounding_box)
         self.output_folder = output_folder
 
         self.results = {}

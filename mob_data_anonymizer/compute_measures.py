@@ -5,11 +5,15 @@ import skmob
 import typer
 import warnings
 
+from make_api_call import MakeApiCall
 from shapely.errors import ShapelyDeprecationWarning
 
 from mob_data_anonymizer import PARAMETERS_FILE_DOESNT_EXIST, PARAMETERS_FILE_NOT_JSON, INPUT_FILE_NOT_EXIST, \
-    OUTPUT_FOLDER_NOT_EXIST, PARAMETERS_NOT_VALID, SUCCESS, WRONG_METHOD, WRONG_MODE
+    OUTPUT_FOLDER_NOT_EXIST, PARAMETERS_NOT_VALID, SUCCESS, WRONG_METHOD, WRONG_MODE, API_SERVER
 from mob_data_anonymizer.utils.Measures import Measures
+from mob_data_anonymizer.distances.trajectory.Martinez2021.Distance import Distance
+from mob_data_anonymizer.entities.Dataset import Dataset
+from mob_data_anonymizer.utils.Stats import Stats
 
 VALID_METHODS = ['mean_square_displacement',
                  'random_location_entropy',
@@ -47,13 +51,13 @@ def check_parameters_file(file_path: str) -> int:
         if not os.path.exists(data['output_folder']):
             return OUTPUT_FOLDER_NOT_EXIST
 
-        # Check if mode is valid
-        if not data['mode'] in VALID_MODES:
-            return WRONG_MODE
-
-        # Check if all methods are valid
-        if not all(x in VALID_METHODS for x in data['methods']):
-            return WRONG_METHOD
+        # # Check if mode is valid
+        # if not data['mode'] in VALID_MODES:
+        #     return WRONG_MODE
+        #
+        # # Check if all methods are valid
+        # if not all(x in VALID_METHODS for x in data['methods']):
+        #     return WRONG_METHOD
 
     except KeyError:
         return PARAMETERS_NOT_VALID
@@ -61,7 +65,7 @@ def check_parameters_file(file_path: str) -> int:
     return SUCCESS
 
 
-def compute_measures(file_path: str) -> int:
+def compute_measures_old(file_path: str) -> int:
     with open(file_path) as param_file:
         data = json.load(param_file)
 
@@ -87,3 +91,60 @@ def compute_measures(file_path: str) -> int:
             class_method(measures, data['mode'])
         except TypeError:
             class_method(measures)
+
+
+def compute_measures(param_file_path: str):
+    with open(param_file_path) as param_file:
+        data = json.load(param_file)
+
+    typer.secho(f'Loading original dataset')
+    filename = data.get("original_dataset")
+    original_dataset = Dataset()
+    original_dataset.from_file(filename, datetime_key="timestamp")
+
+    typer.secho(f'Loading anonymized dataset')
+    filename = data.get("anonymized_dataset")
+    anonymized_dataset = Dataset()
+    anonymized_dataset.from_file(filename, datetime_key="timestamp")
+
+    martinez21_distance = Distance(original_dataset)
+    martinez21_distance_norm = Distance(original_dataset, landa=martinez21_distance.landa,
+                                        max_dist=martinez21_distance.max_dist, normalized=True)
+
+    stats = Stats(original_dataset, anonymized_dataset)
+    results = {}
+    results["percen_traj_removed"] = round(stats.get_perc_of_removed_trajectories() * 100, 2)
+    print(f'% Removed trajectories: {results["percen_traj_removed"]}%')
+    results["percen_loc_removed"] = round(stats.get_perc_of_removed_locations() * 100, 2)
+    print(f'% Removed locations: {results["percen_loc_removed"]}%')
+    results["rsme"] = round(stats.get_rsme(martinez21_distance), 4)
+    print(f'RSME: {results["rsme"]}')
+    results["rsme_normalized"] = round(stats.get_rsme(martinez21_distance_norm), 4)
+    print(f'RSME normalized: {results["rsme_normalized"]}')
+    results["propensity"] = round(stats.get_propensity_score(), 4)
+    print(f'Propensity score: {results["propensity"]}')
+    results["percen_record_linkage"] = round(stats.get_fast_record_linkage(martinez21_distance), 2)
+    print(f'% Record linkage: {results["percen_record_linkage"]}')
+
+    output_file_path = data["output_folder"] + "/" + data["main_output_file"]
+    with open(output_file_path, 'w') as f:
+        json.dump(results, f, indent=4)
+
+
+def compute_measures_api(param_file_path: str):
+    with open(param_file_path) as param_file:
+        data = json.load(param_file)
+
+    original_file = data["original_dataset"]
+    anom_file = data["anonymized_dataset"]
+    api = MakeApiCall(API_SERVER)
+
+    # action = "measures"
+    action = "measuresback"
+    response = api.post_user_data2(action, data, original_file, anom_file)
+
+    output_file_path = data["output_folder"] + "/" + data["main_output_file"]
+    with open(output_file_path, 'w') as f:
+        json.dump(response.json(), f, indent=4)
+
+    print(f"Received: {response}")

@@ -27,6 +27,28 @@ def anonymize(
     else:
         anonymizer.anonymizer(parameters_file)
 
+
+@app.command()
+def anonymize_api(
+        parameters_file: str = typer.Option(
+            str(DEFAULT_PARAMETERS_FILE),
+            "--parameters_file",
+            "-f",
+            prompt="Anonymization parameters file location"
+        ),
+) -> None:
+    code = anonymizer.check_parameters_file(parameters_file)
+    if code != SUCCESS:
+        typer.secho(
+            f'Anonymization failed with "{ERRORS[code]}"',
+            fg=typer.colors.RED,
+        )
+
+        raise typer.Exit(1)
+    else:
+        anonymizer.anonymizer_api(parameters_file)
+
+
 @app.command()
 def analysis(
         parameters_file: str = typer.Option(
@@ -47,6 +69,28 @@ def analysis(
     else:
         analyzer.run_analysis(parameters_file)
 
+
+@app.command()
+def analysis_api(
+        parameters_file: str = typer.Option(
+            str(DEFAULT_PARAMETERS_FILE),
+            "--parameters_file",
+            "-f",
+            prompt="Analysis parameters file location"
+        ),
+) -> None:
+    code = analyzer.check_parameters_file(parameters_file)
+    if code != SUCCESS:
+        typer.secho(
+            f'Analysis failed with "{ERRORS[code]}"',
+            fg=typer.colors.RED,
+        )
+
+        raise typer.Exit(1)
+    else:
+        analyzer.run_analysis_api(parameters_file)
+
+
 @app.command()
 def measures(
         parameters_file: str = typer.Option(
@@ -66,6 +110,27 @@ def measures(
         raise typer.Exit(1)
     else:
         compute_measures.compute_measures(parameters_file)
+
+
+@app.command()
+def measures_api(
+        parameters_file: str = typer.Option(
+            str(DEFAULT_PARAMETERS_FILE),
+            "--parameters_file",
+            "-f",
+            prompt="Measures parameters file location"
+        ),
+) -> None:
+    code = compute_measures.check_parameters_file(parameters_file)
+    if code != SUCCESS:
+        typer.secho(
+            f'Measures failed with "{ERRORS[code]}"',
+            fg=typer.colors.RED,
+        )
+
+        raise typer.Exit(1)
+    else:
+        compute_measures.compute_measures_api(parameters_file)
 
 
 def _version_callback(value: bool) -> None:

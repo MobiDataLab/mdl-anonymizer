@@ -61,6 +61,7 @@ class SwapLocations(AnonymizationMethodInterface):
             self.step_t = int(abs(max_r_t - min_r_t) / 2)
 
         self.seed = seed
+        print(f"k: {self.k}")
 
     def __build_cluster(self, remaining_locations, chosen_location):
 
@@ -166,7 +167,7 @@ class SwapLocations(AnonymizationMethodInterface):
         return self.anonymized_dataset
 
     @staticmethod
-    def get_instance(data):
+    def get_instance(data, file=None):
 
         required_fields = ["k", "max_r_s", "min_r_s", "max_r_t", "min_r_t"]
         values = {}
@@ -178,7 +179,11 @@ class SwapLocations(AnonymizationMethodInterface):
                 values[field] = DEFAULT_VALUES[field]
 
         dataset = Dataset()
-        dataset.from_file(data.get("input_file"), min_locations=5, datetime_key="timestamp")
+        if file is None:
+            filename = data.get("input_file")
+        else:
+            filename = file
+        dataset.from_file(filename, min_locations=5, datetime_key="timestamp")
         dataset.filter_by_speed()
 
         step_s = data.get('step_s', None)

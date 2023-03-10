@@ -43,14 +43,14 @@ class Distance(DistanceInterface):
         self.temporal_matrix = defaultdict(dict)
 
     def __set_weight_parameter(self):
-        # if len(self.dataset.trajectories) > 1000:
-        #     percen_sample = 10
-        #     num_sample = int((len(self.dataset.trajectories) * percen_sample) / 100)
-        #     logging.info(f"\tTaking sample for landa = {num_sample} ({percen_sample}%)")
-        #     sample = random.sample(self.dataset.trajectories, num_sample)
-        # else:
-        #     sample = self.dataset.trajectories
-        sample = self.dataset.trajectories
+        if len(self.dataset.trajectories) > 1000:
+            percen_sample = 10
+            num_sample = int((len(self.dataset.trajectories) * percen_sample) / 100)
+            logging.info(f"\tTaking sample for landa = {num_sample} ({percen_sample}%)")
+            sample = random.sample(self.dataset.trajectories, num_sample)
+        else:
+            sample = self.dataset.trajectories
+        # sample = self.dataset.trajectories
         self.distance_matrix = defaultdict(dict)
         self.temporal = defaultdict(dict)
         max_dist = 0

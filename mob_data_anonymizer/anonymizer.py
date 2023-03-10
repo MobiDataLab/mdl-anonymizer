@@ -1,18 +1,21 @@
 import io
 import json
 import os
+import sys
 
+from make_api_call import MakeApiCall
 from mob_data_anonymizer import PARAMETERS_FILE_DOESNT_EXIST, SUCCESS, PARAMETERS_FILE_NOT_JSON, PARAMETERS_NOT_VALID, \
     WRONG_METHOD, INPUT_FILE_NOT_EXIST, OUTPUT_FOLDER_NOT_EXIST, DEFAULT_OUTPUT_FILE, DEFAULT_SAVE_FILTERED_DATASET, \
-    DEFAULT_FILTERED_FILE
+    DEFAULT_FILTERED_FILE, API_SERVER
 from mob_data_anonymizer.analysis_methods.AnalysisMethodInterface import AnalysisMethodInterface
 from mob_data_anonymizer.anonymization_methods.AnonymizationMethodInterface import AnonymizationMethodInterface
 from mob_data_anonymizer.anonymization_methods.SwapLocations.SwapLocations import SwapLocations
 from mob_data_anonymizer.anonymization_methods.Microaggregation.Microaggregation import Microaggregation
+from mob_data_anonymizer.anonymization_methods.Microaggregation.Microaggregation2 import Microaggregation2
 from mob_data_anonymizer.anonymization_methods.SwapMob.SwapMob import SwapMob
 from mob_data_anonymizer.analysis_methods.QuadTreeHeatMap import QuadTreeHeatMap
 
-VALID_METHODS = ['SwapLocations', 'SwapMob', 'Microaggregation']
+VALID_METHODS = ['SwapLocations', 'SwapMob', 'Microaggregation', 'Microaggregation2']
 
 
 def check_parameters_file(file_path: str) -> int:
@@ -48,13 +51,9 @@ def anonymizer(file_path: str) -> int:
         data = json.load(param_file)
 
     # Get instance of requested method
-    method_name = data['method']
-    if method_name == 'SwapLocations':
-        method = SwapLocations.get_instance(data)
-    elif method_name == 'SwapMob':
-        method = SwapMob.get_instance(data)
-    elif method_name == 'Microaggregation':
-        method = Microaggregation.get_instance(data)
+    class_object = getattr(sys.modules[__name__], data['method'])
+    print("Anonymization method: ", class_object.__name__)
+    method = class_object.get_instance(data)
 
     # Filtered dataset
     output_folder = data.get('output_folder', '')
@@ -74,3 +73,21 @@ def anonymizer(file_path: str) -> int:
 
     output = method.get_anonymized_dataset()
     output.to_csv(f"{output_folder}{output_file}")
+
+
+def anonymizer_api(param_file_path: str) -> int:
+    with open(param_file_path) as param_file:
+        data = json.load(param_file)
+
+    input_file = data["input_file"]
+    api = MakeApiCall(API_SERVER)
+
+    action = "anonymize"
+    action += "/" + data['method']
+    response = api.post_user_data(action, data, input_file)
+
+    output_file_path = data["output_folder"] + "/" + data["main_output_file"]
+    with open(output_file_path, 'wb') as f:
+        f.write(response.content)
+
+    print(f"Received: {response}")

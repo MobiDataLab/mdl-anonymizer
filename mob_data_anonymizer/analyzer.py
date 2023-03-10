@@ -3,9 +3,11 @@ import json
 import os
 import sys
 
+from make_api_call import MakeApiCall
+
 from mob_data_anonymizer import PARAMETERS_FILE_DOESNT_EXIST, SUCCESS, PARAMETERS_FILE_NOT_JSON, PARAMETERS_NOT_VALID, \
     WRONG_METHOD, INPUT_FILE_NOT_EXIST, OUTPUT_FOLDER_NOT_EXIST, DEFAULT_OUTPUT_FILE, DEFAULT_SAVE_FILTERED_DATASET, \
-    DEFAULT_FILTERED_FILE
+    DEFAULT_FILTERED_FILE, API_SERVER
 from mob_data_anonymizer.analysis_methods.AnalysisMethodInterface import AnalysisMethodInterface
 from mob_data_anonymizer.anonymization_methods.AnonymizationMethodInterface import AnonymizationMethodInterface
 from mob_data_anonymizer.anonymization_methods.SwapLocations.SwapLocations import SwapLocations
@@ -69,3 +71,20 @@ def run_analysis(file_path: str) -> int:
     output_file = data.get('main_output_file', DEFAULT_OUTPUT_FILE)
 
     method.export_result(f"{output_folder}{output_file}")
+
+
+def run_analysis_api(param_file_path: str) -> int:
+    with open(param_file_path) as param_file:
+        data = json.load(param_file)
+
+    input_file = data["input_file"]
+    api = MakeApiCall(API_SERVER)
+
+    action = "analyze"
+    response = api.post_user_data(action, data, input_file)
+
+    output_file = data.get('main_output_file', DEFAULT_OUTPUT_FILE)
+    with open(output_file, 'wb') as f:
+        f.write(response.content)
+
+    print(f"Received: {response}")

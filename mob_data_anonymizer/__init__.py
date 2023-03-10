@@ -5,6 +5,7 @@ DEFAULT_PARAMETERS_FILE = "anonymization_parameters.json"
 DEFAULT_OUTPUT_FILE = "output.json"
 DEFAULT_SAVE_FILTERED_DATASET = True
 DEFAULT_FILTERED_FILE = "filtered.json"
+API_SERVER = "http://127.0.0.1:8000"
 
 (
     SUCCESS,

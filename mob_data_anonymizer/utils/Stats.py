@@ -1,3 +1,4 @@
+import sys
 from collections import defaultdict
 from datetime import datetime
 from math import sqrt
@@ -13,8 +14,13 @@ from bisect import bisect_left
 from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.ensemble import GradientBoostingClassifier, ExtraTreesClassifier
 from sklearn.metrics import roc_auc_score, accuracy_score, f1_score, confusion_matrix, classification_report
+from sklearn.model_selection import GridSearchCV
+import xgboost as xgb
+import multiprocessing
+import lazypredict
+from lazypredict.Supervised import LazyClassifier
 
 
 class Stats:
@@ -84,7 +90,7 @@ class Stats:
         return (total_prob / len(self.original_dataset)) * 100
 
     def get_fast_record_linkage(self, distance, window_size=None):
-        WINDOW_SIZE = 0.1  # it indicates the % of the num of trajectories in the dataset
+        WINDOW_SIZE = 1.0  # it indicates the % of the num of trajectories in the dataset
         if window_size is None:
             window_size = (len(self.original_dataset) * WINDOW_SIZE) / 100
             if window_size < 1.0:
@@ -111,10 +117,6 @@ class Stats:
         min_traj = None
         total_prob = 0
         for trajectory_anom in tqdm(self.anonymized_dataset.trajectories):
-            if trajectory_anom.id == 353:
-                pass
-            if trajectory_anom.id == 420:
-                pass
             trajectory_anom.distance_to_reference_trajectory = \
                 distance.compute_distance_to_reference_trajectory(trajectory_anom)
             closest_trajectories = Stats.__take_closest_window(distances,
@@ -258,27 +260,42 @@ class Stats:
         # print(pd.DataFrame(y_test).shape)
 
         # model = LogisticRegression()
-        model = GradientBoostingClassifier()
+        # model = GradientBoostingClassifier()
+        # model = xgb.XGBClassifier(n_jobs=multiprocessing.cpu_count() // 2)
+        # clf = GridSearchCV(model, {'max_depth': [2, 4, 6], 'n_estimators': [50, 100, 200]}, verbose=1, n_jobs=2)
+        # clf.fit(X_train, y_train)
+        # print(clf.best_score_)
+        # print(clf.best_params_)
+        # sys.exit(0)
+
+        # clf = LazyClassifier(verbose=0, ignore_warnings=True, custom_metric=None)
+        # models, predictions = clf.fit(X_train, X_test, y_train, y_test)
+        # print(models)
+        # sys.exit(0)
+
+        # model = LogisticRegression()
+        model = xgb.XGBClassifier()
+        # model = ExtraTreesClassifier()
 
         model.fit(X_train, y_train)
         preds_train = model.predict(X_train)
         preds_test = model.predict(X_test)
-        print('accuracy in train:', accuracy_score(preds_train, y_train))
-        print('accuracy in test:', accuracy_score(preds_test, y_test))
+        print('accuracy in train:', accuracy_score(y_train, preds_train))
+        print('accuracy in test:', accuracy_score(y_test, preds_test))
 
         preds_all = model.predict(X_all)
-        print('accuracy in all:', accuracy_score(preds_all, y_all))
+        print('accuracy in all:', accuracy_score(y_all, preds_all))
 
         probs = np.max(model.predict_proba(X_all), axis=1)
         v = 0
         for prob in probs:
-            p = (prob - 0.5)**2
+            p = (prob - 0.5) ** 2
             v += p
         v /= len(probs)
 
         return v
 
-    def  __compute_trajectory_sequences(self, dataset, tessellation, datetime_ranges=None):
+    def __compute_trajectory_sequences(self, dataset, tessellation, datetime_ranges=None):
 
         tdf = dataset.to_tdf()
 
@@ -291,7 +308,7 @@ class Stats:
         if datetime_ranges is not None:
             st_tdf['tile_ID'] = st_tdf.apply(
                 lambda row: row['tile_ID'] + (
-                            max_tile_id * (bisect_left(datetime_ranges, row['datetime'].tz_localize("UTC")) - 1)),
+                        max_tile_id * (bisect_left(datetime_ranges, row['datetime'].tz_localize("UTC")) - 1)),
                 axis=1)
 
             # Update the max tile id

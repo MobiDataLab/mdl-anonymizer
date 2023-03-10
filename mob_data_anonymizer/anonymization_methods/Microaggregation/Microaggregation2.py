@@ -3,6 +3,7 @@ import time
 from mob_data_anonymizer.aggregation import TrajectoryAggregationInterface
 from mob_data_anonymizer.aggregation.Martinez2021.Aggregation import Aggregation
 from mob_data_anonymizer.clustering.ClusteringInterface import ClusteringInterface
+from mob_data_anonymizer.anonymization_methods.AnonymizationMethodInterface import AnonymizationMethodInterface
 from mob_data_anonymizer.clustering.MDAV.SimpleMDAV import SimpleMDAV
 from mob_data_anonymizer.clustering.MDAV.SimpleMDAVDataset import SimpleMDAVDataset
 from mob_data_anonymizer.distances.trajectory.DistanceInterface import DistanceInterface
@@ -12,14 +13,15 @@ from mob_data_anonymizer.entities.Trajectory import Trajectory
 from tqdm import tqdm
 
 DEFAULT_VALUES = {
-    "k": 3
+    "k": 3,
+    "interval": 900
 }
 
 
-class Microaggregation2:
+class Microaggregation2(AnonymizationMethodInterface):
     def __init__(self, dataset: Dataset, k=DEFAULT_VALUES['k'], clustering_method: ClusteringInterface = None,
                  distance: DistanceInterface = None, aggregation_method: TrajectoryAggregationInterface = None,
-                 interval: int = None):
+                 interval: int = 15*60):
         """
                 Parameters
                 ----------
@@ -99,7 +101,7 @@ class Microaggregation2:
             cluster_trajectories = self.clusters[c]
 
             # Initialize anonymized trajectories
-            anon_trajectories = list(map(lambda t: Trajectory(t.id), cluster_trajectories))
+            anon_trajectories = list(map(lambda t: Trajectory(t.id, t.user_id), cluster_trajectories))
 
             aggregate_trajectory = self.aggregation_method.compute(cluster_trajectories)
             self.centroids[c] = aggregate_trajectory
@@ -119,9 +121,9 @@ class Microaggregation2:
         return self.anonymized_dataset
 
     @staticmethod
-    def get_instance(data):
+    def get_instance(data, file=None):
 
-        required_fields = ["k"]
+        required_fields = ["k", "interval"]
         values = {}
 
         for field in required_fields:
@@ -130,8 +132,15 @@ class Microaggregation2:
                 logging.info(f"No '{field}' provided. Using {DEFAULT_VALUES[field]}.")
                 values[field] = DEFAULT_VALUES[field]
 
+        print(f"k: {values['k']}, interval: {values['interval']}")
+
         dataset = Dataset()
-        dataset.load_from_scikit(data.get("input_file"), min_locations=5, datetime_key="timestamp")
+        if file is None:
+            filename = data.get("input_file")
+        else:
+            filename = file
+
+        dataset.from_file(filename, min_locations=5, datetime_key="timestamp")
         dataset.filter_by_speed()
 
         # Trajectory Distance
@@ -139,4 +148,4 @@ class Microaggregation2:
 
         martinez21_distance = Distance(dataset, landa=l)
 
-        return Microaggregation2(dataset, k=values['k'], distance=martinez21_distance)
+        return Microaggregation2(dataset, k=values['k'], distance=martinez21_distance, interval=values['interval'])

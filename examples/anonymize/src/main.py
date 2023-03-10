@@ -20,33 +20,35 @@ from mob_data_anonymizer.clustering.MDAV.SimpleMDAVDataset import SimpleMDAVData
 
 from mob_data_anonymizer.entities.Dataset import Dataset
 from mob_data_anonymizer.utils.Stats import Stats
+import warnings
+warnings.filterwarnings('ignore')
 
 logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', level=logging.INFO)
 
 ############################## Settings ##############################
 ### Anonymization method selection and settings ###
-METHOD_NAME = "SwapLocations"  # Options: ["SwapMob", "Microaggregation", "SwapLocations"]
-# METHOD_NAME = "Microaggregation"  # Options: ["SwapMob", "Microaggregation", "Microaggregation2", "SwapLocations"]
+# METHOD_NAME = "SwapLocations"  # Options: ["SwapMob", "Microaggregation", "SwapLocations"]
+METHOD_NAME = "Microaggregation"  # Options: ["SwapMob", "Microaggregation", "Microaggregation2", "SwapLocations"]
 TEMPORAL_THLD = 30  # Only for SwapMob
 SPATIAL_THLD = 0.2  # Only for SwapMob
 MIN_N_SWAPS = 1  # Only for SwapMob
 SEED = 42  # Only for SwapMob
 K = 3 # Only for Microaggregation
 
-# DISTANCE_LANDA = 1.5687583243223124  # Only for Microaggregation
-DISTANCE_LANDA = 0.00657901067783612  # Only for Microaggregation
+DISTANCE_LANDA = 1.5687583243223124  # Only for Microaggregation
+# DISTANCE_LANDA = 0.00657901067783612  # Only for Microaggregation
 # DISTANCE_LANDA = 0.0066544171556305225  # Only for Microaggregation
-MAX_DIST = 125193.634080271    # For normalization
-# MAX_DIST = 66908.66750605461    # For normalization
+# MAX_DIST = 125193.634080271    # For normalization
+MAX_DIST = 66908.66750605461    # For normalization
 # MAX_DIST = 118420.79414044978    # For normalization
-INTERVAL = 5*60 # Only for Microaggregation2 (seconds)
+INTERVAL = 24*60*60 # Only for Microaggregation2 (seconds)
 
 ### Paths ###
 DATA_FOLDER = os.path.join("..", "..", "data")
 # DATASET_NAME = "cabs_dataset_0000_2359.parquet" # DISTANCE_LANDA = 0.0066544171556305225 ; MAX_DIST = 118420.79414044978
-DATASET_NAME = "cabs_dataset_20080608.parquet"  # DISTANCE_LANDA = 0.00657901067783612; MAX_DIST = 125193.634080271
+# DATASET_NAME = "cabs_dataset_20080608.parquet"  # DISTANCE_LANDA = 0.00657901067783612; MAX_DIST = 125193.634080271
 # DATASET_NAME = "cabs_dataset_20080608_0800_1200.parquet" # DISTANCE_LANDA =
-# DATASET_NAME = "cabs_dataset_20080608_0700_0715.csv" # DISTANCE_LANDA = 1.5687583243223124; MAX_DIST = 66908.66750605461
+DATASET_NAME = "cabs_dataset_20080608_0700_0715.csv" # DISTANCE_LANDA = 1.5687583243223124; MAX_DIST = 66908.66750605461
 # DATASET_NAME = "cabs_dataset_0700_0715.parquet" # DISTANCE_LANDA = 1.5687583243223124; MAX_DIST = 66908.66750605461
 DATASET_PATH = os.path.join(DATA_FOLDER, DATASET_NAME)
 OUTPUT_FOLDER = os.path.join("..", "..", "output")
@@ -85,7 +87,7 @@ elif METHOD_NAME == "Microaggregation2":
                                    distance=Martinez2021_distance, aggregation_method=aggregation_method,
                                    interval = INTERVAL)
 elif METHOD_NAME == "SwapLocations":
-    anonymizer = SwapLocations(dataset)
+    anonymizer = SwapLocations(dataset, k=3, max_r_s=1000, min_r_s=100, max_r_t=120, min_r_t=60)
 else:
     raise Exception(f"Method [{METHOD_NAME}] is not available. Options: SwapMob, Microaggregation and SwapLocations")
 
