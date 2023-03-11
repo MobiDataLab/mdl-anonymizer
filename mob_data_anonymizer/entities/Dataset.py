@@ -178,6 +178,11 @@ class Dataset(ABC):
                                              constants.UID, constants.TID])
         tdf = TrajDataFrame(df, timestamp=True)
 
+        tdf[constants.LONGITUDE] = tdf[constants.LONGITUDE].astype(np.float32)
+        tdf[constants.LATITUDE] = tdf[constants.LATITUDE].astype(np.float32)
+        tdf[constants.UID] = tdf[constants.UID].astype(np.int32)
+        tdf[constants.TID] = tdf[constants.TID].astype(np.int32)
+
         return tdf
 
     # def to_tdf(self):
