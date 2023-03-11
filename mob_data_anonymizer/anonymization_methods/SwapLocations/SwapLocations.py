@@ -1,6 +1,7 @@
 import logging
 import random
 
+import pandas
 from haversine import Unit, haversine, haversine_vector
 from tqdm import tqdm
 import numpy as np
@@ -23,7 +24,7 @@ class SwapLocations(AnonymizationMethodInterface):
     def __init__(self, dataset: Dataset, k=DEFAULT_VALUES['k'],
                  max_r_s=DEFAULT_VALUES['max_r_s'], max_r_t=DEFAULT_VALUES['max_r_t'],
                  min_r_s=DEFAULT_VALUES['min_r_s'], min_r_t=DEFAULT_VALUES['min_r_t'],
-                 step_s=None, step_t=None, seed: int = None):
+                 step_s=None, step_t=None, seed: int = None, show_details=False):
         """
         Parameters
         ----------
@@ -61,107 +62,92 @@ class SwapLocations(AnonymizationMethodInterface):
             self.step_t = int(abs(max_r_t - min_r_t) / 2)
 
         self.seed = seed
-        print(f"k: {self.k}")
 
-    def __build_cluster(self, remaining_locations, chosen_location):
-
-        spatial_distances_computed = {}
-        temporal_distances_computed = {}
+    def __build_cluster(self, tdf, l):
 
         temporal_range = utils.inclusive_range(self.min_r_t, self.max_r_t, self.step_t if self.step_t > 0 else None)
         spatial_range = utils.inclusive_range(self.min_r_s, self.max_r_s, self.step_s if self.step_s > 0 else None)
 
+        timestamp = l.iloc[0]['datetime']
+
+        # Compute the time difference between this timestamped_location and the rest of locations in the tdf
+        tdf['dif_time'] = np.abs((tdf['datetime'] - timestamp).dt.total_seconds())
+
         for R_t in temporal_range:
+
+            # Compute the locations in the temporal range (tfd2 just keeps the locations within the temporal range)
+            tdf2 = tdf.query('dif_time <= @R_t').copy()
+
+            # If not enough locations, check the next range
+            if len(tdf2) < self.k:
+                continue
+
+            # We have enough locations, check the spatial range
+
+            # Compute all the distances from tdf2 points to our timestamped_location
+            tdf2['distance'] = haversine_vector(tdf2[['lat', 'lng']].to_numpy(), l[['lat', 'lng']].to_numpy(),
+                                                unit=Unit.METERS, comb=True).flatten()
+
             for R_s in spatial_range:
-                U_prima = []
+                # tdf3 has all the locations inside both temporal and spatial range
+                tdf3 = tdf2.query('distance <= @R_s').copy()
+                # Keep just one location for each trajectory (don't swap locations of the same trajectory)
+                # We keep the locations temporally closer to the original one
+                tdf3 = tdf3.sort_values(by=['dif_time'])
+                tdf3 = tdf3.drop_duplicates(subset=['tid'], keep='first')
 
-                for i, l in enumerate(remaining_locations):
+                # If not enough locations, check the next spatial range
+                if len(tdf3) < self.k:
+                    continue
 
-                    # We don't consider locations of the same trajectory
-                    if chosen_location[0] == l[0]:
-                        continue
+                # We have enough locations!
+                return tdf3
 
-                    # Check temporal distance from 'chosen_location' to 'l'
-                    try:
-                        temporal_distance = temporal_distances_computed[i]
-                    except KeyError:
-                        temporal_distance = chosen_location[1].temporal_distance(l[1])
-                        temporal_distances_computed[i] = temporal_distance
-
-                    if temporal_distance <= R_t:
-                        # Check spatial distance from 'chosen_location' to 'l'
-                        try:
-                            distance = spatial_distances_computed[i]
-                        except KeyError:
-                            distance = chosen_location[1].spatial_distance(l[1], unit=Unit.METERS)
-                            spatial_distances_computed[i] = distance
-
-                        if 0 <= distance <= R_s:
-                            U_prima.append(l)
-
-                # Filter and take just one location for trajectory
-                # TODO: Keep the temporal closest location to 'chosen_location' not random
-                used_trajectories = set()
-                U_prima = [x for x in U_prima if
-                           x[0] not in used_trajectories and (used_trajectories.add(x[0]) or True)]
-
-                # Do we have enough locations?
-                if len(U_prima) >= self.k - 1:
-                    return U_prima
-
-        # No existing cluster
+        # There is no possible cluster
         return None
 
     def run(self):
+        num_cluster = 1
+        pandas.options.display.width = 0
+        anon_tdf = pandas.DataFrame()
 
-        # Set seed
-        if self.seed is not None:
-            random.seed(self.seed)
+        tdf = self.dataset.to_tdf()
 
-        # Create anon trajectories
-        for t in self.dataset.trajectories:
-            self.anonymized_dataset.add_trajectory(Trajectory(t.id))
-        logging.info("Anonymized dataset initialized!")
+        pbar = tqdm(total=len(tdf))
 
-        # All locations to be swapped in just one list, with her original trajectory
-        remaining_locations = [(t.id, l) for t in self.dataset.trajectories for l in t.locations]
+        while not tdf.empty:
 
-        logging.info("Swapping...")
-        pbar = tqdm(total=len(remaining_locations))
+            l = tdf.sample(random_state=self.seed)
 
-        while remaining_locations:
+            cluster = self.__build_cluster(tdf, l)
 
-            # Choose one
-            chosen_location = random.choice(remaining_locations)
+            if cluster is not None:
+                # We have a cluster!
+                # Remove locations to be swapped from original tdf
+                tdf = tdf.drop(cluster.index.tolist())
 
-            # Find all nearest locations (dynamic radius)
-            U = [chosen_location]
+                # Assign random trajectory to each location
+                cluster[['tid', 'uid']] = np.random.permutation(cluster[['tid', 'uid']])
 
-            U_prima = self.__build_cluster(remaining_locations, chosen_location)
-            if U_prima:
-                U.extend(U_prima)
+                cluster['num_cluster'] = num_cluster
 
-            if len(U) >= self.k:
-                # Assign every location to a random trajectory
-                trajectories_id = [l[0] for l in U]
-                random.shuffle(U)
+                anon_tdf = pandas.concat([anon_tdf, cluster], ignore_index=True)
+                num_cluster += 1
+                pbar.update(len(cluster))
+            else:
+                # Remove original location from tdf
+                tdf = tdf.drop(l.index.tolist())
+                pbar.update(len(l))
 
-                for i, l in enumerate(U):
-                    an_t = self.anonymized_dataset.get_trajectory(trajectories_id[i])
-                    an_t.add_location(l[1], sort=False)
+        # Remove trajectories with just one location
+        s = anon_tdf['tid'].value_counts()
+        anon_tdf = anon_tdf[anon_tdf['tid'].map(s) >= 2]
 
-            # Remove from remaining_locations
-            for l in U:
-                remaining_locations.remove(l)
+        anon_tdf = anon_tdf.sort_values(by=['tid', 'datetime'])
 
-            pbar.update(len(U))
+        # anon_tdf.to_csv("anonymized_dataset_details.csv")
 
-        logging.info("Swapping done!")
-
-        self.anonymized_dataset.trajectories = [t for t in self.anonymized_dataset.trajectories if len(t) > 1]
-        self.anonymized_dataset.sort_trajectories()
-        logging.info("Removed trajectories with less than 1 locations!\n")
-        logging.info("Done!")
+        self.anonymized_dataset.from_tdf(anon_tdf)
 
     def get_anonymized_dataset(self):
         return self.anonymized_dataset
@@ -190,5 +176,5 @@ class SwapLocations(AnonymizationMethodInterface):
         step_t = data.get('step_t', None)
 
         return SwapLocations(dataset,
-                               values['k'], values['max_r_s'], values['max_r_t'], values['min_r_s'], values['min_r_t'],
-                               step_s=step_s, step_t=step_t)
+                             values['k'], values['max_r_s'], values['max_r_t'], values['min_r_s'], values['min_r_t'],
+                             step_s=step_s, step_t=step_t)
