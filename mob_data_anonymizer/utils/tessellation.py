@@ -4,6 +4,7 @@ from geopandas import GeoDataFrame
 import skmob
 from skmob import TrajDataFrame
 from skmob.tessellation import tilers
+from skmob.utils import constants
 from skmob.utils.constants import DEFAULT_CRS
 
 
@@ -25,38 +26,59 @@ def _get_bounding_box(tdf):
     return polygon
 
 
-def spatial_tessellation(tdf: TrajDataFrame, tiles_shape, meters=250, bounding_box=None) -> TrajDataFrame:
-    # tdf = skmob.TrajDataFrame.from_file('dataset/actual_dataset_loaded.csv', latitude='lat', longitude='lon',
-    #                                    datetime='timestamp', user_id='user_id')
+def spatial_tessellation(tdf: TrajDataFrame, tiles_shape, meters=250, tiles=None, bounding_box=None) -> TrajDataFrame:
+    '''
 
-    # Compute bounding_box
-    if bounding_box is None:
-        bounding_box = _get_bounding_box(tdf)
+    :param tdf: tdf to be tessellated
+    :param tiles_shape:
+    :param meters: size of the tiles
+    :param tiles: If a tiles file is provided is used, if not the are computed
+    :param bounding_box: If a bounding_box is not provided, it is computed
+    :return: tuple of tdf mapped to tiles and tiles computed
+    '''
 
     # Build tiles
-    tessellation = tilers.tiler.get(tiles_shape, base_shape=bounding_box, meters=meters)
+    if tiles is None:
+        if bounding_box is None:
+            # Compute bounding_box
+            bounding_box = _get_bounding_box(tdf)
+
+        tiles = tilers.tiler.get(tiles_shape, base_shape=bounding_box, meters=meters)
 
     # Map locations to tiles
-    mtdf = tdf.mapping(tessellation, remove_na=True)
+    mtdf = tdf.mapping(tiles, remove_na=True)
+
+    return mtdf, tiles
+
+
+def generalization(tdf: TrajDataFrame, size=250) -> TrajDataFrame:
+    '''
+
+    :param tdf: trajDataFrame to generalize
+    :param size: size tile (meters)
+    :return: TrajDataFrame with new positions generalized to the centroid of the corresponding tile. Also the tile_ID ç
+    and the original position are included
+    '''
+
+    mtdf = spatial_tessellation(tdf, "squared", size)
 
     # Add centroid locations of every tile to dataframe
     centroids = pd.DataFrame({
     })
 
-    centroids['tile_ID'] = tessellation['tile_ID']
-    centroids['x'] = round(tessellation['geometry'].centroid.x, 5)
-    centroids['y'] = round(tessellation['geometry'].centroid.y, 5)
-
-    # Merge with Mapped locations
-    new_tdf = pd.merge(mtdf, centroids, how='left', on='tile_ID')
+    mtdf['x'] = round(mtdf['geometry'].centroid.x, 5)
+    mtdf['y'] = round(mtdf['geometry'].centroid.y, 5)
 
     # Rename and reorder columns
-    new_tdf.rename(columns={
-        'lat': 'orig_lat',
-        'lng': 'orig_lng',
-        'x': 'lon',
-        'y': 'lat',
+    mtdf.rename(columns={
+        constants.LATITUDE: 'orig_lat',
+        constants.LONGITUDE: 'orig_lng',
+        'x': constants.LONGITUDE,
+        'y': constants.LATITUDE,
     }, inplace=True)
-    new_tdf = new_tdf[['lon', 'lat', 'datetime', 'uid', 'tid', 'tile_ID', 'orig_lon', 'orig_lat']]
 
-    return new_tdf
+    mtdf = mtdf[
+        [constants.LONGITUDE, constants.LATITUDE, constants.DATETIME, constants.UID, constants.TID, 'tile_ID',
+         'orig_lon', 'orig_lat']]
+
+    return mtdf

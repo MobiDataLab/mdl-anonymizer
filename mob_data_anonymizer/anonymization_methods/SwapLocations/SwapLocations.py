@@ -7,6 +7,8 @@ from tqdm import tqdm
 import numpy as np
 
 from mob_data_anonymizer.anonymization_methods.AnonymizationMethodInterface import AnonymizationMethodInterface
+from mob_data_anonymizer.anonymization_methods.SwapLocations.trajectory_anonymization import \
+    apply_trajectory_anonymization
 from mob_data_anonymizer.entities.Dataset import Dataset
 from mob_data_anonymizer.entities.Trajectory import Trajectory
 from mob_data_anonymizer.utils import utils
@@ -16,7 +18,8 @@ DEFAULT_VALUES = {
     "max_r_s": 500,
     "min_r_s": 100,
     "max_r_t": 120,
-    "min_r_t": 60
+    "min_r_t": 60,
+    "tile_size": 1000,
 }
 
 
@@ -24,7 +27,8 @@ class SwapLocations(AnonymizationMethodInterface):
     def __init__(self, dataset: Dataset, k=DEFAULT_VALUES['k'],
                  max_r_s=DEFAULT_VALUES['max_r_s'], max_r_t=DEFAULT_VALUES['max_r_t'],
                  min_r_s=DEFAULT_VALUES['min_r_s'], min_r_t=DEFAULT_VALUES['min_r_t'],
-                 step_s=None, step_t=None, seed: int = None, show_details=False):
+                 step_s=None, step_t=None, tile_size=DEFAULT_VALUES['tile_size'],
+                 seed: int = None):
         """
         Parameters
         ----------
@@ -44,6 +48,8 @@ class SwapLocations(AnonymizationMethodInterface):
             In meters
         step_t: int, optional
             In seconds
+        tile_size: int, optional
+            Size of the tiles in tessellation used for trajectory anonymization (in meters)
         seed : int, optional
             Seed for the random swapping process (default is None, so seed is not fixed)
         """
@@ -61,6 +67,7 @@ class SwapLocations(AnonymizationMethodInterface):
         if not step_t:
             self.step_t = int(abs(max_r_t - min_r_t) / 2)
 
+        self.tile_size = tile_size
         self.seed = seed
 
     def __build_cluster(self, tdf, l):
@@ -145,7 +152,15 @@ class SwapLocations(AnonymizationMethodInterface):
 
         anon_tdf = anon_tdf.sort_values(by=['tid', 'datetime'])
 
-        # anon_tdf.to_csv("anonymized_dataset_details.csv")
+        # anon_tdf.to_csv("anonymized_dataset_details_pre_traj.csv")
+
+        logging.info("Apply trajectory anonymization")
+        anon_tdf = apply_trajectory_anonymization(anon_tdf, tile_size=self.tile_size)
+        # anon_tdf.to_csv("anonymized_dataset_details_pre_remove_1loc.csv")
+
+        # Remove again trajectories with just one location
+        s = anon_tdf['tid'].value_counts()
+        anon_tdf = anon_tdf[anon_tdf['tid'].map(s) >= 2]
 
         self.anonymized_dataset.from_tdf(anon_tdf)
 
@@ -174,7 +189,8 @@ class SwapLocations(AnonymizationMethodInterface):
 
         step_s = data.get('step_s', None)
         step_t = data.get('step_t', None)
+        tile_size = data.get('tile_size', None)
 
         return SwapLocations(dataset,
                              values['k'], values['max_r_s'], values['max_r_t'], values['min_r_s'], values['min_r_t'],
-                             step_s=step_s, step_t=step_t)
+                             step_s=step_s, step_t=step_t, tile_size=tile_size)
