@@ -10,7 +10,7 @@ tessellation_shape_type = "squared"
 
 def apply_trajectory_anonymization (tdf, tile_size: int = 1000):
     '''
-    Apply a simple trajectory anonymization method. Use when you have previoously anonymized a dataset at location level.
+    Apply a simple trajectory anonymization method. Use when you have previously anonymized a dataset at location level.
     :return:
     '''
 
@@ -117,8 +117,8 @@ def apply_trajectory_anonymization (tdf, tile_size: int = 1000):
                     # print(mtdf[(mtdf.tid == tid) & (mtdf.tile_ID == tile)].index)
                     mtdf.drop(mtdf[(mtdf.tid == tid) & (mtdf.tile_ID == tile)].index, inplace=True)
 
-    tessellation.to_csv("tiles.csv")
+    # tessellation.to_csv("tiles.csv")
 
-    mtdf.drop('tile_ID', axis=1)
+    mtdf = mtdf.drop('tile_ID', axis=1).reset_index(drop=True)
 
     return mtdf

@@ -170,7 +170,7 @@ class SwapLocations(AnonymizationMethodInterface):
     @staticmethod
     def get_instance(data, file=None):
 
-        required_fields = ["k", "max_r_s", "min_r_s", "max_r_t", "min_r_t"]
+        required_fields = ["k", "max_r_s", "min_r_s", "max_r_t", "min_r_t", "tile_size"]
         values = {}
 
         for field in required_fields:
@@ -189,8 +189,7 @@ class SwapLocations(AnonymizationMethodInterface):
 
         step_s = data.get('step_s', None)
         step_t = data.get('step_t', None)
-        tile_size = data.get('tile_size', None)
 
         return SwapLocations(dataset,
                              values['k'], values['max_r_s'], values['max_r_t'], values['min_r_s'], values['min_r_t'],
-                             step_s=step_s, step_t=step_t, tile_size=tile_size)
+                             step_s=step_s, step_t=step_t, tile_size=values['tile_size'])
