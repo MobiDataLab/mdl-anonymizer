@@ -124,7 +124,7 @@ def get_root():
 def get(task_id: str):
     response_file_path = tasks_manager.return_task(task_id)
     if response_file_path is None:
-        task_message = f"task {task_id} not available or processing"
+        task_message = f"task {task_id} not available or still processing"
         print(task_message)
         return {"message": task_message}
     else:
@@ -132,11 +132,11 @@ def get(task_id: str):
         return response
 
 
-@app.post("/anonymize/Microaggregation/")
-def post(params: ParamsMicro = Depends(), files: List[UploadFile] = File(...)):
-    method = "Microaggregation"
-    response_file_path = anonymize(method, params, files[0].file)
-    return FileResponse(response_file_path)
+# @app.post("/anonymize/Microaggregation/")
+# def post(params: ParamsMicro = Depends(), files: List[UploadFile] = File(...)):
+#     method = "Microaggregation"
+#     response_file_path = anonymize(method, params, files[0].file)
+#     return FileResponse(response_file_path)
 
 
 @app.post("/anonymizeback/Microaggregation/")
@@ -149,11 +149,11 @@ def post(params: ParamsMicro = Depends(), files: List[UploadFile] = File(...),
     return {"message": task_message}
 
 
-@app.post("/anonymize/Microaggregation2/")
-def post(params: ParamsMicro2 = Depends(), files: List[UploadFile] = File(...)):
-    method = "Microaggregation2"
-    response_file_path = anonymize(method, params, files[0].file)
-    return FileResponse(response_file_path)
+# @app.post("/anonymize/Microaggregation2/")
+# def post(params: ParamsMicro2 = Depends(), files: List[UploadFile] = File(...)):
+#     method = "Microaggregation2"
+#     response_file_path = anonymize(method, params, files[0].file)
+#     return FileResponse(response_file_path)
 
 
 @app.post("/anonymizeback/Microaggregation2/")
@@ -166,11 +166,11 @@ def post(params: ParamsMicro2 = Depends(), files: List[UploadFile] = File(...),
     return {"message": task_message}
 
 
-@app.post("/anonymize/SwapLocations/")
-def post(params: ParamsSwaplocations = Depends(), files: List[UploadFile] = File(...)):
-    method = "SwapLocations"
-    response_file_path = anonymize(method, params, files[0].file)
-    return FileResponse(response_file_path)
+# @app.post("/anonymize/SwapLocations/")
+# def post(params: ParamsSwaplocations = Depends(), files: List[UploadFile] = File(...)):
+#     method = "SwapLocations"
+#     response_file_path = anonymize(method, params, files[0].file)
+#     return FileResponse(response_file_path)
 
 
 @app.post("/anonymizeback/SwapLocations/")
@@ -183,11 +183,11 @@ def post(params: ParamsSwaplocations = Depends(), files: List[UploadFile] = File
     return {"message": task_message}
 
 
-@app.post("/anonymize/SwapMob/")
-def post(params: ParamsSwapmob = Depends(), files: List[UploadFile] = File(...)):
-    method = "SwapMob"
-    response_file_path = anonymize(method, params, files[0].file)
-    return FileResponse(response_file_path)
+# @app.post("/anonymize/SwapMob/")
+# def post(params: ParamsSwapmob = Depends(), files: List[UploadFile] = File(...)):
+#     method = "SwapMob"
+#     response_file_path = anonymize(method, params, files[0].file)
+#     return FileResponse(response_file_path)
 
 
 @app.post("/anonymizeback/SwapMob/")
@@ -200,10 +200,10 @@ def post(params: ParamsSwapmob = Depends(), files: List[UploadFile] = File(...),
     return {"message": task_message}
 
 
-@app.post("/analyze/")
-def post(params: ParamsAnalyze = Depends(), files: List[UploadFile] = File(...)):
-    response_file_path = analyze(params, files[0].file)
-    return FileResponse(response_file_path)
+# @app.post("/analyze/")
+# def post(params: ParamsAnalyze = Depends(), files: List[UploadFile] = File(...)):
+#     response_file_path = analyze(params, files[0].file)
+#     return FileResponse(response_file_path)
 
 
 @app.post("/analyzeback/")
@@ -216,15 +216,15 @@ def post(params: ParamsAnalyze = Depends(), files: List[UploadFile] = File(...),
     return {"message": task_message}
 
 
-@app.post("/measures/")
-def post(params: ParamsMeasures = Depends(), files: List[UploadFile] = File(...)) -> Measures:
-    response_measures = measures(params, files[0].file, files[1].file)
-    return Measures(propensity=response_measures["propensity"],
-                    rsme=response_measures["rsme"],
-                    rsme_normalized=response_measures["rsme_normalized"],
-                    percen_record_linkage=response_measures["percen_record_linkage"],
-                    percen_traj_removed=response_measures["percen_traj_removed"],
-                    percen_loc_removed=response_measures["percen_loc_removed"])
+# @app.post("/measures/")
+# def post(params: ParamsMeasures = Depends(), files: List[UploadFile] = File(...)) -> Measures:
+#     response_measures = measures(params, files[0].file, files[1].file)
+#     return Measures(propensity=response_measures["propensity"],
+#                     rsme=response_measures["rsme"],
+#                     rsme_normalized=response_measures["rsme_normalized"],
+#                     percen_record_linkage=response_measures["percen_record_linkage"],
+#                     percen_traj_removed=response_measures["percen_traj_removed"],
+#                     percen_loc_removed=response_measures["percen_loc_removed"])
 
 
 @app.post("/measuresback/")
