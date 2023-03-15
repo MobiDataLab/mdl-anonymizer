@@ -9,7 +9,8 @@ from make_api_call import MakeApiCall
 from shapely.errors import ShapelyDeprecationWarning
 
 from mob_data_anonymizer import PARAMETERS_FILE_DOESNT_EXIST, PARAMETERS_FILE_NOT_JSON, INPUT_FILE_NOT_EXIST, \
-    OUTPUT_FOLDER_NOT_EXIST, PARAMETERS_NOT_VALID, SUCCESS, WRONG_METHOD, WRONG_MODE, API_SERVER
+    OUTPUT_FOLDER_NOT_EXIST, PARAMETERS_NOT_VALID, SUCCESS, WRONG_METHOD, WRONG_MODE
+from mob_data_anonymizer import CONFIG_DB_FILE
 from mob_data_anonymizer.utils.Measures import Measures
 from mob_data_anonymizer.distances.trajectory.Martinez2021.Distance import Distance
 from mob_data_anonymizer.entities.Dataset import Dataset
@@ -137,9 +138,26 @@ def compute_measures_api(param_file_path: str):
 
     original_file = data["original_dataset"]
     anom_file = data["anonymized_dataset"]
-    api = MakeApiCall(API_SERVER)
+    api = MakeApiCall()
 
-    # action = "measures"
+    action = "measures"
+    response = api.post_user_data2(action, data, original_file, anom_file)
+
+    output_file_path = data["output_folder"] + "/" + data["main_output_file"]
+    with open(output_file_path, 'w') as f:
+        json.dump(response.json(), f, indent=4)
+
+    print(f"Received: {response}")
+
+
+def compute_measures_api_back(param_file_path: str):
+    with open(param_file_path) as param_file:
+        data = json.load(param_file)
+
+    original_file = data["original_dataset"]
+    anom_file = data["anonymized_dataset"]
+    api = MakeApiCall()
+
     action = "measuresback"
     response = api.post_user_data2(action, data, original_file, anom_file)
 
@@ -148,3 +166,24 @@ def compute_measures_api(param_file_path: str):
         json.dump(response.json(), f, indent=4)
 
     print(f"Received: {response}")
+
+
+def compute_measures_api_back_db(param_file_path: str):
+    with open(param_file_path) as param_file:
+        data = json.load(param_file)
+
+    original_file = data["original_dataset"]
+    anom_file = data["anonymized_dataset"]
+    api = MakeApiCall()
+
+    action = "measuresback"
+    response = api.post_user_data2(action, data, original_file, anom_file)
+
+    # with open(CONFIG_DB_FILE) as param_file:
+    #     data = json.load(param_file)
+    # output_file_path = data['db_folder'] + data['db_file']
+    # with open(output_file_path, 'w') as f:
+    #     json.dump(response.json(), f, indent=4)
+
+    print(f"Response: {response}")
+    print(f"Received: {response.json()['message']}")

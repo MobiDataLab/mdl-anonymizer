@@ -111,11 +111,11 @@ class Microaggregation(AnonymizationMethodInterface):
         else:
             filename = file
 
-        dataset.from_file(filename, min_locations=5, datetime_key="timestamp")
+        dataset.from_file(filename, min_locations=10, datetime_key="timestamp")
         dataset.filter_by_speed()
 
         # Trajectory Distance
-        l = data.get('lambda')
+        l = data.get('landa')
 
         martinez21_distance = Distance(dataset, landa=l)
 

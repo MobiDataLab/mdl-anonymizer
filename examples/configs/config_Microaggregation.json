@@ -6,5 +6,5 @@
   "save_preprocessed_dataset": true,
   "preprocessed_file": "preprocessed_dataset_CLI.csv",
   "k": 3,
-  "lambda": 0
+  "landa": 0
 }

@@ -3,6 +3,7 @@ import typer
 from typing import Optional
 from mob_data_anonymizer import __app_name__, __version__, DEFAULT_PARAMETERS_FILE, ERRORS, SUCCESS, anonymizer, \
     compute_measures, analyzer
+from mob_data_anonymizer import tasks_manager
 
 app = typer.Typer()
 
@@ -46,7 +47,7 @@ def anonymize_api(
 
         raise typer.Exit(1)
     else:
-        anonymizer.anonymizer_api(parameters_file)
+        anonymizer.anonymizer_api_back_db(parameters_file)
 
 
 @app.command()
@@ -88,7 +89,7 @@ def analysis_api(
 
         raise typer.Exit(1)
     else:
-        analyzer.run_analysis_api(parameters_file)
+        analyzer.run_analysis_api_back_db(parameters_file)
 
 
 @app.command()
@@ -130,7 +131,19 @@ def measures_api(
 
         raise typer.Exit(1)
     else:
-        compute_measures.compute_measures_api(parameters_file)
+        compute_measures.compute_measures_api_back_db(parameters_file)
+
+
+@app.command()
+def get_task(
+        task_id: str = typer.Option(
+            ...,
+            "--task_id",
+            "-t",
+            prompt="Task id"
+        ),
+) -> None:
+    tasks_manager.request_return_task(task_id)
 
 
 def _version_callback(value: bool) -> None:

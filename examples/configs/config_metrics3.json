@@ -1,0 +1,6 @@
+{
+  "original_dataset": "examples/data/cabs_dataset_20080608_0700_0715.csv",
+  "anonymized_dataset": "ec58ec7e3da94313aad88df63b1e9982.csv",
+  "output_folder": "examples/output/",
+  "main_output_file": "measures.json"
+}

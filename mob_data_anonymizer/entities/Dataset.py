@@ -33,7 +33,7 @@ class Dataset(ABC):
     #    def load(self):
     #        raise NotImplementedError
 
-    def from_file(self, filename, n_trajectories=None, min_locations=0,
+    def from_file(self, filename, filetype=None, n_trajectories=None, min_locations=0,
                   latitude_key="lat", longitude_key="lon", datetime_key="datetime", user_key="user_id",
                   trajectory_key="trajectory_id",
                   datetime_format="%Y/%m/%d %H:%M:%S",
@@ -58,10 +58,13 @@ class Dataset(ABC):
                 raise Exception("File format not supported")
         else:  # file object from api
             logging.info("Loading dataset from file object...")
-            with open("temp.csv", 'wb') as out_file:
-                content = filename.read()  # async read
-                out_file.write(content)  # async write
-            df = pandas.read_csv("temp.csv")
+            if filetype[-8:] == '.parquet':
+                df = pq.read_table(filename).to_pandas()
+            else:
+                with open("temp.csv", 'wb') as out_file:
+                    content = filename.read()  # async read
+                    out_file.write(content)  # async write
+                df = pandas.read_csv("temp.csv")
 
         # Order by traj_id
         df.sort_values(trajectory_key, inplace=True)

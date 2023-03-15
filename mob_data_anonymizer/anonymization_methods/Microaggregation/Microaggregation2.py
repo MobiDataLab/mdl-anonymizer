@@ -121,7 +121,7 @@ class Microaggregation2(AnonymizationMethodInterface):
         return self.anonymized_dataset
 
     @staticmethod
-    def get_instance(data, file=None):
+    def get_instance(data, file=None, filetype=None):
 
         required_fields = ["k", "interval"]
         values = {}
@@ -140,11 +140,11 @@ class Microaggregation2(AnonymizationMethodInterface):
         else:
             filename = file
 
-        dataset.from_file(filename, min_locations=5, datetime_key="timestamp")
+        dataset.from_file(filename, filetype, min_locations=10, datetime_key="timestamp")
         dataset.filter_by_speed()
 
         # Trajectory Distance
-        l = data.get('lambda')
+        l = data.get('landa')
 
         martinez21_distance = Distance(dataset, landa=l)
 

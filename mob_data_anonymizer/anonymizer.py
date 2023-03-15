@@ -6,7 +6,7 @@ import sys
 from make_api_call import MakeApiCall
 from mob_data_anonymizer import PARAMETERS_FILE_DOESNT_EXIST, SUCCESS, PARAMETERS_FILE_NOT_JSON, PARAMETERS_NOT_VALID, \
     WRONG_METHOD, INPUT_FILE_NOT_EXIST, OUTPUT_FOLDER_NOT_EXIST, DEFAULT_OUTPUT_FILE, DEFAULT_SAVE_FILTERED_DATASET, \
-    DEFAULT_FILTERED_FILE, API_SERVER
+    DEFAULT_FILTERED_FILE
 from mob_data_anonymizer.analysis_methods.AnalysisMethodInterface import AnalysisMethodInterface
 from mob_data_anonymizer.anonymization_methods.AnonymizationMethodInterface import AnonymizationMethodInterface
 from mob_data_anonymizer.anonymization_methods.SwapLocations.SwapLocations import SwapLocations
@@ -80,7 +80,7 @@ def anonymizer_api(param_file_path: str) -> int:
         data = json.load(param_file)
 
     input_file = data["input_file"]
-    api = MakeApiCall(API_SERVER)
+    api = MakeApiCall()
 
     action = "anonymize"
     action += "/" + data['method']
@@ -91,3 +91,42 @@ def anonymizer_api(param_file_path: str) -> int:
         f.write(response.content)
 
     print(f"Received: {response}")
+
+
+def anonymizer_api_back(param_file_path: str):
+    with open(param_file_path) as param_file:
+        data = json.load(param_file)
+
+    input_file = data["input_file"]
+    api = MakeApiCall()
+
+    action = "anonymizeback"
+    action += "/" + data['method']
+    response = api.post_user_data(action, data, input_file)
+
+    output_file_path = data["output_folder"] + "/" + data["main_output_file"]
+    with open(output_file_path, 'wb') as f:
+        f.write(response.content)
+
+    print(f"Received: {response}")
+
+
+def anonymizer_api_back_db(param_file_path: str):
+    with open(param_file_path) as param_file:
+        data = json.load(param_file)
+
+    input_file = data["input_file"]
+    api = MakeApiCall()
+
+    action = "anonymizeback"
+    action += "/" + data['method']
+    response = api.post_user_data(action, data, input_file)
+
+    # with open(CONFIG_DB_FILE) as param_file:
+    #     data = json.load(param_file)
+    # output_file_path = data['db_folder'] + data['db_file']
+    # with open(output_file_path, 'w') as f:
+    #     json.dump(response.json(), f, indent=4)
+
+    print(f"Response: {response}")
+    print(f"Received: {response.json()['message']}")

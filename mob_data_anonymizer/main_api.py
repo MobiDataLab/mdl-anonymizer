@@ -3,10 +3,14 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import Optional, List
 from mob_data_anonymizer.utils.actions import anonymize
+from mob_data_anonymizer.utils.actions import anonymize_back
 from mob_data_anonymizer.utils.actions import analyze
+from mob_data_anonymizer.utils.actions import analyze_back
 from mob_data_anonymizer.utils.actions import measures
 from mob_data_anonymizer.utils.actions import measures_back
+from mob_data_anonymizer import tasks_manager
 from mob_data_anonymizer.methodName import MethodName
+import uuid
 
 
 class Params(BaseModel):
@@ -80,6 +84,19 @@ class Measures(BaseModel):
     percen_loc_removed: float
 
 
+class ParamsAnalyze(BaseModel):
+    method: str = "QuadTreeHeatMap"
+    input_file: Optional[str]
+    output_folder: str = "examples/output"
+    main_output_file: str = "anonymous_QuadTreeHeatMap_CLI.json"
+    save_preprocessed_dataset: bool = True
+    preprocessed_file: str = "preprocessed_dataset_CLI.csv"
+    min_k: int = 5
+    max_locations: int = 1000
+    min_sector_length: int = 50
+    merge_sectors: bool = True
+
+
 # class Params(BaseModel):
 #     method: str
 
@@ -97,11 +114,39 @@ def get_root():
     return {f"message: from root get"}
 
 
+# @app.get("/task/")
+# def get(task_id: str):
+#     response_file_path = tasks_manager.return_task(task_id)
+#     return FileResponse(response_file_path)
+
+
+@app.get("/task/")
+def get(task_id: str):
+    response_file_path = tasks_manager.return_task(task_id)
+    if response_file_path is None:
+        task_message = f"task {task_id} not available or processing"
+        print(task_message)
+        return {"message": task_message}
+    else:
+        response = FileResponse(response_file_path, filename=response_file_path)
+        return response
+
+
 @app.post("/anonymize/Microaggregation/")
 def post(params: ParamsMicro = Depends(), files: List[UploadFile] = File(...)):
     method = "Microaggregation"
     response_file_path = anonymize(method, params, files[0].file)
     return FileResponse(response_file_path)
+
+
+@app.post("/anonymizeback/Microaggregation/")
+def post(params: ParamsMicro = Depends(), files: List[UploadFile] = File(...),
+         background_tasks: BackgroundTasks = None):
+    method = "Microaggregation"
+    task_id = str(uuid.uuid4().hex)
+    background_tasks.add_task(anonymize_back, method, params, files[0].file, files[0].filename, task_id)
+    task_message = f"task {task_id} requested"
+    return {"message": task_message}
 
 
 @app.post("/anonymize/Microaggregation2/")
@@ -111,11 +156,31 @@ def post(params: ParamsMicro2 = Depends(), files: List[UploadFile] = File(...)):
     return FileResponse(response_file_path)
 
 
+@app.post("/anonymizeback/Microaggregation2/")
+def post(params: ParamsMicro2 = Depends(), files: List[UploadFile] = File(...),
+         background_tasks: BackgroundTasks = None):
+    method = "Microaggregation2"
+    task_id = str(uuid.uuid4().hex)
+    background_tasks.add_task(anonymize_back, method, params, files[0].file, files[0].filename, task_id)
+    task_message = f"task {task_id} requested"
+    return {"message": task_message}
+
+
 @app.post("/anonymize/SwapLocations/")
 def post(params: ParamsSwaplocations = Depends(), files: List[UploadFile] = File(...)):
     method = "SwapLocations"
     response_file_path = anonymize(method, params, files[0].file)
     return FileResponse(response_file_path)
+
+
+@app.post("/anonymizeback/SwapLocations/")
+def post(params: ParamsSwaplocations = Depends(), files: List[UploadFile] = File(...),
+         background_tasks: BackgroundTasks = None):
+    method = "SwapLocations"
+    task_id = str(uuid.uuid4().hex)
+    background_tasks.add_task(anonymize_back, method, params, files[0].file, files[0].filename, task_id)
+    task_message = f"task {task_id} requested"
+    return {"message": task_message}
 
 
 @app.post("/anonymize/SwapMob/")
@@ -125,10 +190,30 @@ def post(params: ParamsSwapmob = Depends(), files: List[UploadFile] = File(...))
     return FileResponse(response_file_path)
 
 
+@app.post("/anonymizeback/SwapMob/")
+def post(params: ParamsSwapmob = Depends(), files: List[UploadFile] = File(...),
+         background_tasks: BackgroundTasks = None):
+    method = "SwapMob"
+    task_id = str(uuid.uuid4().hex)
+    background_tasks.add_task(anonymize_back, method, params, files[0].file, files[0].filename, task_id)
+    task_message = f"task {task_id} requested"
+    return {"message": task_message}
+
+
 @app.post("/analyze/")
-def post(params: Params = Depends(), files: List[UploadFile] = File(...)):
+def post(params: ParamsAnalyze = Depends(), files: List[UploadFile] = File(...)):
     response_file_path = analyze(params, files[0].file)
     return FileResponse(response_file_path)
+
+
+@app.post("/analyzeback/")
+def post(params: ParamsAnalyze = Depends(), files: List[UploadFile] = File(...),
+         background_tasks: BackgroundTasks = None):
+    task_id = str(uuid.uuid4().hex)
+    print(task_id)
+    background_tasks.add_task(analyze_back, params, files[0].file, files[0].filename, task_id)
+    task_message = f"task {task_id} requested"
+    return {"message": task_message}
 
 
 @app.post("/measures/")
@@ -145,7 +230,7 @@ def post(params: ParamsMeasures = Depends(), files: List[UploadFile] = File(...)
 @app.post("/measuresback/")
 def post(params: ParamsMeasures = Depends(), files: List[UploadFile] = File(...),
          background_tasks: BackgroundTasks = None):
-    task_id = "0000"
+    task_id = str(uuid.uuid4().hex)
     background_tasks.add_task(measures_back, params, files[0].file, files[1].file, task_id)
     task_message = f"task {task_id} requested"
     return {"message": task_message}

@@ -1,12 +1,12 @@
 {
   "method": "QuadTreeHeatMap",
-  "input_file": "examples/data/cabs_dataset_0700_0715.parquet",
+  "input_file": "examples/data/cabs_dataset_20080608_0700_0715.csv",
   "output_folder": "examples/output",
   "main_output_file": "anonymous_QuadTreeHeatMap_CLI.json",
   "save_preprocessed_dataset": true,
   "preprocessed_file": "preprocessed_dataset_CLI.csv",
   "min_k": 5,
-  "max_locations": null,
+  "max_locations": 1000,
   "min_sector_length": 50,
   "merge_sectors": true
 }

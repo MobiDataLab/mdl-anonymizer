@@ -1,11 +1,14 @@
 import requests
 import json
+from mob_data_anonymizer import CONFIG_API_FILE
 
 
 class MakeApiCall:
 
-    def __init__(self, api):
-        self.api = api
+    def __init__(self):
+        with open(CONFIG_API_FILE) as f:
+            config_api = json.load(f)
+        self.api = config_api['api_server']
 
     def get_data(self):
         response = requests.get(f"{self.api}")
@@ -19,10 +22,13 @@ class MakeApiCall:
         return response
 
     def get_user_data(self, parameters):
-        response = requests.get(f"{self.api}", params=parameters)
+        print(parameters)
+        parameters = {"task_id": str(parameters["task_id"])}
+        response = requests.get(f"{self.api}/task", params=parameters)
+        # response = requests.get(f"{self.api}/task", params={'task_id': "0000"})
         if response.status_code == 200:
             print("successfully fetched the data with parameters provided")
-            self.formatted_print(response.json())
+            # self.formatted_print(response.json())
         else:
             print(
                 f"Hello person, there's a {response.status_code} error with your request")

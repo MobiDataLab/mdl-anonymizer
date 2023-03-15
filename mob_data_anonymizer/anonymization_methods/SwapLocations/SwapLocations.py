@@ -184,7 +184,7 @@ class SwapLocations(AnonymizationMethodInterface):
             filename = data.get("input_file")
         else:
             filename = file
-        dataset.from_file(filename, min_locations=5, datetime_key="timestamp")
+        dataset.from_file(filename, min_locations=10, datetime_key="timestamp")
         dataset.filter_by_speed()
 
         step_s = data.get('step_s', None)
