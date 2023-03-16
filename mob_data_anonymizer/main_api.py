@@ -68,6 +68,18 @@ class ParamsSwapmob(BaseModel):
     temporal_thold: float = 60
 
 
+class ParamsSimpleGeneralization(BaseModel):
+    input_file: Optional[str]
+    output_folder: str = "examples/output"
+    main_output_file: str = "anonymized_Microaggregation2_CLI.csv"
+    save_preprocessed_dataset: bool = True
+    preprocessed_file: str = "preprocessed_dataset_CLI.csv"
+    gen_tile_size: int = 500
+    tile_shape: str = "squared"
+    traj_anon_tile_size: int = 1000
+    overlapping_strategy: str = "all"
+
+
 class ParamsMeasures(BaseModel):
     original_file: Optional[str]
     anonymized_file: Optional[str]
@@ -194,6 +206,16 @@ def post(params: ParamsSwaplocations = Depends(), files: List[UploadFile] = File
 def post(params: ParamsSwapmob = Depends(), files: List[UploadFile] = File(...),
          background_tasks: BackgroundTasks = None):
     method = "SwapMob"
+    task_id = str(uuid.uuid4().hex)
+    background_tasks.add_task(anonymize_back, method, params, files[0].file, files[0].filename, task_id)
+    task_message = f"task {task_id} requested"
+    return {"message": task_message}
+
+
+@app.post("/anonymizeback/SimpleGeneralization/")
+def post(params: ParamsSimpleGeneralization = Depends(), files: List[UploadFile] = File(...),
+         background_tasks: BackgroundTasks = None):
+    method = "SimpleGeneralization"
     task_id = str(uuid.uuid4().hex)
     background_tasks.add_task(anonymize_back, method, params, files[0].file, files[0].filename, task_id)
     task_message = f"task {task_id} requested"

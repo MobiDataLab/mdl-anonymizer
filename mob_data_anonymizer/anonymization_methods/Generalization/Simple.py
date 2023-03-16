@@ -70,7 +70,7 @@ class SimpleGeneralization(AnonymizationMethodInterface):
         return self.anonymized_dataset
 
     @staticmethod
-    def get_instance(data, file=None):
+    def get_instance(data, file=None, filetype=None):
 
         required_fields = ["gen_tile_size", "traj_anon_tile_size"]
         values = {}
@@ -86,7 +86,7 @@ class SimpleGeneralization(AnonymizationMethodInterface):
             filename = data.get("input_file")
         else:
             filename = file
-        dataset.from_file(filename, min_locations=5, datetime_key="timestamp")
+        dataset.from_file(filename, filetype, min_locations=5, datetime_key="timestamp")
         dataset.filter_by_speed()
 
         ts = data.get('tile_shape', DEFAULT_VALUES['tile_shape'])
