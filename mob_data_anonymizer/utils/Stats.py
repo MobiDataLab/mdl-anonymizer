@@ -1,26 +1,21 @@
-import sys
+from collections import defaultdict
+import logging
+from bisect import bisect_left
 from collections import defaultdict
 from datetime import datetime
 from math import sqrt
-import logging
-import pandas as pd
+
 import numpy as np
-import pytz
+import pandas as pd
+import xgboost as xgb
 from pandas import DateOffset
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import train_test_split
+from sklearn.utils import shuffle
 from skmob.tessellation import tilers
 from tqdm import tqdm
+
 from mob_data_anonymizer.entities.Dataset import Dataset
-from bisect import bisect_left
-from sklearn.utils import shuffle
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import GradientBoostingClassifier, ExtraTreesClassifier
-from sklearn.metrics import roc_auc_score, accuracy_score, f1_score, confusion_matrix, classification_report
-from sklearn.model_selection import GridSearchCV
-import xgboost as xgb
-import multiprocessing
-import lazypredict
-from lazypredict.Supervised import LazyClassifier
 
 
 class Stats:

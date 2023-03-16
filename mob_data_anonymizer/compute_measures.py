@@ -5,7 +5,7 @@ import skmob
 import typer
 import warnings
 
-from make_api_call import MakeApiCall
+from mob_data_anonymizer.make_api_call import MakeApiCall
 from shapely.errors import ShapelyDeprecationWarning
 
 from mob_data_anonymizer import PARAMETERS_FILE_DOESNT_EXIST, PARAMETERS_FILE_NOT_JSON, INPUT_FILE_NOT_EXIST, \
