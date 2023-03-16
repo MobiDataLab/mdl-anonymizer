@@ -94,7 +94,7 @@ class Microaggregation(AnonymizationMethodInterface):
         return self.anonymized_dataset
 
     @staticmethod
-    def get_instance(data, file=None):
+    def get_instance(data, file=None, filetype=None):
 
         required_fields = ["k"]
         values = {}
@@ -111,7 +111,7 @@ class Microaggregation(AnonymizationMethodInterface):
         else:
             filename = file
 
-        dataset.from_file(filename, min_locations=10, datetime_key="timestamp")
+        dataset.from_file(filename, filetype, min_locations=10, datetime_key="timestamp")
         dataset.filter_by_speed()
 
         # Trajectory Distance

@@ -14,7 +14,9 @@ from sklearn.model_selection import train_test_split
 from sklearn.utils import shuffle
 from skmob.tessellation import tilers
 from tqdm import tqdm
+import warnings
 
+warnings.filterwarnings('ignore')
 from mob_data_anonymizer.entities.Dataset import Dataset
 
 

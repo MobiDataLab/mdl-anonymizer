@@ -116,7 +116,7 @@ def analyze(params, file) -> str:
     return output_file
 
 
-def analyze_back(params, file, task_id):
+def analyze_back(params, file, filename, task_id):
     data = params.dict()
     method = data["method"]
     print(data)
@@ -124,7 +124,7 @@ def analyze_back(params, file, task_id):
     # Get instance of requested method
     class_object = getattr(sys.modules[__name__], data['method'])
     print("Analysis method: ", class_object.__name__)
-    method = class_object.get_instance(data, file)
+    method = class_object.get_instance(data, file, filename)
 
     # Filtered dataset
     output_folder = data.get('output_folder', '')
@@ -190,7 +190,7 @@ def measures(params, original_file, anom_file) -> dict:
     return results
 
 
-def measures_back(params, original_file, anom_file, task_id):
+def measures_back(params, original_file, anom_file, original_filename, anom_filename, task_id):
     data = params.dict()
     typer.secho(f'Loading original dataset')
 
@@ -200,7 +200,7 @@ def measures_back(params, original_file, anom_file, task_id):
     else:
         filename = original_file
 
-    original_dataset.from_file(filename, datetime_key="timestamp")
+    original_dataset.from_file(filename, original_filename, datetime_key="timestamp")
 
     typer.secho(f'Loading anonymized dataset')
 
@@ -210,7 +210,7 @@ def measures_back(params, original_file, anom_file, task_id):
     else:
         filename = anom_file
 
-    anonymized_dataset.from_file(filename, datetime_key="timestamp")
+    anonymized_dataset.from_file(filename, anom_filename, datetime_key="timestamp")
 
     martinez21_distance = Distance(original_dataset)
     martinez21_distance_norm = Distance(original_dataset, landa=martinez21_distance.landa,

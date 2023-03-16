@@ -253,6 +253,7 @@ def post(params: ParamsAnalyze = Depends(), files: List[UploadFile] = File(...),
 def post(params: ParamsMeasures = Depends(), files: List[UploadFile] = File(...),
          background_tasks: BackgroundTasks = None):
     task_id = str(uuid.uuid4().hex)
-    background_tasks.add_task(measures_back, params, files[0].file, files[1].file, task_id)
+    background_tasks.add_task(measures_back, params, files[0].file, files[1].file,
+                              files[0].filename, files[1].filename, task_id)
     task_message = f"task {task_id} requested"
     return {"message": task_message}

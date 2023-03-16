@@ -293,7 +293,7 @@ class QuadTreeHeatMap(AnalysisMethodInterface):
         self.result.to_file(f"{filepath}", driver="GeoJSON")
 
     @staticmethod
-    def get_instance(data, file=None):
+    def get_instance(data, file=None, filetype=None):
         required_fields = ["min_k", "min_sector_length", "merge_sectors", "split_n_locations"]
         values = {}
 
@@ -308,7 +308,7 @@ class QuadTreeHeatMap(AnalysisMethodInterface):
             filename = data.get("input_file")
         else:
             filename = file
-        dataset.from_file(filename, min_locations=1, datetime_key="timestamp")
+        dataset.from_file(filename, filetype, min_locations=1, datetime_key="timestamp")
         dataset.filter_by_speed()
 
         return QuadTreeHeatMap(dataset, values['min_k'], values["min_sector_length"],
