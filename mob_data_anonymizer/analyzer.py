@@ -114,7 +114,7 @@ def run_analysis_api_back_db(param_file_path: str):
     input_file = data["input_file"]
     api = MakeApiCall()
 
-    action = "analyzeback"
+    action = "analyze"
     response = api.post_user_data(action, data, input_file)
 
     # with open(CONFIG_DB_FILE) as param_file:

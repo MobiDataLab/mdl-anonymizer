@@ -127,6 +127,42 @@ def compute_measures(param_file_path: str):
     results["percen_record_linkage"] = round(stats.get_fast_record_linkage(martinez21_distance), 2)
     print(f'% Record linkage: {results["percen_record_linkage"]}')
 
+    # typer.secho(f'Loading original dataset')
+    # tdf_1 = skmob.TrajDataFrame.from_file(data.get("original_dataset"),
+    #                                       latitude='lat',
+    #                                       longitude='lon',
+    #                                       user_id='user_id',
+    #                                       datetime='timestamp')
+    #
+    # typer.secho(f'Loading anonymized dataset')
+    # tdf_2 = skmob.TrajDataFrame.from_file(data.get("anonymized_dataset"),
+    #                                       latitude='lat',
+    #                                       longitude='lon',
+    #                                       user_id='user_id',
+    #                                       datetime='timestamp')
+    #
+    # measures = Measures(tdf_1, tdf_2)
+    # results["visits_per_location_o"], results["visits_per_location_a"] \
+    #     = round(measures.cmp_visits_per_location(), 4)
+    # print(f"visits per location: Original={results['visits_per_location_o']} - "
+    #       f"Anonymized={results['visits_per_location_a']}")
+    # results["distance_straight_line_o"], results["distance_straight_line_a"] \
+    #     = round(measures.cmp_visits_per_location(), 4)
+    # print(f"Distance straight line: Original={results['distance_straight_line_o']} - "
+    #       f"Anonymized={results['distance_straight_line_a']}")
+    # results["uncorrelated_location_entropy_o"], results["uncorrelated_location_entropy_a"] \
+    #     = round(measures.cmp_uncorrelated_location_entropy(), 4)
+    # print(f"Uncorrelated location entropy: Original={results['uncorrelated_location_entropy_o']} - "
+    #       f"Anonymized={results['uncorrelated_location_entropy_a']}")
+    # results["random_location_entropy_o"], results["random_location_entropy_a"] \
+    #     = round(measures.cmp_random_location_entropy(), 4)
+    # print(f"Random location entropy: Original={results['random_location_entropy_o']} - "
+    #       f"Anonymized={results['random_location_entropy_a']}")
+    # results["mean_square_displacement_o"], results["mean_square_displacement_a"] \
+    #     = round(measures.cmp_mean_square_displacement(), 4)
+    # print(f"Mean square displacement: Original={results['mean_square_displacement_o']} - "
+    #       f"Anonymized={results['mean_square_displacement_a']}")
+
     output_file_path = data["output_folder"] + "/" + data["main_output_file"]
     with open(output_file_path, 'w') as f:
         json.dump(results, f, indent=4)
@@ -140,7 +176,7 @@ def compute_measures_api(param_file_path: str):
     anom_file = data["anonymized_dataset"]
     api = MakeApiCall()
 
-    action = "measures"
+    action = "compute_measures"
     response = api.post_user_data2(action, data, original_file, anom_file)
 
     output_file_path = data["output_folder"] + "/" + data["main_output_file"]
@@ -158,7 +194,7 @@ def compute_measures_api_back(param_file_path: str):
     anom_file = data["anonymized_dataset"]
     api = MakeApiCall()
 
-    action = "measuresback"
+    action = "compute_measures"
     response = api.post_user_data2(action, data, original_file, anom_file)
 
     output_file_path = data["output_folder"] + "/" + data["main_output_file"]
@@ -176,7 +212,7 @@ def compute_measures_api_back_db(param_file_path: str):
     anom_file = data["anonymized_dataset"]
     api = MakeApiCall()
 
-    action = "measuresback"
+    action = "compute_measures"
     response = api.post_user_data2(action, data, original_file, anom_file)
 
     # with open(CONFIG_DB_FILE) as param_file:

@@ -121,9 +121,9 @@ app = FastAPI()
 #     return {f"message: from anom get {params}"}
 
 
-@app.get("/")
-def get_root():
-    return {f"message: from root get"}
+# @app.get("/")
+# def get_root():
+#     return {f"message: from root get"}
 
 
 # @app.get("/task/")
@@ -151,7 +151,7 @@ def get(task_id: str):
 #     return FileResponse(response_file_path)
 
 
-@app.post("/anonymizeback/Microaggregation/")
+@app.post("/anonymize/Microaggregation/")
 def post(params: ParamsMicro = Depends(), files: List[UploadFile] = File(...),
          background_tasks: BackgroundTasks = None):
     method = "Microaggregation"
@@ -168,10 +168,10 @@ def post(params: ParamsMicro = Depends(), files: List[UploadFile] = File(...),
 #     return FileResponse(response_file_path)
 
 
-@app.post("/anonymizeback/Microaggregation2/")
+@app.post("/anonymize/TimePartMicroaggregation/")
 def post(params: ParamsMicro2 = Depends(), files: List[UploadFile] = File(...),
          background_tasks: BackgroundTasks = None):
-    method = "Microaggregation2"
+    method = "TimePartMicroaggregation"
     task_id = str(uuid.uuid4().hex)
     background_tasks.add_task(anonymize_back, method, params, files[0].file, files[0].filename, task_id)
     task_message = f"task {task_id} requested"
@@ -185,7 +185,7 @@ def post(params: ParamsMicro2 = Depends(), files: List[UploadFile] = File(...),
 #     return FileResponse(response_file_path)
 
 
-@app.post("/anonymizeback/SwapLocations/")
+@app.post("/anonymize/SwapLocations/")
 def post(params: ParamsSwaplocations = Depends(), files: List[UploadFile] = File(...),
          background_tasks: BackgroundTasks = None):
     method = "SwapLocations"
@@ -202,7 +202,7 @@ def post(params: ParamsSwaplocations = Depends(), files: List[UploadFile] = File
 #     return FileResponse(response_file_path)
 
 
-@app.post("/anonymizeback/SwapMob/")
+@app.post("/anonymize/SwapMob/")
 def post(params: ParamsSwapmob = Depends(), files: List[UploadFile] = File(...),
          background_tasks: BackgroundTasks = None):
     method = "SwapMob"
@@ -212,7 +212,7 @@ def post(params: ParamsSwapmob = Depends(), files: List[UploadFile] = File(...),
     return {"message": task_message}
 
 
-@app.post("/anonymizeback/SimpleGeneralization/")
+@app.post("/anonymize/SimpleGeneralization/")
 def post(params: ParamsSimpleGeneralization = Depends(), files: List[UploadFile] = File(...),
          background_tasks: BackgroundTasks = None):
     method = "SimpleGeneralization"
@@ -228,7 +228,7 @@ def post(params: ParamsSimpleGeneralization = Depends(), files: List[UploadFile]
 #     return FileResponse(response_file_path)
 
 
-@app.post("/analyzeback/")
+@app.post("/analyze/")
 def post(params: ParamsAnalyze = Depends(), files: List[UploadFile] = File(...),
          background_tasks: BackgroundTasks = None):
     task_id = str(uuid.uuid4().hex)
@@ -249,7 +249,7 @@ def post(params: ParamsAnalyze = Depends(), files: List[UploadFile] = File(...),
 #                     percen_loc_removed=response_measures["percen_loc_removed"])
 
 
-@app.post("/measuresback/")
+@app.post("/compute_measures/")
 def post(params: ParamsMeasures = Depends(), files: List[UploadFile] = File(...),
          background_tasks: BackgroundTasks = None):
     task_id = str(uuid.uuid4().hex)

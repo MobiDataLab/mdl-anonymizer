@@ -82,10 +82,13 @@ class QuadTreeHeatMap(AnalysisMethodInterface):
 
         # Initialize QuadTree with bounding box
         logging.info("Initializing QuadTree...")
+
         min_x = min(np_dataset[:, 0])
         min_y = min(np_dataset[:, 1])
         max_x = max(np_dataset[:, 0])
         max_y = max(np_dataset[:, 1])
+        print((min_x, min_y))
+        print((max_x, min_y))
         x_dist = haversine((min_x, min_y), (max_x, min_y), unit=Unit.METERS)
         y_dist = haversine((min_x, min_y), (min_x, max_y), unit=Unit.METERS)
         min_side_dist = min(x_dist, y_dist)

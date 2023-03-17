@@ -239,7 +239,7 @@ class Stats:
         df2['clas'] = clas
         df = df1.append(df2, ignore_index=True)
         df = shuffle(df)
-        print(df)
+        # print(df)
 
         train, test = train_test_split(df)
         X_train = train.drop(columns=['clas'])
