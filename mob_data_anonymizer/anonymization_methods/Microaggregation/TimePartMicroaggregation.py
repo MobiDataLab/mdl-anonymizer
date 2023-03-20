@@ -18,7 +18,7 @@ DEFAULT_VALUES = {
 }
 
 
-class Microaggregation2(AnonymizationMethodInterface):
+class TimePartMicroaggregation(AnonymizationMethodInterface):
     def __init__(self, dataset: Dataset, k=DEFAULT_VALUES['k'], clustering_method: ClusteringInterface = None,
                  distance: DistanceInterface = None, aggregation_method: TrajectoryAggregationInterface = None,
                  interval: int = 15*60):
@@ -148,4 +148,4 @@ class Microaggregation2(AnonymizationMethodInterface):
 
         martinez21_distance = Distance(dataset, landa=l)
 
-        return Microaggregation2(dataset, k=values['k'], distance=martinez21_distance, interval=values['interval'])
+        return TimePartMicroaggregation(dataset, k=values['k'], distance=martinez21_distance, interval=values['interval'])

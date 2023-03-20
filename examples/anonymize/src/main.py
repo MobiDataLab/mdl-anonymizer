@@ -10,7 +10,7 @@ sys.path.append("../../../")
 
 from mob_data_anonymizer.anonymization_methods.SwapMob.SwapMob import SwapMob
 from mob_data_anonymizer.anonymization_methods.Microaggregation.Microaggregation import Microaggregation
-from mob_data_anonymizer.anonymization_methods.Microaggregation.Microaggregation2 import Microaggregation2
+from mob_data_anonymizer.anonymization_methods.Microaggregation.TimePartMicroaggregation import TimePartMicroaggregation
 from mob_data_anonymizer.distances.trajectory.Martinez2021.Distance import Distance
 from mob_data_anonymizer.aggregation.Martinez2021.Aggregation import Aggregation
 from mob_data_anonymizer.clustering.MDAV.SimpleMDAV import SimpleMDAV
@@ -83,7 +83,7 @@ elif METHOD_NAME == "Microaggregation2":
     # Martinez2021_distance = Distance(dataset, landa=DISTANCE_LANDA)
     aggregation_method = Aggregation
     clustering_method = SimpleMDAV(SimpleMDAVDataset(dataset, Martinez2021_distance, aggregation_method))
-    anonymizer = Microaggregation2(dataset, k=K, clustering_method=clustering_method,
+    anonymizer = TimePartMicroaggregation(dataset, k=K, clustering_method=clustering_method,
                                    distance=Martinez2021_distance, aggregation_method=aggregation_method,
                                    interval = INTERVAL)
 elif METHOD_NAME == "SwapLocations":

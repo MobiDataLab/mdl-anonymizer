@@ -11,12 +11,12 @@ from mob_data_anonymizer.analysis_methods.AnalysisMethodInterface import Analysi
 from mob_data_anonymizer.anonymization_methods.AnonymizationMethodInterface import AnonymizationMethodInterface
 from mob_data_anonymizer.anonymization_methods.SwapLocations.SwapLocations import SwapLocations
 from mob_data_anonymizer.anonymization_methods.Microaggregation.Microaggregation import Microaggregation
-from mob_data_anonymizer.anonymization_methods.Microaggregation.Microaggregation2 import Microaggregation2
+from mob_data_anonymizer.anonymization_methods.Microaggregation.TimePartMicroaggregation import TimePartMicroaggregation
 from mob_data_anonymizer.anonymization_methods.Generalization.Simple import SimpleGeneralization
 from mob_data_anonymizer.anonymization_methods.SwapMob.SwapMob import SwapMob
 from mob_data_anonymizer.analysis_methods.QuadTreeHeatMap import QuadTreeHeatMap
 
-VALID_METHODS = ['SwapLocations', 'SwapMob', 'Microaggregation', 'Microaggregation2', 'SimpleGeneralization']
+VALID_METHODS = ['SwapLocations', 'SwapMob', 'Microaggregation', 'TimePartMicroaggregation', 'SimpleGeneralization']
 
 
 def check_parameters_file(file_path: str) -> int:
@@ -119,7 +119,7 @@ def anonymizer_api_back_db(param_file_path: str):
     input_file = data["input_file"]
     api = MakeApiCall()
 
-    action = "anonymizeback"
+    action = "anonymize"
     action += "/" + data['method']
     response = api.post_user_data(action, data, input_file)
 

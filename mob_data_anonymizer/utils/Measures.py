@@ -73,6 +73,8 @@ class Measures:
 
         print(f"Mean square displacement: Original={o} - Anonymized={a}")
 
+        return o, a
+
     def cmp_random_location_entropy(self, output='average'):
         '''
         ( See https://scikit-mobility.github.io/scikit-mobility/reference/collective_measures.html#skmob.measures.collective.random_location_entropy)
@@ -121,6 +123,8 @@ class Measures:
             a = dt_a['uncorrelated_location_entropy'].mean()
             print(f"Average uncorrelated location entropy: Original={o} - Anonymized={a}")
 
+            return o, a
+
         if output == 'export':
             report = pandas.merge(dt_o, dt_a, on=["lat", "lng"])
             report.rename(
@@ -149,6 +153,8 @@ class Measures:
             a = dt_a['n_visits'].mean()
             print(f"Average visits per location: Original={o} - Anonymized={a}")
 
+            return o, a
+
         if output == 'export':
             report = pandas.merge(dt_o, dt_a, on=["lat", "lng"])
             report.rename(columns={"n_visits_x": "orig", "n_visits_y": "anon"},
@@ -176,6 +182,7 @@ class Measures:
             o = dt_o['distance_straight_line'].mean()
             a = dt_a['distance_straight_line'].mean()
             print(f"Average distance straight line: Original={o} - Anonymized={a}")
+            return o, a
 
         if output == 'export':
             report = pandas.merge(dt_o, dt_a, on="uid")

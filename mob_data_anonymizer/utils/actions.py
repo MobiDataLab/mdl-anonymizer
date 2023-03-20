@@ -15,7 +15,7 @@ from mob_data_anonymizer.analysis_methods.AnalysisMethodInterface import Analysi
 from mob_data_anonymizer.anonymization_methods.AnonymizationMethodInterface import AnonymizationMethodInterface
 from mob_data_anonymizer.anonymization_methods.SwapLocations.SwapLocations import SwapLocations
 from mob_data_anonymizer.anonymization_methods.Microaggregation.Microaggregation import Microaggregation
-from mob_data_anonymizer.anonymization_methods.Microaggregation.Microaggregation2 import Microaggregation2
+from mob_data_anonymizer.anonymization_methods.Microaggregation.TimePartMicroaggregation import TimePartMicroaggregation
 from mob_data_anonymizer.anonymization_methods.Generalization.Simple import SimpleGeneralization
 from mob_data_anonymizer.anonymization_methods.SwapMob.SwapMob import SwapMob
 from mob_data_anonymizer.analysis_methods.QuadTreeHeatMap import QuadTreeHeatMap
@@ -85,6 +85,8 @@ def anonymize_back(method, params, file, filename, task_id) -> str:
     output = method.get_anonymized_dataset()
     output.to_csv(f"{output_file}")
 
+    logging.info("Done!")
+
 
 def analyze(params, file) -> str:
     data = params.dict()
@@ -145,6 +147,8 @@ def analyze_back(params, file, filename, task_id):
     output_file = data["db_folder"] + "/" + task_id + ".json"
     method.export_result(f"{output_file}")
 
+    logging.info("Done!")
+
 
 def measures(params, original_file, anom_file) -> dict:
     data = params.dict()
@@ -196,21 +200,21 @@ def measures_back(params, original_file, anom_file, original_filename, anom_file
 
     original_dataset = Dataset()
     if original_file is None:
-        filename = data.get("original_file")
+        filenameOri = data.get("original_file")
     else:
-        filename = original_file
+        filenameOri = original_file
 
-    original_dataset.from_file(filename, original_filename, datetime_key="timestamp")
+    original_dataset.from_file(filenameOri, original_filename, datetime_key="timestamp")
 
     typer.secho(f'Loading anonymized dataset')
 
     anonymized_dataset = Dataset()
     if anom_file is None:
-        filename = data.get("anonymized_file")
+        filenameAnom = data.get("anonymized_file")
     else:
-        filename = anom_file
+        filenameAnom = anom_file
 
-    anonymized_dataset.from_file(filename, anom_filename, datetime_key="timestamp")
+    anonymized_dataset.from_file(filenameAnom, anom_filename, datetime_key="timestamp")
 
     martinez21_distance = Distance(original_dataset)
     martinez21_distance_norm = Distance(original_dataset, landa=martinez21_distance.landa,
@@ -231,9 +235,56 @@ def measures_back(params, original_file, anom_file, original_filename, anom_file
     results["percen_record_linkage"] = round(stats.get_fast_record_linkage(martinez21_distance), 2)
     print(f'% Record linkage: {results["percen_record_linkage"]}')
 
+    # typer.secho(f'Loading original dataset')
+    # if type(filenameOri) is str:
+    #     filename = filenameOri
+    # else:  # file object from api
+    #     logging.info("Loading dataset from file object...")
+    #     filename = "temp.csv"
+    # tdf_1 = skmob.TrajDataFrame.from_file(filename,
+    #                                       latitude='lat',
+    #                                       longitude='lon',
+    #                                       user_id='user_id',
+    #                                       datetime='timestamp')
+    # typer.secho(f'Loading anonymized dataset')
+    # if type(filenameAnom) is str:
+    #     filename = filenameAnom
+    # else:  # file object from api
+    #     logging.info("Loading dataset from file object...")
+    #     filename = "temp.csv"
+    # tdf_2 = skmob.TrajDataFrame.from_file(filename,
+    #                                       latitude='lat',
+    #                                       longitude='lon',
+    #                                       user_id='user_id',
+    #                                       datetime='timestamp')
+    #
+    # measures = Measures(tdf_1, tdf_2)
+    # results["visits_per_location_o"], results["visits_per_location_a"] \
+    #     = round(measures.cmp_visits_per_location(), 4)
+    # print(f"visits per location: Original={results['visits_per_location_o']} - "
+    #       f"Anonymized={results['visits_per_location_a']}")
+    # results["distance_straight_line_o"], results["distance_straight_line_a"] \
+    #     = round(measures.cmp_visits_per_location(), 4)
+    # print(f"Distance straight line: Original={results['distance_straight_line_o']} - "
+    #       f"Anonymized={results['distance_straight_line_a']}")
+    # results["uncorrelated_location_entropy_o"], results["uncorrelated_location_entropy_a"] \
+    #     = round(measures.cmp_uncorrelated_location_entropy(), 4)
+    # print(f"Uncorrelated location entropy: Original={results['uncorrelated_location_entropy_o']} - "
+    #       f"Anonymized={results['uncorrelated_location_entropy_a']}")
+    # results["random_location_entropy_o"], results["random_location_entropy_a"] \
+    #     = round(measures.cmp_random_location_entropy(), 4)
+    # print(f"Random location entropy: Original={results['random_location_entropy_o']} - "
+    #       f"Anonymized={results['random_location_entropy_a']}")
+    # results["mean_square_displacement_o"], results["mean_square_displacement_a"] \
+    #     = round(measures.cmp_mean_square_displacement(), 4)
+    # print(f"Mean square displacement: Original={results['mean_square_displacement_o']} - "
+    #       f"Anonymized={results['mean_square_displacement_a']}")
+
     # output_file_path = data["output_folder"] + "/" + task_id + ".json"
     with open(CONFIG_DB_FILE) as param_file:
         data = json.load(param_file)
     output_file_path = data["db_folder"] + "/" + task_id + ".json"
     with open(output_file_path, 'w') as f:
         json.dump(results, f, indent=4)
+
+    logging.info("Done!")
