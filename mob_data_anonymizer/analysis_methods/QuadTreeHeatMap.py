@@ -86,8 +86,9 @@ class QuadTreeHeatMap(AnalysisMethodInterface):
         min_y = min(np_dataset[:, 1])
         max_x = max(np_dataset[:, 0])
         max_y = max(np_dataset[:, 1])
-        x_dist = haversine((min_x, min_y), (max_x, min_y), unit=Unit.METERS)
-        y_dist = haversine((min_x, min_y), (min_x, max_y), unit=Unit.METERS)
+        y_dist = haversine((min_y, min_x), (max_y, min_x), unit=Unit.METERS)
+        x_dist = haversine((min_y, min_x), (min_y, max_x), unit=Unit.METERS)
+
         min_side_dist = min(x_dist, y_dist)
         # min_sector_length = min_side_dist / 2**max_depth
         max_depth = int(math.log(min_side_dist / self.min_sector_length, 2))
@@ -108,13 +109,13 @@ class QuadTreeHeatMap(AnalysisMethodInterface):
         # Get QuadTree sectors that have at least min_k locations
         logging.info("Transforming QuadTree to K-anonymous heatmap...")
         self.heatmap_nodes = self.qtree_to_heatmap(self.qtree)
-
         # Transform heatmap to GeoPandasFrame
         logging.info("Generating GeoPandasFrame...")
         gdf_dict = {"geometry": [], "n_locations": [], "density": []}
         sq_coords_to_sq_mts = partial(pyproj.transform, pyproj.Proj(init='epsg:4326'), pyproj.Proj(init='epsg:3857'))   # https://gist.github.com/robinkraft/c6de2f988c9d3f01af3c
         for (bbox, n_locations) in tqdm(self.heatmap_nodes):
-            point_list = [[bbox[1], bbox[0]], [bbox[1], bbox[2]], [bbox[3], bbox[2]], [bbox[3], bbox[0]]]
+            point_list = [[bbox[0], bbox[1]], [bbox[0], bbox[3]], [bbox[2], bbox[3]], [bbox[2], bbox[1]]]
+
             polygon = geometry.Polygon(point_list)
             gdf_dict["geometry"].append(polygon)
             gdf_dict["n_locations"].append(n_locations)
@@ -200,6 +201,7 @@ class QuadTreeHeatMap(AnalysisMethodInterface):
                                             min(bbox_1[1], bbox_2[1]),
                                             max(bbox_1[2], bbox_2[2]),
                                             max(bbox_1[3], bbox_2[3]))
+
                                     heatmap.append((bbox, total_locations))
 
                                     # Avoid repeating mergings
