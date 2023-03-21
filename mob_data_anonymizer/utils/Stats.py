@@ -283,7 +283,8 @@ class Stats:
         preds_all = model.predict(X_all)
         print('accuracy in all:', accuracy_score(y_all, preds_all))
 
-        probs = np.max(model.predict_proba(X_all), axis=1)
+        # probs = np.max(model.predict_proba(X_all), axis=1)
+        probs = model.predict_proba(X_all)[:,1]
         v = 0
         for prob in probs:
             p = (prob - 0.5) ** 2

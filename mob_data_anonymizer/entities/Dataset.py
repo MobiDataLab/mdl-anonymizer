@@ -342,7 +342,7 @@ class Dataset(ABC):
 
     def filter_by_speed(self, max_speed_kmh=300):
         """
-        :param max_velocity: km/h
+        :param max_speed_kmh: km/h
         :return:
         """
         logging.info(f"Filtering dataset by max velocity")

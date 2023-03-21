@@ -20,6 +20,7 @@ from mob_data_anonymizer.anonymization_methods.Generalization.Simple import Simp
 from mob_data_anonymizer.anonymization_methods.SwapMob.SwapMob import SwapMob
 from mob_data_anonymizer.analysis_methods.QuadTreeHeatMap import QuadTreeHeatMap
 from mob_data_anonymizer.utils.Measures import Measures
+from mob_data_anonymizer.utils.utils import round_tuple
 
 logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', level=logging.INFO)
 
@@ -258,27 +259,27 @@ def measures_back(params, original_file, anom_file, original_filename, anom_file
     #                                       user_id='user_id',
     #                                       datetime='timestamp')
     #
-    # measures = Measures(tdf_1, tdf_2)
-    # results["visits_per_location_o"], results["visits_per_location_a"] \
-    #     = round(measures.cmp_visits_per_location(), 4)
-    # print(f"visits per location: Original={results['visits_per_location_o']} - "
-    #       f"Anonymized={results['visits_per_location_a']}")
-    # results["distance_straight_line_o"], results["distance_straight_line_a"] \
-    #     = round(measures.cmp_visits_per_location(), 4)
-    # print(f"Distance straight line: Original={results['distance_straight_line_o']} - "
-    #       f"Anonymized={results['distance_straight_line_a']}")
-    # results["uncorrelated_location_entropy_o"], results["uncorrelated_location_entropy_a"] \
-    #     = round(measures.cmp_uncorrelated_location_entropy(), 4)
-    # print(f"Uncorrelated location entropy: Original={results['uncorrelated_location_entropy_o']} - "
-    #       f"Anonymized={results['uncorrelated_location_entropy_a']}")
-    # results["random_location_entropy_o"], results["random_location_entropy_a"] \
-    #     = round(measures.cmp_random_location_entropy(), 4)
-    # print(f"Random location entropy: Original={results['random_location_entropy_o']} - "
-    #       f"Anonymized={results['random_location_entropy_a']}")
-    # results["mean_square_displacement_o"], results["mean_square_displacement_a"] \
-    #     = round(measures.cmp_mean_square_displacement(), 4)
-    # print(f"Mean square displacement: Original={results['mean_square_displacement_o']} - "
-    #       f"Anonymized={results['mean_square_displacement_a']}")
+    measures = Measures(original_dataset.to_tdf(), anonymized_dataset.to_tdf())
+    results["visits_per_location_original"], results["visits_per_location_anonymized"] \
+        = round_tuple(measures.cmp_visits_per_location(), 4)
+    print(f"visits per location: Original={results['visits_per_location_original']} - "
+          f"Anonymized={results['visits_per_location_anonymized']}")
+    results["distance_straight_line_original"], results["distance_straight_line_anonymized"] \
+        = round_tuple(measures.cmp_visits_per_location(), 4)
+    print(f"Distance straight line: Original={results['distance_straight_line_original']} - "
+          f"Anonymized={results['distance_straight_line_anonymized']}")
+    results["uncorrelated_location_entropy_original"], results["uncorrelated_location_entropy_anonymized"] \
+        = round_tuple(measures.cmp_uncorrelated_location_entropy(), 4)
+    print(f"Uncorrelated location entropy: Original={results['uncorrelated_location_entropy_original']} - "
+          f"Anonymized={results['uncorrelated_location_entropy_anonymized']}")
+    results["random_location_entropy_original"], results["random_location_entropy_anonymized"] \
+        = round_tuple(measures.cmp_random_location_entropy(), 4)
+    print(f"Random location entropy: Original={results['random_location_entropy_original']} - "
+          f"Anonymized={results['random_location_entropy_anonymized']}")
+    results["mean_square_displacement_original"], results["mean_square_displacement_anonymized"] \
+        = round_tuple(measures.cmp_mean_square_displacement(), 4)
+    print(f"Mean square displacement: Original={results['mean_square_displacement_original']} - "
+          f"Anonymized={results['mean_square_displacement_anonymized']}")
 
     # output_file_path = data["output_folder"] + "/" + task_id + ".json"
     with open(CONFIG_DB_FILE) as param_file:
@@ -286,5 +287,35 @@ def measures_back(params, original_file, anom_file, original_filename, anom_file
     output_file_path = data["db_folder"] + "/" + task_id + ".json"
     with open(output_file_path, 'w') as f:
         json.dump(results, f, indent=4)
+
+    logging.info("Done!")
+
+
+def filter_back(params, file, filename, task_id):
+    data = params.dict()
+    typer.secho(f'Loading original dataset')
+
+    original_dataset = Dataset()
+    if file is None:
+        fileori = data.get("original_file")
+    else:
+        fileori = file
+
+    methods = data["methods"]
+    min_locations = 0
+    max_speed = sys.maxsize
+    for method in methods:
+        if "min_locations" in method:
+            min_locations = method["min_locations"]
+        if "max_speed" in method:
+            max_speed = method["max_speed"]
+    original_dataset.from_file(fileori, filename, min_locations=min_locations, datetime_key="timestamp")
+    original_dataset.filter_by_speed(max_speed_kmh=max_speed)
+
+    # Save filtered file
+    with open(CONFIG_DB_FILE) as param_file:
+        data = json.load(param_file)
+    output_file = data["db_folder"] + "/" + task_id + ".csv"
+    original_dataset.to_csv(f"{output_file}")
 
     logging.info("Done!")

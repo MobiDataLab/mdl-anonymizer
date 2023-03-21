@@ -8,6 +8,7 @@ from mob_data_anonymizer.utils.actions import analyze
 from mob_data_anonymizer.utils.actions import analyze_back
 from mob_data_anonymizer.utils.actions import measures
 from mob_data_anonymizer.utils.actions import measures_back
+from mob_data_anonymizer.utils.actions import filter_back
 from mob_data_anonymizer import tasks_manager
 from mob_data_anonymizer.methodName import MethodName
 import uuid
@@ -107,6 +108,13 @@ class ParamsAnalyze(BaseModel):
     max_locations: int = 1000
     min_sector_length: int = 50
     merge_sectors: bool = True
+
+
+class ParamsFilter(BaseModel):
+    input_file: Optional[str]
+    main_output_file: str = "filtered_dataset.json"
+    min_locations: int = 10
+    max_speed: int = 300
 
 
 # class Params(BaseModel):
@@ -257,3 +265,13 @@ def post(params: ParamsMeasures = Depends(), files: List[UploadFile] = File(...)
                               files[0].filename, files[1].filename, task_id)
     task_message = f"task {task_id} requested"
     return {"message": task_message}
+
+
+# @app.post("/filter_dataset/")
+# def post(params: ParamsFilter = Depends(), files: List[UploadFile] = File(...),
+#          background_tasks: BackgroundTasks = None):
+#     task_id = str(uuid.uuid4().hex)
+#     print(task_id)
+#     background_tasks.add_task(filter_back, params, files[0].file, files[0].filename, task_id)
+#     task_message = f"task {task_id} requested"
+#     return {"message": task_message}

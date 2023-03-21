@@ -2,7 +2,7 @@ import typer
 
 from typing import Optional
 from mob_data_anonymizer import __app_name__, __version__, DEFAULT_PARAMETERS_FILE, ERRORS, SUCCESS, anonymizer, \
-    compute_measures, analyzer
+    compute_measures, analyzer, filter_data
 from mob_data_anonymizer import tasks_manager
 
 app = typer.Typer()
@@ -132,6 +132,48 @@ def measures_api(
         raise typer.Exit(1)
     else:
         compute_measures.compute_measures_api_back_db(parameters_file)
+
+
+@app.command()
+def filter_dataset(
+        parameters_file: str = typer.Option(
+            str(DEFAULT_PARAMETERS_FILE),
+            "--parameters_file",
+            "-f",
+            prompt="Filter parameters file location"
+        ),
+) -> None:
+    code = filter_data.check_parameters_file(parameters_file)
+    if code != SUCCESS:
+        typer.secho(
+            f'Filter failed with "{ERRORS[code]}"',
+            fg=typer.colors.RED,
+        )
+
+        raise typer.Exit(1)
+    else:
+        filter_data.filter_dataset(parameters_file)
+
+
+@app.command()
+def filter_dataset_api(
+        parameters_file: str = typer.Option(
+            str(DEFAULT_PARAMETERS_FILE),
+            "--parameters_file",
+            "-f",
+            prompt="Filter parameters file location"
+        ),
+) -> None:
+    code = filter_data.check_parameters_file(parameters_file)
+    if code != SUCCESS:
+        typer.secho(
+            f'Filter failed with "{ERRORS[code]}"',
+            fg=typer.colors.RED,
+        )
+
+        raise typer.Exit(1)
+    else:
+        filter_data.filter_dataset_api_back_db(parameters_file)
 
 
 @app.command()

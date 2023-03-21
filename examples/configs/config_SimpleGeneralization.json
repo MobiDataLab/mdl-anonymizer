@@ -1,11 +1,11 @@
 {
   "method": "SimpleGeneralization",
-  "input_file": "examples/data/cabs_dataset_20080608_0700_0715.csv",
+  "input_file": "examples/data/preprocessed_dataset_20080608_sample.csv",
   "output_folder": "examples/output",
-  "main_output_file": "anonymized_SimpleGeneralization_CLI.csv",
+  "main_output_file": "anonymized_SimpleGeneralization.csv",
   "save_preprocessed_dataset": false,
   "preprocessed_file": "preprocessed_dataset_CLI.csv",
   "gen_tile_size": 500,
   "tile_shape": "squared",
-  "traj_anon_tile_size": 1000
+  "traj_anon_tile_size": 1700
 }

@@ -1,6 +1,0 @@
-{
-  "original_dataset": "examples/data/cabs_dataset_20080608_0700_0715.csv",
-  "anonymized_dataset": "8e593ace8c9145e59e7429b60ddd6834.csv",
-  "output_folder": "examples/output/",
-  "main_output_file": "measures.json"
-}
