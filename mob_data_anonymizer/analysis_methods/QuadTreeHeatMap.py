@@ -61,7 +61,8 @@ class QuadTreeHeatMap(AnalysisMethodInterface):
             logging.info(f"NOTE: split_n_locations is None, setting to min_k [{min_k}]")
             split_n_locations = min_k
         elif split_n_locations < min_k:
-            logging.info(f"WARNING: split_n_locations [{split_n_locations}] lower than min_k [{min_k}], setting to min_k")
+            logging.info(
+                f"WARNING: split_n_locations [{split_n_locations}] lower than min_k [{min_k}], setting to min_k")
             split_n_locations = min_k
         self.split_n_locations = split_n_locations
 
@@ -69,11 +70,13 @@ class QuadTreeHeatMap(AnalysisMethodInterface):
         self.result = None
 
     def run(self):
-        """Creates the K-anonymous heatmap based on a Quad-Tree.
+        """Creates the K-anonymous heatmap based on a QuadTree.
 
         During the execution will transform the original dataset to NumPy for faster processing.
-        It will create a GeoPandasFrame (heatmap) and assign it to the self.result variable.
-        This new dataset can be obtained with the get_anonymized_dataset method.
+        The resulting heatmap will be stored in the self.heatmap_nodes variable.
+        For obtaining as a GeoPandasFrame, use the get_result or export_result methods.
+        
+        This new dataset can be obtained with the export_result method.
         Two tqdm progress bars are used.
         """
         # Transform dataset to NumPy
@@ -82,52 +85,68 @@ class QuadTreeHeatMap(AnalysisMethodInterface):
 
         # Initialize QuadTree with bounding box
         logging.info("Initializing QuadTree...")
+        # Get QuadTree settings
         min_x = min(np_dataset[:, 0])
         min_y = min(np_dataset[:, 1])
         max_x = max(np_dataset[:, 0])
         max_y = max(np_dataset[:, 1])
-        y_dist = haversine((min_y, min_x), (max_y, min_x), unit=Unit.METERS)
-        x_dist = haversine((min_y, min_x), (min_y, max_x), unit=Unit.METERS)
-
-        min_side_dist = min(x_dist, y_dist)
-        # min_sector_length = min_side_dist / 2**max_depth
-        max_depth = int(math.log(min_side_dist / self.min_sector_length, 2))
-        empirical_min_sector_length = min_side_dist / (2**max_depth)
-        logging.info(f"QuadTree maximum depth = {max_depth} | "
-                     f"Empirical mininum sector length = {empirical_min_sector_length:2f} meters")
-        self.qtree = Index(bbox=(min_x, min_y, max_x, max_y),
-                           max_items=self.split_n_locations,
-                           max_depth=max_depth)
-
-        # Insert locations
-        logging.info("Inserting locations to QuadTree...")
-        for [x, y] in tqdm(np_dataset[:, :2]):
-            # Insert (Object, Bounding box) to QuadTree
-            self.qtree.insert((x, y),  # Object
-                              (x, y, x, y))  # Bounding box
+        bbox = (min_x, min_y, max_x, max_y)
+        self.qtree = self.create_qtree(np_dataset[:, :2], bbox)
 
         # Get QuadTree sectors that have at least min_k locations
         logging.info("Transforming QuadTree to K-anonymous heatmap...")
         self.heatmap_nodes = self.qtree_to_heatmap(self.qtree)
-        # Transform heatmap to GeoPandasFrame
-        logging.info("Generating GeoPandasFrame...")
-        gdf_dict = {"geometry": [], "n_locations": [], "density": []}
-        sq_coords_to_sq_mts = partial(pyproj.transform, pyproj.Proj(init='epsg:4326'), pyproj.Proj(init='epsg:3857'))   # https://gist.github.com/robinkraft/c6de2f988c9d3f01af3c
-        for (bbox, n_locations) in tqdm(self.heatmap_nodes):
-            point_list = [[bbox[0], bbox[1]], [bbox[0], bbox[3]], [bbox[2], bbox[3]], [bbox[2], bbox[1]]]
-
-            polygon = geometry.Polygon(point_list)
-            gdf_dict["geometry"].append(polygon)
-            gdf_dict["n_locations"].append(n_locations)
-            area = transform(sq_coords_to_sq_mts, polygon).area  # Transform square coordinates area into square meters
-            gdf_dict["density"].append(n_locations/area)
-        gdf = GeoDataFrame(gdf_dict)
-        self.result = gdf
         logging.info("Heatmap done!")
+
+    def create_qtree(self, locations, bbox: tuple, verbose=True) -> _QuadTree:
+        """
+        Creates a QuadTree based on a set of locations and a bounding box.
+        The self.min_sector_length is used for defining the proper max_depth.
+        Parameters
+        ----------
+        locations
+            List or NumPy array of locations, formed by x (longitude) and y (latitude) coordinates.
+        bbox : tuple
+            Bounding box for the QuadTree containing (min_x, min_y, max_x, max_y). Where x is longitude and y latitude.
+            All the locations passed as parameter has to be contained (including borders) in this box.
+        Returns
+        -------
+        qtree : _QuadTree
+            QuadTree with the corresponding bounding box and locations inserted.
+        """
+        (min_x, min_y, max_x, max_y) = bbox
+        x_dist = haversine((min_y, min_x), (min_y, max_x), unit=Unit.METERS)
+        y_dist = haversine((min_y, min_x), (max_y, min_x), unit=Unit.METERS)
+        min_side_dist = min(x_dist, y_dist)
+        max_depth = int(
+            math.log(min_side_dist / self.min_sector_length, 2))  # min_sector_length = min_side_dist / 2^max_depth
+        empirical_min_sector_length = min_side_dist / (2 ** max_depth)
+        if verbose:
+            logging.info(f"QuadTree maximum depth = {max_depth} | "
+                         f"Empirical mininum sector length = {empirical_min_sector_length:2f} meters")
+
+        # Create QuadTree
+        qtree = Index(bbox=(min_x, min_y, max_x, max_y),
+                      max_items=self.split_n_locations,
+                      max_depth=max_depth)
+
+        # Insert locations to QuadTree
+        def add_to_qtree(x, y):
+            qtree.insert((x, y),  # Object
+                         (x, y, x, y))  # Bounding box
+
+        if verbose:
+            for [x, y] in tqdm(locations):
+                add_to_qtree(x, y)
+        else:
+            for [x, y] in locations:
+                add_to_qtree(x, y)
+
+        return qtree
 
     def qtree_to_heatmap(self, qtree_elem: _QuadTree) -> list:
         """
-        Computes a list of heatmap nodes from the sectors of the QuadTree, always ensuring K-anonymity.
+        Computes a list of heatmap nodes (stored in self.heatmap_nodes) from the sectors of the QuadTree, always ensuring K-anonymity.
 
         Parameters
         ----------
@@ -179,7 +198,7 @@ class QuadTreeHeatMap(AnalysisMethodInterface):
                             first_neigh = (child_idx + 2) % 4
                             second_neigh = (child_idx + 3) % 4
 
-                        # If there are available neighbours for merging
+                        # If there are available neighbours for merging, try it
                         neighbours_idxs = [neigh_idx for neigh_idx in [first_neigh, second_neigh] if
                                            neigh_idx in children_idxs_by_nlocs]
                         if len(neighbours_idxs) > 0:
@@ -191,8 +210,9 @@ class QuadTreeHeatMap(AnalysisMethodInterface):
                             # Try to merge with neighbours by #locations
                             is_merged = False
                             for neigh_idx in neighbours_by_nlocs:
-                                # If it #locations is enough, create *group* and add to heatmap
                                 total_locations = n_child_locations + children_nlocs[neigh_idx]
+
+                                # If total_locations is enough, *merge*
                                 if total_locations >= self.min_k:
                                     neighbour = qtree_elem.children[neigh_idx]
                                     bbox_1 = self.get_bbox(child)
@@ -202,20 +222,29 @@ class QuadTreeHeatMap(AnalysisMethodInterface):
                                             max(bbox_1[2], bbox_2[2]),
                                             max(bbox_1[3], bbox_2[3]))
 
-                                    heatmap.append((bbox, total_locations))
+                                    # If it can be further split, try it
+                                    if total_locations >= self.min_k*2:
+                                        locations = [node.item for node in child.nodes] + \
+                                                    [node.item for node in neighbour.nodes]                                        
+                                        # Create a new QuadTree with this locations
+                                        merged = self.create_qtree(locations, bbox, verbose=False)
+                                        # Transform to heatmap expecting to obtain multiple subsectors (splitted)
+                                        heatmap += self.qtree_to_heatmap(merged)
+                                    # Otherwise, add merge to heatmap
+                                    else:
+                                        heatmap.append((bbox, total_locations))
 
                                     # Avoid repeating mergings
                                     children_idxs_by_nlocs.remove(child_idx)
                                     children_idxs_by_nlocs.remove(neigh_idx)
                                     idx -= 1
 
-                                    # End of loop
+                                    # End of loop with proper merging
                                     is_merged = True
                                     break
 
-                            # If it has not been merged
-                            if not is_merged:
-                                impossible_k_anonymity = True
+                            # If it has not been merged, impossible k-anonymity
+                            impossible_k_anonymity = not is_merged
 
                         # Otherwise, there is no merging possible
                         else:
@@ -224,8 +253,7 @@ class QuadTreeHeatMap(AnalysisMethodInterface):
                         # If there is not merging that ensures k-anonymity, add *parent* to heatmap and break
                         if impossible_k_anonymity:
                             n_parent_locations = len(qtree_elem)
-                            heatmap = []  # Reset heatmap
-                            heatmap = [(self.get_bbox(qtree_elem), n_parent_locations)]  # Add parent
+                            heatmap = [(self.get_bbox(qtree_elem), n_parent_locations)]  # Only add parent
                             break
 
                     # If child has enough locations, search inside
@@ -284,14 +312,34 @@ class QuadTreeHeatMap(AnalysisMethodInterface):
 
     def get_result(self) -> GeoDataFrame:
         """Returns
+        It will create a GeoPandasFrame (heatmap), assign it to the self.result variable and return it.
+        The run method needs to be called before.
         -------
         result : GeoDataFrame
             The anonymized heatmap computed at the run method,
             in this case as a GeoPandasFrame with the attributes: geometry (a Polygon), n_locations and density.
         """
+
+        # Transform heatmap to GeoPandasFrame
+        logging.info("Generating GeoPandasFrame...")
+        gdf_dict = {"geometry": [], "n_locations": [], "density": []}
+        sq_coords_to_sq_mts = partial(pyproj.transform, pyproj.Proj(init='epsg:4326'), pyproj.Proj(
+            init='epsg:3857'))  # Reference: https://gist.github.com/robinkraft/c6de2f988c9d3f01af3c
+        for (bbox, n_locations) in tqdm(self.heatmap_nodes):
+            point_list = [[bbox[0], bbox[1]], [bbox[0], bbox[3]], [bbox[2], bbox[3]], [bbox[2], bbox[1]]]
+            polygon = geometry.Polygon(point_list)
+            gdf_dict["geometry"].append(polygon)
+            gdf_dict["n_locations"].append(n_locations)
+            area = transform(sq_coords_to_sq_mts, polygon).area  # Transform square coordinates area into square meters
+            gdf_dict["density"].append(n_locations / area)
+        gdf = GeoDataFrame(gdf_dict)
+        self.result = gdf
+
         return self.result
 
     def export_result(self, filepath):
+        if self.result is None:
+            self.result = self.get_result()
         self.result.to_file(f"{filepath}", driver="GeoJSON")
 
     @staticmethod

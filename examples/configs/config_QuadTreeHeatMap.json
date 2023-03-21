@@ -6,7 +6,6 @@
   "save_preprocessed_dataset": true,
   "preprocessed_file": "preprocessed_dataset_CLI.csv",
   "min_k": 5,
-  "max_locations": 1000,
   "min_sector_length": 50,
   "merge_sectors": true
 }

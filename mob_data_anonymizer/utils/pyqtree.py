@@ -145,10 +145,10 @@ class _QuadTree(object):
 
     def _insert(self, item, bbox):
         rect = _normalize_rect(bbox)
-        if len(self.children) == 0:
-            node = _QuadNode(item, rect)
-            self.nodes.append(node)
+        node = _QuadNode(item, rect)    # MODIFIED: This was only if len(self.children) == 0
+        self.nodes.append(node)         # MODIFIED: This was only if len(self.children) == 0
 
+        if len(self.children) == 0:
             if len(self.nodes) > self.max_items and self._depth < self.max_depth:
                 self._split()
         else:
@@ -159,10 +159,10 @@ class _QuadTree(object):
 
     def _remove(self, item, bbox):
         rect = _normalize_rect(bbox)
-        if len(self.children) == 0:
-            node = _QuadNode(item, rect)
-            self.nodes.remove(node)
-        else:
+        node = _QuadNode(item, rect)    # MODIFIED: This was only if len(self.children) == 0
+        self.nodes.remove(node)         # MODIFIED: This was only if len(self.children) == 0
+
+        if len(self.children) > 0:
             self._remove_from_children(item, rect)
 
         """ MODIFIED METHOD """
@@ -277,7 +277,7 @@ class _QuadTree(object):
                          _QuadTree(x2, y2, halfwidth, halfheight,
                                    self.max_items, self.max_depth, new_depth)]
         nodes = self.nodes
-        self.nodes = []
+        #self.nodes = []    # MODIFIED: Parents keep nodes list
         for node in nodes:
             self._insert_into_children(node.item, node.rect)
 

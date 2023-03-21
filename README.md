@@ -25,8 +25,11 @@ conda activate mda_env
 conda install rtree -y
 conda install tqdm -y
 conda install -c conda-forge haversine -y
-conda install -c conda-forge scikit-mobility -y
+conda install -c conda-forge scikit-mobility -y   # If this fails, use "pip install scikit-mobility"
 conda install typer -y
+conda install -c conda-forge more-itertools -y
+conda install -c conda-forge pyarrow -y
+conda install -c conda-forge xgboost -y
 
 # [Optional] Build and setup the package for Python import, not required for CLI usage
 conda install conda-build
@@ -111,7 +114,7 @@ python -m mob_data_anonymizer anonymize -f examples/configs/config_SwapLocations
 
 Example using the given [configuration file](examples/configs/config_QuadTreeHeatMap.json):
 ```bash
-python -m mob_data_anonymizer anonymize -f examples/configs/config_QuadTreeHeatMap.json
+python -m mob_data_anonymizer analysis -f examples/configs/config_QuadTreeHeatMap.json
 ```
 
 #### Utility metrics
