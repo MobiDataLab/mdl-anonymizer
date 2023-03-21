@@ -32,9 +32,9 @@ class Measures:
         # Tessellation
         bounding_box = self.__get_bounding_box(self.pre_original_tdf)
         logging.info("Tessellating original dataset")
-        self.original_tdf, _ = spatial_tessellation(self.pre_original_tdf, "h3_tessellation", bounding_box=bounding_box)
+        self.original_tdf, _ = spatial_tessellation(self.pre_original_tdf, "squared", bounding_box=bounding_box)
         logging.info("Tessellating anonymized dataset")
-        self.anonymized_tdf, _ = spatial_tessellation(self.pre_anonymized_tdf, "h3_tessellation",
+        self.anonymized_tdf, _ = spatial_tessellation(self.pre_anonymized_tdf, "squared",
                                                    bounding_box=bounding_box)
         self.output_folder = output_folder
 
@@ -71,7 +71,7 @@ class Measures:
         o = mean_square_displacement(self.original_tdf, show_progress=False)
         a = mean_square_displacement(self.anonymized_tdf, show_progress=False)
 
-        print(f"Mean square displacement: Original={o} - Anonymized={a}")
+        # print(f"Mean square displacement: Original={o} - Anonymized={a}")
 
         return o, a
 
@@ -94,7 +94,9 @@ class Measures:
         if output == 'average':
             o = dt_o['random_location_entropy'].mean()
             a = dt_a['random_location_entropy'].mean()
-            print(f"Average random location entropy: Original={o} - Anonymized={a}")
+            # print(f"Average random location entropy: Original={o} - Anonymized={a}")
+
+            return o, a
 
         if output == 'export':
             report = pandas.merge(dt_o, dt_a, on=["lat", "lng"])
@@ -121,7 +123,7 @@ class Measures:
         if output == 'average':
             o = dt_o['uncorrelated_location_entropy'].mean()
             a = dt_a['uncorrelated_location_entropy'].mean()
-            print(f"Average uncorrelated location entropy: Original={o} - Anonymized={a}")
+            # print(f"Average uncorrelated location entropy: Original={o} - Anonymized={a}")
 
             return o, a
 
@@ -151,7 +153,7 @@ class Measures:
         if output == 'average':
             o = dt_o['n_visits'].mean()
             a = dt_a['n_visits'].mean()
-            print(f"Average visits per location: Original={o} - Anonymized={a}")
+            # print(f"Average visits per location: Original={o} - Anonymized={a}")
 
             return o, a
 
@@ -181,7 +183,7 @@ class Measures:
         if output == 'average':
             o = dt_o['distance_straight_line'].mean()
             a = dt_a['distance_straight_line'].mean()
-            print(f"Average distance straight line: Original={o} - Anonymized={a}")
+            # print(f"Average distance straight line: Original={o} - Anonymized={a}")
             return o, a
 
         if output == 'export':
