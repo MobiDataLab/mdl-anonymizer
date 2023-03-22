@@ -262,10 +262,10 @@ def measures_back(params, original_file, anom_file, original_filename, anom_file
     measures = Measures(original_dataset.to_tdf(), anonymized_dataset.to_tdf())
     results["visits_per_location_original"], results["visits_per_location_anonymized"] \
         = round_tuple(measures.cmp_visits_per_location(), 4)
-    print(f"visits per location: Original={results['visits_per_location_original']} - "
+    print(f"Visits per location: Original={results['visits_per_location_original']} - "
           f"Anonymized={results['visits_per_location_anonymized']}")
     results["distance_straight_line_original"], results["distance_straight_line_anonymized"] \
-        = round_tuple(measures.cmp_visits_per_location(), 4)
+        = round_tuple(measures.cmp_distance_straight_line(), 4)
     print(f"Distance straight line: Original={results['distance_straight_line_original']} - "
           f"Anonymized={results['distance_straight_line_anonymized']}")
     results["uncorrelated_location_entropy_original"], results["uncorrelated_location_entropy_anonymized"] \

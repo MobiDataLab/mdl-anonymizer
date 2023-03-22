@@ -150,18 +150,22 @@ def compute_measures(param_file_path: str):
         = round_tuple(measures.cmp_visits_per_location(), 4)
     print(f"visits per location: Original={results['visits_per_location_original']} - "
           f"Anonymized={results['visits_per_location_anonymized']}")
+
     results["distance_straight_line_original"], results["distance_straight_line_anonymized"] \
         = round_tuple(measures.cmp_distance_straight_line(), 4)
     print(f"Distance straight line: Original={results['distance_straight_line_original']} - "
           f"Anonymized={results['distance_straight_line_anonymized']}")
+
     results["uncorrelated_location_entropy_original"], results["uncorrelated_location_entropy_anonymized"] \
         = round_tuple(measures.cmp_uncorrelated_location_entropy(), 4)
     print(f"Uncorrelated location entropy: Original={results['uncorrelated_location_entropy_original']} - "
-          f"Anonymized={results['uncorrelated_location_entropy_a']}")
+          f"Anonymized={results['uncorrelated_location_entropy_anonymized']}")
+
     results["random_location_entropy_original"], results["random_location_entropy_anonymized"] \
         = round_tuple(measures.cmp_random_location_entropy(), 4)
     print(f"Random location entropy: Original={results['random_location_entropy_original']} - "
           f"Anonymized={results['random_location_entropy_anonymized']}")
+
     results["mean_square_displacement_original"], results["mean_square_displacement_anonymized"] \
         = round_tuple(measures.cmp_mean_square_displacement(), 4)
     print(f"Mean square displacement: Original={results['mean_square_displacement_original']} - "
