@@ -9,17 +9,20 @@ from skmob.measures.collective import mean_square_displacement, random_location_
     visits_per_location
 from skmob.measures.individual import distance_straight_line
 from skmob.tessellation import tilers
+from skmob.utils import constants
 from skmob.utils.constants import DEFAULT_CRS
 
 from mob_data_anonymizer.utils.tessellation import spatial_tessellation
 
 
 class Measures:
-    def __init__(self, original_tdf: TrajDataFrame, anonymized_tdf: TrajDataFrame, sort=True, tesselation_meters=500,
+    def __init__(self, original_tdf: TrajDataFrame, anonymized_tdf: TrajDataFrame, sort=True, tesselation_meters=250,
                  output_folder=""):
 
         self.pre_original_tdf = original_tdf
         self.pre_anonymized_tdf = anonymized_tdf
+
+        self.tile_size = tesselation_meters
 
         if sort:
             # Sorting by timestamp
@@ -32,10 +35,31 @@ class Measures:
         # Tessellation
         bounding_box = self.__get_bounding_box(self.pre_original_tdf)
         logging.info("Tessellating original dataset")
-        self.original_tdf, _ = spatial_tessellation(self.pre_original_tdf, "squared", bounding_box=bounding_box)
+        self.original_tdf, tiles = spatial_tessellation(self.pre_original_tdf, "squared",
+                                                        meters=self.tile_size)
+
+        tiles['x'] = round(tiles['geometry'].centroid.x, 5)
+        tiles['y'] = round(tiles['geometry'].centroid.y, 5)
+        self.original_tdf = pandas.merge(self.original_tdf, tiles, how="left", on="tile_ID")
+        self.original_tdf.rename(columns={
+            constants.LATITUDE: 'orig_lat',
+            constants.LONGITUDE: 'orig_lng',
+            'x': constants.LONGITUDE,
+            'y': constants.LATITUDE,
+        }, inplace=True)
+
         logging.info("Tessellating anonymized dataset")
         self.anonymized_tdf, _ = spatial_tessellation(self.pre_anonymized_tdf, "squared",
-                                                   bounding_box=bounding_box)
+                                                      tiles=tiles)
+
+        self.anonymized_tdf = pandas.merge(self.anonymized_tdf, tiles, how="left", on="tile_ID")
+        self.anonymized_tdf.rename(columns={
+            constants.LATITUDE: 'orig_lat',
+            constants.LONGITUDE: 'orig_lng',
+            'x': constants.LONGITUDE,
+            'y': constants.LATITUDE,
+        }, inplace=True)
+
         self.output_folder = output_folder
 
         self.results = {}
@@ -68,8 +92,8 @@ class Measures:
         '''
         logging.info("Computing Mean Square Displacement")
 
-        o = mean_square_displacement(self.original_tdf, show_progress=False)
-        a = mean_square_displacement(self.anonymized_tdf, show_progress=False)
+        o = mean_square_displacement(self.pre_original_tdf, show_progress=False)
+        a = mean_square_displacement(self.pre_anonymized_tdf, show_progress=False)
 
         # print(f"Mean square displacement: Original={o} - Anonymized={a}")
 
