@@ -17,19 +17,23 @@ To install the package, run the commands below in a terminal located at the root
 This will create a <a href="https://docs.conda.io/projects/conda/en/latest/">Conda</a> environment, install the dependencies and setup the module.
 Setup is only required when using the module as a library in Python code, not for CLI usage (see [Usage section](#usage)).
 ```bash
+
 # Create and activate environment
-conda create --name mda_env -y
+conda create -n mdl_env pip python=3.9 rtree
 conda activate mda_env
 
 # Install dependencies
-conda install rtree -y
-conda install tqdm -y
-conda install -c conda-forge haversine -y
 conda install -c conda-forge scikit-mobility -y   # If this fails, use "pip install scikit-mobility"
-conda install typer -y
-conda install -c conda-forge more-itertools -y
 conda install -c conda-forge pyarrow -y
-conda install -c conda-forge xgboost -y
+conda install -c conda-forge py-xgboost
+conda install -c conda-forge haversine -y
+conda install tqdm typer more-itertools -y
+
+# [Optional] API
+conda install -c conda-forge fastapi
+conda install -c conda-forge uvicorn
+conda install -c conda-forge python-multipart
+
 
 # [Optional] Build and setup the package for Python import, not required for CLI usage
 conda install conda-build
@@ -37,7 +41,7 @@ conda develop mob_data_anonymizer
 ```
 
 Tested to work with the following software versions:
-* Python: 3.8 and 3.10
+* Python: 3.9 and 3.10
 * Conda: 4.11.0 and 4.12.0
 * Operating System: Ubuntu 20.04 and Windows 10
 
@@ -142,6 +146,10 @@ Example using the given [configuration file](examples/configs/config_metrics.jso
 ```bash
 python -m mob_data_anonymizer measures -f examples/configs/config_metrics.json
 ```
+
+### API
+uvicorn mob_data_anonymizer.main_api:app --host 0.0.0.0 --port 8000
+host:8000/docs
 
 ### As a library
 Once the module is installed, its usage only requires an import:
