@@ -291,7 +291,7 @@ class Stats:
             v += p
         v /= len(probs)
 
-        return v
+        return v * 4.0
 
     def __compute_trajectory_sequences(self, dataset, tessellation, datetime_ranges=None):
 
