@@ -121,7 +121,7 @@ class SwapLocations(AnonymizationMethodInterface):
         tdf = self.dataset.to_tdf()
 
         pbar = tqdm(total=len(tdf))
-
+        logging.info("Swapping...")
         while not tdf.empty:
 
             l = tdf.sample(random_state=self.seed)
@@ -152,9 +152,9 @@ class SwapLocations(AnonymizationMethodInterface):
 
         anon_tdf = anon_tdf.sort_values(by=['tid', 'datetime'])
 
-        anon_tdf.to_csv("anonymized_dataset_details_pre_traj.csv")
+        # anon_tdf.to_csv("anonymized_dataset_details_pre_traj.csv")
 
-        logging.info("Apply trajectory anonymization")
+        logging.info("Applying trajectory anonymization")
         anon_tdf = apply_trajectory_anonymization(anon_tdf, tile_size=self.tile_size)
         # anon_tdf.to_csv("anonymized_dataset_details_pre_remove_1loc.csv")
 
