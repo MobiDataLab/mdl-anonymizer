@@ -152,7 +152,7 @@ class SwapLocations(AnonymizationMethodInterface):
 
         anon_tdf = anon_tdf.sort_values(by=['tid', 'datetime'])
 
-        # anon_tdf.to_csv("anonymized_dataset_details_pre_traj.csv")
+        anon_tdf.to_csv("anonymized_dataset_details_pre_traj.csv")
 
         logging.info("Apply trajectory anonymization")
         anon_tdf = apply_trajectory_anonymization(anon_tdf, tile_size=self.tile_size)
@@ -168,7 +168,7 @@ class SwapLocations(AnonymizationMethodInterface):
         return self.anonymized_dataset
 
     @staticmethod
-    def get_instance(data, file=None):
+    def get_instance(data, file=None, filetype=None):
 
         required_fields = ["k", "max_r_s", "min_r_s", "max_r_t", "min_r_t", "tile_size"]
         values = {}
@@ -184,7 +184,7 @@ class SwapLocations(AnonymizationMethodInterface):
             filename = data.get("input_file")
         else:
             filename = file
-        dataset.from_file(filename, min_locations=10, datetime_key="timestamp")
+        dataset.from_file(filename, filetype, min_locations=5, datetime_key="timestamp")
         dataset.filter_by_speed()
 
         step_s = data.get('step_s', None)

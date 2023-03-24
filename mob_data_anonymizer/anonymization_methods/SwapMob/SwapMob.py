@@ -373,7 +373,7 @@ class SwapMob(AnonymizationMethodInterface):
 
 
     @staticmethod
-    def get_instance(data, file=None):
+    def get_instance(data, file=None, filetype=None):
 
         required_fields = ["spatial_thold", "temporal_thold"]
         values = {}
@@ -389,7 +389,7 @@ class SwapMob(AnonymizationMethodInterface):
             filename = data.get("input_file")
         else:
             filename = file
-        dataset.from_file(filename, min_locations=10, datetime_key="timestamp")
+        dataset.from_file(filename, filetype, min_locations=5, datetime_key="timestamp")
         dataset.filter_by_speed()
 
         min_n_swaps = data.get('min_n_swaps', 1)

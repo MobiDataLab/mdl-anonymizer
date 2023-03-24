@@ -2,7 +2,7 @@ import typer
 
 from typing import Optional
 from mob_data_anonymizer import __app_name__, __version__, DEFAULT_PARAMETERS_FILE, ERRORS, SUCCESS, anonymizer, \
-    compute_measures, analyzer, filter_data
+    compute_measures, analyzer
 from mob_data_anonymizer import tasks_manager
 
 app = typer.Typer()
