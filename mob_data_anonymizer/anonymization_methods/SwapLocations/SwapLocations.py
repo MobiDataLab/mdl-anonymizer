@@ -10,7 +10,6 @@ from mob_data_anonymizer.anonymization_methods.AnonymizationMethodInterface impo
 from mob_data_anonymizer.anonymization_methods.SwapLocations.trajectory_anonymization import \
     apply_trajectory_anonymization
 from mob_data_anonymizer.entities.Dataset import Dataset
-from mob_data_anonymizer.entities.Trajectory import Trajectory
 from mob_data_anonymizer.utils import utils
 
 DEFAULT_VALUES = {
@@ -122,9 +121,11 @@ class SwapLocations(AnonymizationMethodInterface):
 
         pbar = tqdm(total=len(tdf))
         logging.info("Swapping...")
+        random_generator = np.random.default_rng(seed=self.seed)
+
         while not tdf.empty:
 
-            l = tdf.sample(random_state=self.seed)
+            l = tdf.sample(random_state=random_generator)
 
             cluster = self.__build_cluster(tdf, l)
 
@@ -134,7 +135,7 @@ class SwapLocations(AnonymizationMethodInterface):
                 tdf = tdf.drop(cluster.index.tolist())
 
                 # Assign random trajectory to each location
-                cluster[['tid', 'uid']] = np.random.permutation(cluster[['tid', 'uid']])
+                cluster[['tid', 'uid']] = random_generator.permutation(cluster[['tid', 'uid']])
 
                 cluster['num_cluster'] = num_cluster
 
@@ -152,7 +153,7 @@ class SwapLocations(AnonymizationMethodInterface):
 
         anon_tdf = anon_tdf.sort_values(by=['tid', 'datetime'])
 
-        # anon_tdf.to_csv("anonymized_dataset_details_pre_traj.csv")
+        anon_tdf.to_csv("anonymized_dataset_details_pre_traj.csv")
 
         logging.info("Applying trajectory anonymization")
         anon_tdf = apply_trajectory_anonymization(anon_tdf, tile_size=self.tile_size)
