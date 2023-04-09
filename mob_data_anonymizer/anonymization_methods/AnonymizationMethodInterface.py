@@ -1,5 +1,8 @@
 from abc import abstractmethod
 
+from mob_data_anonymizer.entities.Dataset import Dataset
+
+
 class AnonymizationMethodInterface:
 
     @staticmethod
@@ -8,5 +11,5 @@ class AnonymizationMethodInterface:
         pass
 
     @abstractmethod
-    def get_anonymized_dataset(self):
+    def get_anonymized_dataset(self) -> Dataset:
         pass

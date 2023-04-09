@@ -1,10 +1,16 @@
+import os
+
 __app_name__ = "mob_data_anonymizer"
 __version__ = "0.1.0"
+
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__)) + '/'
 
 DEFAULT_PARAMETERS_FILE = "anonymization_parameters.json"
 DEFAULT_OUTPUT_FILE = "output.json"
 DEFAULT_SAVE_FILTERED_DATASET = True
 DEFAULT_FILTERED_FILE = "filtered.json"
+
+CONFIG_FILE = ROOT_DIR + "config.json"
 CONFIG_API_FILE = "mob_data_anonymizer/config_api.json"
 CONFIG_DB_FILE = "mob_data_anonymizer/db/config_db.json"
 
@@ -28,3 +34,9 @@ ERRORS = {
     WRONG_METHOD: "A requested method is not supported (or it is misspelled)",
     WRONG_MODE: "The requested mode is not supported (or it is misspelled)",
 }
+
+# Default methods
+DEFAULT_ANONYMIZATION = "SimpleGeneralization"
+DEFAULT_TRAJECTORY_DISTANCE = "Martinez2021"
+DEFAULT_CLUSTERING = "SimpleMDAV"
+DEFAULT_AGGREGATION = "Martinez2021"

@@ -1,0 +1,37 @@
+{
+  "anonymization_methods": {
+    "SimpleGeneralization": {
+      "class": "mob_data_anonymizer.anonymization_methods.Generalization.Simple.SimpleGeneralization"
+    },
+    "SwapLocations": {
+      "class": "mob_data_anonymizer.anonymization_methods.SwapLocations.SwapLocations.SwapLocations"
+    },
+    "SwapMob": {
+      "class": "mob_data_anonymizer.anonymization_methods.SwapMob.SwapMob.SwapMob"
+    },
+    "Microaggregation": {
+      "class": "mob_data_anonymizer.anonymization_methods.Microaggregation.Microaggregation.Microaggregation"
+    },
+    "TimePartMicroaggregation": {
+      "class": "mob_data_anonymizer.anonymization_methods.Microaggregation.TimePartMicroaggregation.TimePartMicroaggregation"
+    }
+  },
+
+  "clustering_methods": {
+    "SimpleMDAV": {
+      "class": "mob_data_anonymizer.clustering.MDAV.SimpleMDAV.SimpleMDAV"
+    }
+  },
+
+  "aggregation_methods": {
+    "Martinez2021": {
+      "class": "mob_data_anonymizer.aggregation.Martinez2021.Aggregation.Aggregation"
+    }
+  },
+
+  "trajectory_distances": {
+    "Martinez2021": {
+      "class": "mob_data_anonymizer.distances.trajectory.Martinez2021.Distance.Distance"
+    }
+  }
+}
