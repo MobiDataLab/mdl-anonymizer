@@ -18,15 +18,18 @@ DEFAULT_VALUES = {
 
 
 class Microaggregation(AnonymizationMethodInterface):
-    def __init__(self, dataset: Dataset, k=DEFAULT_VALUES['k'], clustering_method: ClusteringInterface = None,
-                 distance: DistanceInterface = None, aggregation_method: TrajectoryAggregationInterface = None):
+    def __init__(self, dataset: Dataset, k=DEFAULT_VALUES['k'],
+                 clustering_method: ClusteringInterface = None,
+                 aggregation_method: TrajectoryAggregationInterface = None,
+                 # trajectory_distance: DistanceInterface = None
+                 ):
         """
                 Parameters
                 ----------
                 dataset : Dataset
                     Dataset to anonymize.
                 k : int
-                    Mínimium number of trajectories to be aggregated in a cluster (default is 3)
+                    Minimum number of trajectories to be aggregated in a cluster (default is 3)
                 clustering_method : ClusteringInterface, optional
                     Method to cluster the trajectories (Default is SimpleMDAV)
                 distance : DistanceInterface, optional
@@ -36,10 +39,14 @@ class Microaggregation(AnonymizationMethodInterface):
                 """
 
         self.dataset = dataset
-        self.distance = distance if distance else Distance(dataset)
-        self.aggregation_method = aggregation_method if aggregation_method else Aggregation
-        self.clustering_method = clustering_method if clustering_method \
-            else SimpleMDAV(SimpleMDAVDataset(dataset, self.distance, self.aggregation_method))
+        # self.distance = trajectory_distance if trajectory_distance else Distance(dataset)
+        # self.aggregation_method = aggregation_method if aggregation_method else Aggregation
+        # self.clustering_method = clustering_method if clustering_method \
+        #     else SimpleMDAV(SimpleMDAVDataset(dataset, self.distance, self.aggregation_method))
+
+        # self.distance = trajectory_distance
+        self.aggregation_method = aggregation_method
+        self.clustering_method = clustering_method
 
         self.clusters = {}
         self.centroids = {}

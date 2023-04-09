@@ -1,10 +1,13 @@
 import logging
+import inspect
 
+from mob_data_anonymizer.aggregation.TrajectoryAggregationInterface import TrajectoryAggregationInterface
+from mob_data_anonymizer.distances.trajectory.DistanceInterface import DistanceInterface
 from mob_data_anonymizer.clustering.ClusteringInterface import ClusteringInterface
 from mob_data_anonymizer.clustering.MDAV.SimpleMDAVDataset import SimpleMDAVDataset
 from mob_data_anonymizer.clustering.MDAV.interfaces.MDAVDatasetInterface import MDAVDatasetInterface
 from mob_data_anonymizer.entities.Dataset import Dataset
-import inspect
+
 
 from timeit import default_timer as timer
 from tqdm import tqdm
@@ -18,9 +21,16 @@ class SimpleMDAV(ClusteringInterface):
     This allows to speed the execution up.
     '''
 
-    def __init__(self, mdav_dataset: MDAVDatasetInterface):
-        self.mdav_dataset = mdav_dataset
-        self.original_dataset = None
+    def __init__(self, dataset: Dataset,
+                 trajectory_distance: DistanceInterface = None,
+                 aggregation_method: TrajectoryAggregationInterface = None):
+
+        self.mdav_dataset = SimpleMDAVDataset(dataset, trajectory_distance, aggregation_method)
+        self.original_dataset = dataset
+
+    # def __init__(self, mdav_dataset: MDAVDatasetInterface):
+    #     self.mdav_dataset = mdav_dataset
+    #     self.original_dataset = None
 
     def set_dataset(self, dataset: Dataset):
         self.mdav_dataset.set_dataset(dataset)
@@ -38,9 +48,11 @@ class SimpleMDAV(ClusteringInterface):
 
         expected_clusters = len(self.mdav_dataset) / k
 
+        # TODO: Què fa això aquí?
         stack = inspect.stack()
         the_class = stack[1][0].f_locals["self"].__class__.__name__
         progress = True
+
         if the_class == "TimePartMicroaggregation":
             progress = False
 

@@ -27,3 +27,6 @@ class MDAVDatasetInterface(ABC):
     def unselected_length(self):
         raise NotImplementedError
 
+    def calculate_distances(self, record: object):
+        raise NotImplementedError
+
