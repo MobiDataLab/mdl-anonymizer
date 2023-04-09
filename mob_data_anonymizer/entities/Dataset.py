@@ -364,10 +364,12 @@ class Dataset(ABC):
         return len(self.trajectories)
 
     def __repr__(self):
-        ret = ""
-        if self.description:
-            ret += f"{self.description}\n"
-        for T in self.trajectories:
-            ret += f'{str(T)}\n'
+        ret = f"Dataset: {self.description}\n"
+
+        if not self.trajectories:
+            ret += 'EMPTY!'
+        else:
+            for T in self.trajectories:
+                ret += f'{str(T)}\n'
 
         return ret
