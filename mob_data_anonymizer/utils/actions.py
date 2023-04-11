@@ -295,27 +295,31 @@ def filter_back(params, file, filename, task_id):
     data = params.dict()
     typer.secho(f'Loading original dataset')
 
-    original_dataset = Dataset()
+    dataset = Dataset()
     if file is None:
         fileori = data.get("original_file")
     else:
         fileori = file
 
-    methods = data["methods"]
-    min_locations = 0
-    max_speed = sys.maxsize
-    for method in methods:
-        if "min_locations" in method:
-            min_locations = method["min_locations"]
-        if "max_speed" in method:
-            max_speed = method["max_speed"]
-    original_dataset.from_file(fileori, filename, min_locations=min_locations, datetime_key="timestamp")
-    original_dataset.filter_by_speed(max_speed_kmh=max_speed)
+    if "methods" in data:
+        methods = data["methods"]
+        min_locations = 0
+        max_speed = sys.maxsize
+        for method in methods:
+            if "min_locations" in method:
+                min_locations = method["min_locations"]
+            if "max_speed" in method:
+                max_speed = method["max_speed"]
+    else:
+        min_locations = data['min_locations']
+        max_speed = data['max_speed']
+    dataset.from_file(fileori, filename, min_locations=min_locations, datetime_key="timestamp")
+    dataset.filter_by_speed(max_speed_kmh=max_speed)
 
     # Save filtered file
     with open(CONFIG_DB_FILE) as param_file:
         data = json.load(param_file)
     output_file = data["db_folder"] + "/" + task_id + ".csv"
-    original_dataset.to_csv(f"{output_file}")
+    dataset.to_csv(f"{output_file}")
 
     logging.info("Done!")

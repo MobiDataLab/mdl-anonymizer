@@ -135,7 +135,7 @@ def measures_api(
 
 
 @app.command()
-def filter_dataset(
+def filter(
         parameters_file: str = typer.Option(
             str(DEFAULT_PARAMETERS_FILE),
             "--parameters_file",
@@ -156,7 +156,7 @@ def filter_dataset(
 
 
 @app.command()
-def filter_dataset_api(
+def filter_api(
         parameters_file: str = typer.Option(
             str(DEFAULT_PARAMETERS_FILE),
             "--parameters_file",
