@@ -1,13 +1,8 @@
 {
-  "original_dataset": "examples/output/preprocessed_dataset_CLI.csv",
-  "anonymized_dataset": "examples/output/anonymized_SwapLocations_CLI.csv",
-  "mode": "average",
+  "original_dataset": "examples/data/cabs_dataset_20080608.parquet",
+  "filtered_dataset": "examples/output/filtered_cabs_dataset_20080608.csv",
   "methods": [
-    "visits_per_location",
-    "distance_straight_line",
-    "uncorrelated_location_entropy",
-    "random_location_entropy",
-    "mean_square_displacement"
-  ],
-  "output_folder": "examples/output/"
+    {"min_locations":  10},
+    {"max_speed":  300}
+  ]
 }
