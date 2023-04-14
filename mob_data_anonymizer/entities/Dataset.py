@@ -34,7 +34,7 @@ class Dataset(ABC):
     #        raise NotImplementedError
 
     def from_file(self, filename, filetype=None, n_trajectories=None, min_locations=0,
-                  latitude_key="lat", longitude_key="lon", datetime_key="datetime", user_key="user_id",
+                  latitude_key="lat", longitude_key="lon", datetime_key="timestamp", user_key="user_id",
                   trajectory_key="trajectory_id",
                   datetime_format="%Y/%m/%d %H:%M:%S",
                   sample=None):

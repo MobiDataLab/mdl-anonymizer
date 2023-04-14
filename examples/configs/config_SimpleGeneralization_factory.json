@@ -1,0 +1,13 @@
+{
+  "method": "SimpleGeneralization",
+  "input_file": "examples/data/preprocessed_dataset_20080608_sample.csv",
+  "output_folder": "examples/output",
+  "main_output_file": "anonymized_SimpleGeneralization.csv",
+  "save_preprocessed_dataset": false,
+  "preprocessed_file": "preprocessed_dataset_CLI.csv",
+  "params":  {
+    "gen_tile_size": 500,
+    "tile_shape": "squared",
+    "traj_anon_tile_size": 1700
+  }
+}

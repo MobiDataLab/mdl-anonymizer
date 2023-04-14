@@ -49,7 +49,7 @@ def anonymize_api(
 
         raise typer.Exit(1)
     else:
-        anonymizer.anonymizer_api_back_db(parameters_file)
+        anonymizer.anonymizer_api(parameters_file)
 
 
 @app.command()

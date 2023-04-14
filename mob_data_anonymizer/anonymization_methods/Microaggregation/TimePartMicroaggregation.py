@@ -19,8 +19,10 @@ DEFAULT_VALUES = {
 
 
 class TimePartMicroaggregation(AnonymizationMethodInterface):
-    def __init__(self, dataset: Dataset, k=DEFAULT_VALUES['k'], clustering_method: ClusteringInterface = None,
-                 distance: DistanceInterface = None, aggregation_method: TrajectoryAggregationInterface = None,
+    def __init__(self, dataset: Dataset, k=DEFAULT_VALUES['k'],
+                 clustering_method: ClusteringInterface = None,
+                 # trajectory_distance: DistanceInterface = None,
+                 aggregation_method: TrajectoryAggregationInterface = None,
                  interval: int = 15*60):
         """
                 Parameters
@@ -38,10 +40,13 @@ class TimePartMicroaggregation(AnonymizationMethodInterface):
                 """
 
         self.dataset = dataset
-        self.distance = distance if distance else Distance(dataset)
-        self.aggregation_method = aggregation_method if aggregation_method else Aggregation
-        self.clustering_method = clustering_method if clustering_method \
-            else SimpleMDAV(SimpleMDAVDataset(dataset, self.distance, self.aggregation_method))
+        # self.distance = trajectory_distance if trajectory_distance else Distance(dataset)
+        # self.aggregation_method = aggregation_method if aggregation_method else Aggregation
+        # self.clustering_method = clustering_method if clustering_method \
+        #     else SimpleMDAV(SimpleMDAVDataset(dataset, self.distance, self.aggregation_method))
+
+        self.aggregation_method = aggregation_method
+        self.clustering_method = clustering_method
 
         self.clusters = {}
         self.centroids = {}
@@ -148,4 +153,4 @@ class TimePartMicroaggregation(AnonymizationMethodInterface):
 
         martinez21_distance = Distance(dataset, landa=l)
 
-        return TimePartMicroaggregation(dataset, k=values['k'], distance=martinez21_distance, interval=values['interval'])
+        return TimePartMicroaggregation(dataset, k=values['k'], interval=values['interval'])

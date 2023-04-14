@@ -35,7 +35,7 @@ class ClusteringMethodFactory:
                     distance_name = params['trajectory_distance'].pop('name')
                     # TODO: Parametros de la distancia
                     params['trajectory_distance'] = TrajectoryDistanceFactory.get(distance_name, dataset,
-                                                                                  params['trajectory_distance'])
+                                                                                  params['trajectory_distance']['params'])
                     print(params['trajectory_distance'])
                 else:
                     # Default

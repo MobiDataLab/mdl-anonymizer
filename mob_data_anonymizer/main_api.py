@@ -1,9 +1,10 @@
-from fastapi import FastAPI, Depends, File, UploadFile, BackgroundTasks
+from fastapi import FastAPI, Depends, File, UploadFile, BackgroundTasks, Request
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import Optional, List
 from mob_data_anonymizer.utils.actions import anonymize
 from mob_data_anonymizer.utils.actions import anonymize_back
+from mob_data_anonymizer.utils.actions import anonymize_factory
 from mob_data_anonymizer.utils.actions import analyze
 from mob_data_anonymizer.utils.actions import analyze_back
 from mob_data_anonymizer.utils.actions import measures
@@ -12,6 +13,8 @@ from mob_data_anonymizer.utils.actions import filter_back
 from mob_data_anonymizer import tasks_manager
 from mob_data_anonymizer.methodName import MethodName
 import uuid
+from mob_data_anonymizer import CONFIG_FILE
+import json
 
 
 class Params(BaseModel):
@@ -159,14 +162,14 @@ def get(task_id: str):
 #     return FileResponse(response_file_path)
 
 
-@app.post("/anonymize/Microaggregation/")
-def post(params: ParamsMicro = Depends(), files: List[UploadFile] = File(...),
-         background_tasks: BackgroundTasks = None):
-    method = "Microaggregation"
-    task_id = str(uuid.uuid4().hex)
-    background_tasks.add_task(anonymize_back, method, params, files[0].file, files[0].filename, task_id)
-    task_message = f"task {task_id} requested"
-    return {"message": task_message}
+# @app.post("/anonymize/Microaggregation/")
+# def post(params: ParamsMicro = Depends(), files: List[UploadFile] = File(...),
+#          background_tasks: BackgroundTasks = None):
+#     method = "Microaggregation"
+#     task_id = str(uuid.uuid4().hex)
+#     background_tasks.add_task(anonymize_factory, method, params, files[0].file, files[0].filename, task_id)
+#     task_message = f"task {task_id} requested"
+#     return {"message": task_message}
 
 
 # @app.post("/anonymize/Microaggregation2/")
@@ -176,14 +179,42 @@ def post(params: ParamsMicro = Depends(), files: List[UploadFile] = File(...),
 #     return FileResponse(response_file_path)
 
 
-@app.post("/anonymize/TimePartMicroaggregation/")
-def post(params: ParamsMicro2 = Depends(), files: List[UploadFile] = File(...),
-         background_tasks: BackgroundTasks = None):
-    method = "TimePartMicroaggregation"
+# @app.post("/anonymize/TimePartMicroaggregation/")
+# def post(params: ParamsMicro2 = Depends(), files: List[UploadFile] = File(...),
+#          background_tasks: BackgroundTasks = None):
+#     method = "TimePartMicroaggregation"
+#     task_id = str(uuid.uuid4().hex)
+#     background_tasks.add_task(anonymize_factory, method, params, files[0].file, files[0].filename, task_id)
+#     task_message = f"task {task_id} requested"
+#     return {"message": task_message}
+
+
+@app.post("/anonymize/{method}")
+def post(method: str, data_file: UploadFile = File(...),
+         config_file: UploadFile = File(...), background_tasks: BackgroundTasks = None):
+    with open(CONFIG_FILE, 'r') as f:
+        config = json.load(f)
+    if method not in config['anonymization_methods']:
+        task_message = f"Anonymization method not valid: {method}"
+        return {"message": task_message}
     task_id = str(uuid.uuid4().hex)
-    background_tasks.add_task(anonymize_back, method, params, files[0].file, files[0].filename, task_id)
+    background_tasks.add_task(anonymize_factory, data_file.file, data_file.filename,
+                              config_file.file, task_id)
     task_message = f"task {task_id} requested"
     return {"message": task_message}
+
+
+# @app.post("/anonymize/{method}")
+# def post(method: str, files: List[UploadFile] = File(...), background_tasks: BackgroundTasks = None):
+#     with open(CONFIG_FILE, 'r') as f:
+#         config = json.load(f)
+#     if method not in config['anonymization_methods']:
+#         task_message = f"Anonymization method not valid: {method}"
+#         return {"message": task_message}
+#     task_id = str(uuid.uuid4().hex)
+#     background_tasks.add_task(anonymize_factory, files[0].file, files[0].filename, files[1].file, task_id)
+#     task_message = f"task {task_id} requested"
+#     return {"message": task_message}
 
 
 # @app.post("/anonymize/SwapLocations/")
@@ -193,14 +224,14 @@ def post(params: ParamsMicro2 = Depends(), files: List[UploadFile] = File(...),
 #     return FileResponse(response_file_path)
 
 
-@app.post("/anonymize/SwapLocations/")
-def post(params: ParamsSwaplocations = Depends(), files: List[UploadFile] = File(...),
-         background_tasks: BackgroundTasks = None):
-    method = "SwapLocations"
-    task_id = str(uuid.uuid4().hex)
-    background_tasks.add_task(anonymize_back, method, params, files[0].file, files[0].filename, task_id)
-    task_message = f"task {task_id} requested"
-    return {"message": task_message}
+# @app.post("/anonymize/SwapLocations/")
+# def post(params: ParamsSwaplocations = Depends(), files: List[UploadFile] = File(...),
+#          background_tasks: BackgroundTasks = None):
+#     method = "SwapLocations"
+#     task_id = str(uuid.uuid4().hex)
+#     background_tasks.add_task(anonymize_factory, method, params, files[0].file, files[0].filename, task_id)
+#     task_message = f"task {task_id} requested"
+#     return {"message": task_message}
 
 
 # @app.post("/anonymize/SwapMob/")
@@ -210,24 +241,24 @@ def post(params: ParamsSwaplocations = Depends(), files: List[UploadFile] = File
 #     return FileResponse(response_file_path)
 
 
-@app.post("/anonymize/SwapMob/")
-def post(params: ParamsSwapmob = Depends(), files: List[UploadFile] = File(...),
-         background_tasks: BackgroundTasks = None):
-    method = "SwapMob"
-    task_id = str(uuid.uuid4().hex)
-    background_tasks.add_task(anonymize_back, method, params, files[0].file, files[0].filename, task_id)
-    task_message = f"task {task_id} requested"
-    return {"message": task_message}
+# @app.post("/anonymize/SwapMob/")
+# def post(params: ParamsSwapmob = Depends(), files: List[UploadFile] = File(...),
+#          background_tasks: BackgroundTasks = None):
+#     method = "SwapMob"
+#     task_id = str(uuid.uuid4().hex)
+#     background_tasks.add_task(anonymize_factory, method, params, files[0].file, files[0].filename, task_id)
+#     task_message = f"task {task_id} requested"
+#     return {"message": task_message}
 
 
-@app.post("/anonymize/SimpleGeneralization/")
-def post(params: ParamsSimpleGeneralization = Depends(), files: List[UploadFile] = File(...),
-         background_tasks: BackgroundTasks = None):
-    method = "SimpleGeneralization"
-    task_id = str(uuid.uuid4().hex)
-    background_tasks.add_task(anonymize_back, method, params, files[0].file, files[0].filename, task_id)
-    task_message = f"task {task_id} requested"
-    return {"message": task_message}
+# @app.post("/anonymize/SimpleGeneralization/")
+# def post(params: ParamsSimpleGeneralization = Depends(), files: List[UploadFile] = File(...),
+#          background_tasks: BackgroundTasks = None):
+#     method = "SimpleGeneralization"
+#     task_id = str(uuid.uuid4().hex)
+#     background_tasks.add_task(anonymize_factory, method, params, files[0].file, files[0].filename, task_id)
+#     task_message = f"task {task_id} requested"
+#     return {"message": task_message}
 
 
 # @app.post("/analyze/")

@@ -82,7 +82,7 @@ def anonymizer(file_path: str) -> int:
     output.to_csv(f"{output_folder}{output_file}")
 
 
-def anonymizer_api(param_file_path: str) -> int:
+def anonymizer_api(param_file_path: str):
     with open(param_file_path) as param_file:
         data = json.load(param_file)
 
@@ -91,34 +91,19 @@ def anonymizer_api(param_file_path: str) -> int:
 
     action = "anonymize"
     action += "/" + data['method']
-    response = api.post_user_data(action, data, input_file)
+    response = api.post_user_data(action, input_file, param_file_path)
 
-    output_file_path = data["output_folder"] + "/" + data["main_output_file"]
-    with open(output_file_path, 'wb') as f:
-        f.write(response.content)
+    # with open(CONFIG_DB_FILE) as param_file:
+    #     data = json.load(param_file)
+    # output_file_path = data['db_folder'] + data['db_file']
+    # with open(output_file_path, 'w') as f:
+    #     json.dump(response.json(), f, indent=4)
 
-    print(f"Received: {response}")
-
-
-def anonymizer_api_back(param_file_path: str):
-    with open(param_file_path) as param_file:
-        data = json.load(param_file)
-
-    input_file = data["input_file"]
-    api = MakeApiCall()
-
-    action = "anonymizeback"
-    action += "/" + data['method']
-    response = api.post_user_data(action, data, input_file)
-
-    output_file_path = data["output_folder"] + "/" + data["main_output_file"]
-    with open(output_file_path, 'wb') as f:
-        f.write(response.content)
-
-    print(f"Received: {response}")
+    print(f"Response: {response}")
+    print(f"Received: {response.json()['message']}")
 
 
-def anonymizer_api_back_db(param_file_path: str):
+def anonymizer_api_old(param_file_path: str):
     with open(param_file_path) as param_file:
         data = json.load(param_file)
 

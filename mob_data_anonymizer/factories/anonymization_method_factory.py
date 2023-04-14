@@ -34,13 +34,15 @@ class AnoymizationMethodFactory:
             method_signature = inspect.signature(method_class.__init__)
 
             # Special parameters (if required):
+            # print(method_signature.parameters)
             if 'trajectory_distance' in method_signature.parameters:
+                print("TD required")
                 if 'trajectory_distance' in params:
                     print("TD")
                     distance_name = params['trajectory_distance'].pop('name')
                     # TODO: Parametros de la distancia
                     params['trajectory_distance'] = TrajectoryDistanceFactory.get(distance_name, dataset,
-                                                                                  params['trajectory_distance'])
+                                                                                  params['trajectory_distance']['params'])
                     print(params['trajectory_distance'])
                 else:
                     # Default
@@ -53,7 +55,7 @@ class AnoymizationMethodFactory:
                     method_name = params['clustering_method'].pop('name')
                     # TODO: Parametros del método
                     params['clustering_method'] = ClusteringMethodFactory.get(method_name, dataset,
-                                                                              params['clustering_method'])
+                                                                              params['clustering_method']['params'])
                     print(params['clustering_method'])
                 else:
                     # Default

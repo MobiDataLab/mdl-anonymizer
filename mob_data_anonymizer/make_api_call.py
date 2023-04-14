@@ -35,10 +35,22 @@ class MakeApiCall:
 
         return response
 
-    def post_user_data(self, action, parameters, input_file):
+    def post_user_data(self, action, input_file, param_file):
         # print(parameters)
-        files = [('files', open(input_file, 'rb'))]
-        response = requests.post(f"{self.api}/{action}", params=parameters, files= files)
+        files = [('data_file', open(input_file, 'rb')), ('config_file', open(param_file, 'rb'))]
+        response = requests.post(f"{self.api}/{action}", files=files)
+        if response.status_code == 200:
+            print("successfully posted the data with parameters provided")
+        else:
+            print(
+                f"Hello person, there's a {response.status_code} error with your request")
+
+        return response
+
+    def post_user_data_old(self, action, parameters, input_file, param_file):
+        # print(parameters)
+        files = [('files', open(input_file, 'rb')), ('files', open(param_file, 'rb'))]
+        response = requests.post(f"{self.api}/{action}", params=parameters, files=files)
         if response.status_code == 200:
             print("successfully posted the data with parameters provided")
             print(f"Sent: {parameters}")
@@ -52,7 +64,7 @@ class MakeApiCall:
     def post_user_data2(self, action, parameters, original_file, anom_file):
         # print(parameters)
         files = [('files', open(original_file, 'rb')), ('files', open(anom_file, 'rb'))]
-        response = requests.post(f"{self.api}/{action}", params=parameters, files= files)
+        response = requests.post(f"{self.api}/{action}", params=parameters, files=files)
         if response.status_code == 200:
             print("successfully posted the data with parameters provided")
             print(f"Sent: {parameters}")
@@ -66,4 +78,3 @@ class MakeApiCall:
     def formatted_print(self, obj):
         text = json.dumps(obj, sort_keys=True, indent=4)
         print(text)
-

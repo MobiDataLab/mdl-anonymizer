@@ -13,6 +13,7 @@ from mob_data_anonymizer import PARAMETERS_FILE_DOESNT_EXIST, SUCCESS, PARAMETER
 from mob_data_anonymizer.methodName import MethodName
 from mob_data_anonymizer.analysis_methods.AnalysisMethodInterface import AnalysisMethodInterface
 from mob_data_anonymizer.anonymization_methods.AnonymizationMethodInterface import AnonymizationMethodInterface
+from mob_data_anonymizer.factories.anonymization_method_factory import AnoymizationMethodFactory
 from mob_data_anonymizer.anonymization_methods.SwapLocations.SwapLocations import SwapLocations
 from mob_data_anonymizer.anonymization_methods.Microaggregation.Microaggregation import Microaggregation
 from mob_data_anonymizer.anonymization_methods.Microaggregation.TimePartMicroaggregation import TimePartMicroaggregation
@@ -75,6 +76,33 @@ def anonymize_back(method, params, file, filename, task_id) -> str:
     if save_filtered_dataset:
         filtered_file = data.get('preprocessed_file', DEFAULT_FILTERED_FILE)
         method.dataset.to_csv(f"{output_folder}{filtered_file}")
+
+    # Run method
+    method.run()
+
+    # Save output file
+    with open(CONFIG_DB_FILE) as param_file:
+        data = json.load(param_file)
+    output_file = data["db_folder"] + "/" + task_id + ".csv"
+    output = method.get_anonymized_dataset()
+    output.to_csv(f"{output_file}")
+
+    logging.info("Done!")
+
+
+def anonymize_factory(file, filename, file_config, task_id):
+    # data = params.dict()
+    # data = params.json()
+    params = json.load(file_config)
+    print(params)
+    print("Anonymization method: ", params['method'])
+
+    # Load dataset
+    dataset = Dataset()
+    dataset.from_file(file, filename)
+
+    # Get instance of requested method
+    method = AnoymizationMethodFactory.get(params['method'], dataset, params['params'])
 
     # Run method
     method.run()
