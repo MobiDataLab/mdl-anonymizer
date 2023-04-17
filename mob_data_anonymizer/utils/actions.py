@@ -179,6 +179,38 @@ def analyze_back(params, file, filename, task_id):
     logging.info("Done!")
 
 
+def analyze_factory(file, filename, file_config, task_id):
+    params = json.load(file_config)
+    method = params["method"]
+    print(method)
+
+    # Get instance of requested method
+    class_object = getattr(sys.modules[__name__], params['method'])
+    print("Analysis method: ", class_object.__name__)
+    method = class_object.get_instance(params, file, filename)
+
+    # Filtered dataset
+    output_folder = params.get('output_folder', '')
+    if output_folder != '':
+        output_folder += '/'
+
+    save_filtered_dataset = params.get('save_preprocessed_dataset', DEFAULT_SAVE_FILTERED_DATASET)
+    if save_filtered_dataset:
+        filtered_file = params.get('preprocessed_file', DEFAULT_FILTERED_FILE)
+        method.dataset.to_csv(f"{output_folder}{filtered_file}")
+
+    # Run method
+    method.run()
+
+    # Save output file
+    with open(CONFIG_DB_FILE) as param_file:
+        data = json.load(param_file)
+    output_file = data["db_folder"] + "/" + task_id + ".json"
+    method.export_result(f"{output_file}")
+
+    logging.info("Done!")
+
+
 def measures(params, original_file, anom_file) -> dict:
     data = params.dict()
     typer.secho(f'Loading original dataset')

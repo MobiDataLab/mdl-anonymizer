@@ -115,7 +115,7 @@ def run_analysis_api_back_db(param_file_path: str):
     api = MakeApiCall()
 
     action = "analyze"
-    response = api.post_user_data(action, data, input_file)
+    response = api.post_user_data(action, input_file, param_file_path)
 
     # with open(CONFIG_DB_FILE) as param_file:
     #     data = json.load(param_file)

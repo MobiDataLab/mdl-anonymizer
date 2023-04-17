@@ -13,16 +13,16 @@ class AggregationMethodFactory:
         with open(CONFIG_FILE, 'r') as f:
             config = json.load(f)
 
-            if method_name not in config['aggregation_methods']:
-                raise ValueError(f'Aggregation method not valid: {method_name}')
+        if method_name not in config['aggregation_methods']:
+            raise ValueError(f'Aggregation method not valid: {method_name}')
 
-            method_config = config['aggregation_methods'][method_name]
-            module_name, class_name = method_config['class'].rsplit('.', 1)
-            module = importlib.import_module(module_name)
-            method_class = getattr(module, class_name)
+        method_config = config['aggregation_methods'][method_name]
+        module_name, class_name = method_config['class'].rsplit('.', 1)
+        module = importlib.import_module(module_name)
+        method_class = getattr(module, class_name)
 
-            # Aggregation methods are static, so we just return the class
-            return method_class
+        # Aggregation methods are static, so we just return the class
+        return method_class
 
 
 

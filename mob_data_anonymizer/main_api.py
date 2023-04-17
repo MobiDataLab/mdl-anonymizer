@@ -7,6 +7,7 @@ from mob_data_anonymizer.utils.actions import anonymize_back
 from mob_data_anonymizer.utils.actions import anonymize_factory
 from mob_data_anonymizer.utils.actions import analyze
 from mob_data_anonymizer.utils.actions import analyze_back
+from mob_data_anonymizer.utils.actions import analyze_factory
 from mob_data_anonymizer.utils.actions import measures
 from mob_data_anonymizer.utils.actions import measures_back
 from mob_data_anonymizer.utils.actions import filter_back
@@ -268,13 +269,23 @@ def post(method: str, data_file: UploadFile = File(...),
 
 
 @app.post("/analyze/")
-def post(params: ParamsAnalyze = Depends(), files: List[UploadFile] = File(...),
-         background_tasks: BackgroundTasks = None):
+def post(data_file: UploadFile = File(...),
+         config_file: UploadFile = File(...), background_tasks: BackgroundTasks = None):
     task_id = str(uuid.uuid4().hex)
     print(task_id)
-    background_tasks.add_task(analyze_back, params, files[0].file, files[0].filename, task_id)
+    background_tasks.add_task(analyze_factory, data_file.file, data_file.filename, config_file.file, task_id)
     task_message = f"task {task_id} requested"
     return {"message": task_message}
+
+
+# @app.post("/analyze/")
+# def post(params: ParamsAnalyze = Depends(), files: List[UploadFile] = File(...),
+#          background_tasks: BackgroundTasks = None):
+#     task_id = str(uuid.uuid4().hex)
+#     print(task_id)
+#     background_tasks.add_task(analyze_back, params, files[0].file, files[0].filename, task_id)
+#     task_message = f"task {task_id} requested"
+#     return {"message": task_message}
 
 
 # @app.post("/measures/")
