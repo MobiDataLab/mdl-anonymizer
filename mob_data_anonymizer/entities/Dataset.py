@@ -55,7 +55,7 @@ class Dataset(ABC):
                 # df = pandas.read_parquet(filename)
                 df = pq.read_table(filename).to_pandas()
             else:
-                raise Exception("File format not supported")
+                raise TypeError("File format not supported")
         else:  # file object from api
             logging.info("Loading dataset from file object...")
             if filetype[-8:] == '.parquet':
@@ -149,8 +149,8 @@ class Dataset(ABC):
         # Sort by uid
         tdf.sort_values(constants.TID)
 
-        user_id = tdf.loc[0, constants.UID]
-        traj_id = tdf.loc[0, constants.TID]
+        user_id = tdf[constants.UID].iloc[0]
+        traj_id = tdf[constants.TID].iloc[0]
 
         T = Trajectory(traj_id, user_id)
 
