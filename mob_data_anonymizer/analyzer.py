@@ -4,6 +4,8 @@ import os
 import sys
 
 from mob_data_anonymizer.make_api_call import MakeApiCall
+from mob_data_anonymizer.entities.Dataset import Dataset
+from mob_data_anonymizer.factories.analysis_method_factory import AnalysisMethodFactory
 
 from mob_data_anonymizer import PARAMETERS_FILE_DOESNT_EXIST, SUCCESS, PARAMETERS_FILE_NOT_JSON, PARAMETERS_NOT_VALID, \
     WRONG_METHOD, INPUT_FILE_NOT_EXIST, OUTPUT_FOLDER_NOT_EXIST, DEFAULT_OUTPUT_FILE, DEFAULT_SAVE_FILTERED_DATASET, \
@@ -50,19 +52,17 @@ def run_analysis(file_path: str) -> int:
     with open(file_path) as param_file:
         data = json.load(param_file)
 
-    # Get instance of requested method
-    class_object = getattr(sys.modules[__name__], data['method'])
-    method = class_object.get_instance(data)
+    # Load dataset
+    filename = data.get("input_file")
+    dataset = Dataset()
+    dataset.from_file(filename)
 
-    # Filtered dataset
+    # Get instance of requested method
+    method = AnalysisMethodFactory.get(data['method'], dataset, data['params'])
+
     output_folder = data.get('output_folder', '')
     if output_folder != '':
         output_folder += '/'
-
-    save_filtered_dataset = data.get('save_preprocessed_dataset', DEFAULT_SAVE_FILTERED_DATASET)
-    if save_filtered_dataset:
-        filtered_file = data.get('preprocessed_file', DEFAULT_FILTERED_FILE)
-        method.dataset.to_csv(f"{output_folder}{filtered_file}")
 
     # Run method
     method.run()
@@ -81,40 +81,7 @@ def run_analysis_api(param_file_path: str):
     api = MakeApiCall()
 
     action = "analyze"
-    response = api.post_user_data(action, data, input_file)
-
-    output_file = data.get('main_output_file', DEFAULT_OUTPUT_FILE)
-    with open(output_file, 'wb') as f:
-        f.write(response.content)
-
-    print(f"Received: {response}")
-
-
-def run_analysis_api_back(param_file_path: str):
-    with open(param_file_path) as param_file:
-        data = json.load(param_file)
-
-    input_file = data["input_file"]
-    api = MakeApiCall()
-
-    action = "analyzeback"
-    response = api.post_user_data(action, data, input_file)
-
-    output_file = data.get('main_output_file', DEFAULT_OUTPUT_FILE)
-    with open(output_file, 'wb') as f:
-        f.write(response.content)
-
-    print(f"Received: {response}")
-
-
-def run_analysis_api_back_db(param_file_path: str):
-    with open(param_file_path) as param_file:
-        data = json.load(param_file)
-
-    input_file = data["input_file"]
-    api = MakeApiCall()
-
-    action = "analyze"
+    action += "/" + data['method']
     response = api.post_user_data(action, input_file, param_file_path)
 
     # with open(CONFIG_DB_FILE) as param_file:
@@ -125,3 +92,4 @@ def run_analysis_api_back_db(param_file_path: str):
 
     print(f"Response: {response}")
     print(f"Received: {response.json()['message']}")
+

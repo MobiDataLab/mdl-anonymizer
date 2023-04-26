@@ -14,6 +14,7 @@ from mob_data_anonymizer.methodName import MethodName
 from mob_data_anonymizer.analysis_methods.AnalysisMethodInterface import AnalysisMethodInterface
 from mob_data_anonymizer.anonymization_methods.AnonymizationMethodInterface import AnonymizationMethodInterface
 from mob_data_anonymizer.factories.anonymization_method_factory import AnoymizationMethodFactory
+from mob_data_anonymizer.factories.analysis_method_factory import AnalysisMethodFactory
 from mob_data_anonymizer.anonymization_methods.SwapLocations.SwapLocations import SwapLocations
 from mob_data_anonymizer.anonymization_methods.Microaggregation.Microaggregation import Microaggregation
 from mob_data_anonymizer.anonymization_methods.Microaggregation.TimePartMicroaggregation import TimePartMicroaggregation
@@ -180,24 +181,18 @@ def analyze_back(params, file, filename, task_id):
 
 
 def analyze_factory(file, filename, file_config, task_id):
+    # data = params.dict()
+    # data = params.json()
     params = json.load(file_config)
-    method = params["method"]
-    print(method)
+    print(params)
+    print("Anonymization method: ", params['method'])
+
+    # Load dataset
+    dataset = Dataset()
+    dataset.from_file(file, filename)
 
     # Get instance of requested method
-    class_object = getattr(sys.modules[__name__], params['method'])
-    print("Analysis method: ", class_object.__name__)
-    method = class_object.get_instance(params, file, filename)
-
-    # Filtered dataset
-    output_folder = params.get('output_folder', '')
-    if output_folder != '':
-        output_folder += '/'
-
-    save_filtered_dataset = params.get('save_preprocessed_dataset', DEFAULT_SAVE_FILTERED_DATASET)
-    if save_filtered_dataset:
-        filtered_file = params.get('preprocessed_file', DEFAULT_FILTERED_FILE)
-        method.dataset.to_csv(f"{output_folder}{filtered_file}")
+    method = AnalysisMethodFactory.get(params['method'], dataset, params['params'])
 
     # Run method
     method.run()

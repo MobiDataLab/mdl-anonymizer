@@ -33,5 +33,10 @@
     "Martinez2021": {
       "class": "mob_data_anonymizer.distances.trajectory.Martinez2021.Distance.Distance"
     }
+  },
+  "analysis_methods": {
+    "QuadTreeHeatMap": {
+      "class": "mob_data_anonymizer.analysis_methods.QuadTreeHeatMap.QuadTreeHeatMap"
+    }
   }
 }

@@ -268,9 +268,14 @@ def post(method: str, data_file: UploadFile = File(...),
 #     return FileResponse(response_file_path)
 
 
-@app.post("/analyze/")
-def post(data_file: UploadFile = File(...),
+@app.post("/analyze/{method}")
+def post(method:str, data_file: UploadFile = File(...),
          config_file: UploadFile = File(...), background_tasks: BackgroundTasks = None):
+    with open(CONFIG_FILE, 'r') as f:
+        config = json.load(f)
+    if method not in config['analysis_methods']:
+        task_message = f"Analysis method not valid: {method}"
+        return {"message": task_message}
     task_id = str(uuid.uuid4().hex)
     print(task_id)
     background_tasks.add_task(analyze_factory, data_file.file, data_file.filename, config_file.file, task_id)
