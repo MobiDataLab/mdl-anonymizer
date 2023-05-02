@@ -133,7 +133,7 @@ def measures_api(
 
         raise typer.Exit(1)
     else:
-        compute_measures.compute_measures_api_back_db(parameters_file)
+        compute_measures.compute_measures_api(parameters_file)
 
 
 @app.command()
@@ -175,7 +175,7 @@ def filter_api(
 
         raise typer.Exit(1)
     else:
-        filter_data.filter_dataset_api_back_db(parameters_file)
+        filter_data.filter_dataset_api(parameters_file)
 
 
 @app.command()

@@ -1,29 +1,22 @@
 import io
 import json
 import os
-import skmob
 import typer
 import warnings
 import sys
-
 from mob_data_anonymizer.make_api_call import MakeApiCall
 from shapely.errors import ShapelyDeprecationWarning
-
 from mob_data_anonymizer import PARAMETERS_FILE_DOESNT_EXIST, PARAMETERS_FILE_NOT_JSON, INPUT_FILE_NOT_EXIST, \
-    OUTPUT_FOLDER_NOT_EXIST, PARAMETERS_NOT_VALID, SUCCESS, WRONG_METHOD, WRONG_MODE
-from mob_data_anonymizer import CONFIG_DB_FILE
-from mob_data_anonymizer.utils.Measures import Measures
-from mob_data_anonymizer.distances.trajectory.Martinez2021.Distance import Distance
+    PARAMETERS_NOT_VALID, SUCCESS, WRONG_METHOD
 from mob_data_anonymizer.entities.Dataset import Dataset
-from mob_data_anonymizer.utils.Stats import Stats
-
-VALID_METHODS = ['min_locations',
-                 'max_speed']
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", category=ShapelyDeprecationWarning)
+
+VALID_METHODS = ['min_locations',
+                 'max_speed']
 
 
 def check_parameters_file(file_path: str) -> int:
@@ -72,7 +65,7 @@ def filter_dataset(param_file_path: str):
     dataset.to_csv(filename=data.get("filtered_dataset"))
 
 
-def filter_dataset_api_back_db(param_file_path: str):
+def filter_dataset_api(param_file_path: str):
     with open(param_file_path) as param_file:
         data = json.load(param_file)
 
@@ -80,13 +73,7 @@ def filter_dataset_api_back_db(param_file_path: str):
     api = MakeApiCall()
 
     action = "filter"
-    response = api.post_user_data(action, data, original_file)
-
-    # with open(CONFIG_DB_FILE) as param_file:
-    #     data = json.load(param_file)
-    # output_file_path = data['db_folder'] + data['db_file']
-    # with open(output_file_path, 'w') as f:
-    #     json.dump(response.json(), f, indent=4)
+    response = api.post_user_data(action, original_file, param_file_path)
 
     print(f"Response: {response}")
     print(f"Received: {response.json()['message']}")

@@ -1,6 +1,0 @@
-{
-  "original_dataset": "examples/data/preprocessed_dataset_20080608_sample.csv",
-  "anonymized_dataset": "examples/output/anonymized_TimePartMicroaggregation_sample.csv",
-  "output_folder": "examples/output/",
-  "main_output_file": "measures.json"
-}

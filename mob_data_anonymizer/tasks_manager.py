@@ -9,18 +9,14 @@ from pathlib import Path
 def request_return_task(task_id):
     api = MakeApiCall()
 
-    filename = task_id + ".json"
     param = {"task_id": str(task_id)}
 
     response = api.get_user_data(param)
     try:
         d = response.headers['content-disposition']
     except KeyError:
-        # print(f"Received: {response.content}")
         print(f"Received: {response.json()['message']}")
         return
-
-    # filename = response.headers["content-disposition"].split(";")[1].split("=")[1]
 
     filename = re.findall("filename=\"(.+)\"", d)[0]
     filename = path_leaf(filename)
@@ -36,7 +32,6 @@ def request_return_task(task_id):
 
 
 def return_task(task_id):
-    # filename = CONFIG_DB_FILE + "mob_data_anonymizer/db/" + task_id + ".json"
     with open(CONFIG_DB_FILE) as param_file:
         data = json.load(param_file)
     filename = data['db_folder'] + task_id + ".json"

@@ -38,5 +38,22 @@
     "QuadTreeHeatMap": {
       "class": "mob_data_anonymizer.analysis_methods.QuadTreeHeatMap.QuadTreeHeatMap"
     }
+  },
+  "measures_methods": {
+    "ScikitMeasures": {
+      "class": "mob_data_anonymizer.measures_methods.ScikitMeasures.ScikitMeasures"
+    },
+    "TrajectoriesRemoved": {
+      "class": "mob_data_anonymizer.measures_methods.TrajectoriesRemoved.TrajectoriesRemoved"
+    },
+    "Rsme": {
+      "class": "mob_data_anonymizer.measures_methods.Rsme.Rsme"
+    },
+    "PropensityScore": {
+      "class": "mob_data_anonymizer.measures_methods.PropensityScore.PropensityScore"
+    },
+    "RecordLinkage": {
+      "class": "mob_data_anonymizer.measures_methods.RecordLinkage.RecordLinkage"
+    }
   }
 }
