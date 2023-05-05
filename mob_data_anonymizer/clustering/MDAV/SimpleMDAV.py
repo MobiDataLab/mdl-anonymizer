@@ -49,6 +49,7 @@ class SimpleMDAV(ClusteringInterface):
         expected_clusters = len(self.mdav_dataset) / k
 
         # TODO: Què fa això aquí?
+        # Es pot treure es per que surtin un sol tqdm
         stack = inspect.stack()
         the_class = stack[1][0].f_locals["self"].__class__.__name__
         progress = True

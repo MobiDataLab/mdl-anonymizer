@@ -57,7 +57,7 @@ class SimpleMDAVDataset(MDAVDatasetInterface):
             self.assigned_to[t.index] = self.cluster_id
         self.cluster_id += 1
 
-    def farthest_from(self, traj: Trajectory) -> Trajectory:
+    def farthest_from(self, traj: Trajectory):
         self.calculate_distances(traj)
         index = np.argmax(self.distances)
         farthest = self.trajectories_elegible[index]

@@ -3,6 +3,7 @@ import logging
 from collections import defaultdict
 from math import sqrt
 from tqdm import tqdm
+import math
 import random
 import sys
 from mob_data_anonymizer.entities.Dataset import Dataset
@@ -12,7 +13,7 @@ from mob_data_anonymizer.distances.trajectory.DistanceInterface import DistanceI
 
 
 class Distance(DistanceInterface):
-    def __init__(self, dataset: Dataset, sp_type='Haversine', landa=None, max_dist=None, normalized=False):
+    def __init__(self, dataset: Dataset, sp_type='Haversine', p_lambda=None, max_dist=None, normalized=False):
         self.dataset = dataset
         self.spatial_distance = sp_type
         self.distance_matrix = defaultdict(dict)
@@ -23,15 +24,15 @@ class Distance(DistanceInterface):
         self.average_speed = self.__compute_average_speed()
         self.max_dist = 0  # for normalization [0,1]
         self.reference_trajectory = None
-        if landa is None:
+        if p_lambda is None:
             logging.info("Computing weight parameter and max distance")
-            self.landa, self.max_dist = self.__set_weight_parameter()   # max_dist for normalization [0,1]
-            logging.info(f"\tlanda = {self.landa}")
+            self.p_lambda, self.max_dist = self.__set_weight_parameter()   # max_dist for normalization [0,1]
+            logging.info(f"\tlanda = {self.p_lambda}")
             logging.info(f"\tmax dist = {self.max_dist}")
             logging.info("Done!")
         else:
-            self.landa = landa
-            logging.info(f"\tTaking landa = {self.landa}")
+            self.p_lambda = p_lambda
+            logging.info(f"\tTaking landa = {self.p_lambda}")
             if max_dist is None and normalized:
                 logging.info("Computing max distance")  # for normalization [0,1]
                 self.max_dist = self.__compute_max_distance()
@@ -43,13 +44,26 @@ class Distance(DistanceInterface):
         self.temporal_matrix = defaultdict(dict)
 
     def __set_weight_parameter(self):
-        if len(self.dataset.trajectories) > 1000:
-            percen_sample = 10
-            num_sample = int((len(self.dataset.trajectories) * percen_sample) / 100)
-            logging.info(f"\tTaking sample for landa = {num_sample} ({percen_sample}%)")
+        if len(self.dataset.trajectories) > 10000:
+            num_sample = self.calculate_sample_size()
             sample = random.sample(self.dataset.trajectories, num_sample)
         else:
+            num_sample = len(self.dataset.trajectories)
             sample = self.dataset.trajectories
+        logging.info(f"\tTaking sample for lambda = {num_sample})")
+
+        # num_sample = len(self.dataset.trajectories)
+        # percen_sample = 100
+        # if len(self.dataset.trajectories) > 10000:
+        #     percen_sample = 10
+        # if len(self.dataset.trajectories) > 100000:
+        #     percen_sample = 1
+        # if len(self.dataset.trajectories) > 1000000:
+        #     percen_sample = 0.1
+        # if percen_sample < 100:
+        #     num_sample = int((len(self.dataset.trajectories) * percen_sample) / 100)
+        #     sample = random.sample(self.dataset.trajectories, num_sample)
+        # logging.info(f"\tTaking sample for lambda = {num_sample} ({percen_sample}%)")
         # sample = self.dataset.trajectories
         self.distance_matrix = defaultdict(dict)
         self.temporal = defaultdict(dict)
@@ -83,6 +97,26 @@ class Distance(DistanceInterface):
 
         return landa, max_dist
 
+    def calculate_sample_size(self):
+        size = len(self.dataset.trajectories)
+        magnitude = math.floor(math.log10(size))
+        percen = 100 / (pow(10, magnitude) / 1000)
+        num_sample = int((size * percen) / 100)
+
+        return num_sample
+
+    def calculate_sample_size2(self):
+        z_score = 1.96   # 95% confidence
+        # z_score = 1.645  # 90% confidence
+        # z_score = 2.576  # 99% confidence
+        error = 0.05    # 5%
+        sd = 0.5    # expected standard deviation
+        size = len(self.dataset.trajectories)
+
+        sample = (((z_score*z_score)*sd*(1-sd)) / (error*error)) / (1+((z_score*z_score)*sd*(1-sd))/((sd*sd)*size))
+
+        return int(sample)
+
     def __compute_average_speed(self):
         logging.info("Computing average speed")
         average_speed = 0
@@ -96,21 +130,21 @@ class Distance(DistanceInterface):
 
     def __set_weight_parameter_fast(self):
         self.__compute_max_spatial_distance_max_temporal_distance()
-        landa = self.mean_spatial_distance / (self.mean_temporal_distance * self.average_speed)
+        p_lambda = self.mean_spatial_distance / (self.mean_temporal_distance * self.average_speed)
 
-        max_dist = self.mean_spatial_distance + (self.mean_temporal_distance * self.average_speed * landa)
+        max_dist = self.mean_spatial_distance + (self.mean_temporal_distance * self.average_speed * p_lambda)
 
         logging.info(f"mean_dist = {self.mean_spatial_distance}")
         logging.info(f"mean_temp = {self.mean_temporal_distance * self.average_speed}")
         logging.info(f"average_speed = {self.average_speed}")
-        logging.info(f"lambda = {landa}")
+        logging.info(f"lambda = {p_lambda}")
         logging.info(f"max_dist = {max_dist}")
 
-        return landa, max_dist
+        return p_lambda, max_dist
 
     def __compute_max_distance(self):
         self.__compute_max_spatial_distance_max_temporal_distance()
-        max_dist = self.mean_spatial_distance + (self.mean_temporal_distance * self.average_speed * self.landa)
+        max_dist = self.mean_spatial_distance + (self.mean_temporal_distance * self.average_speed * self.p_lambda)
 
         return max_dist
 
@@ -267,7 +301,7 @@ class Distance(DistanceInterface):
                 loc_2 = trajectory2.locations[j]
 
                 d1 = loc_1.spatial_distance(loc_2, type=self.spatial_distance) * 1000   # meters
-                d2 = self.landa * (loc_1.temporal_distance(loc_2)) * avg_speed  # meters
+                d2 = self.p_lambda * (loc_1.temporal_distance(loc_2)) * avg_speed  # meters
                 d += pow(d1 + d2, 2)
 
                 index_1 += gap_1
@@ -316,7 +350,7 @@ class Distance(DistanceInterface):
             loc_2 = trajectory2.locations[j]
 
             d1 = loc_1.spatial_distance(loc_2, type=self.spatial_distance) * 1000  # meters
-            d2 = self.landa * (loc_1.temporal_distance(loc_2)) * avg_speed  # meters
+            d2 = self.p_lambda * (loc_1.temporal_distance(loc_2)) * avg_speed  # meters
             d += pow(d1 + d2, 2)
 
             index_1 += gap_1

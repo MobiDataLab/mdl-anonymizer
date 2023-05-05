@@ -7,5 +7,5 @@ class TrajectoryAggregationInterface:
 
     @staticmethod
     @abstractmethod
-    def compute(self, trajectories: list) -> Trajectory:
+    def compute(trajectories: list) -> Trajectory:
         pass
