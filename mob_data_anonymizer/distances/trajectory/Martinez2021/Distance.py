@@ -97,7 +97,7 @@ class Distance(DistanceInterface):
 
         return landa, max_dist
 
-    def calculate_sample_size(self):
+    def calculate_sample_size2(self):
         size = len(self.dataset.trajectories)
         magnitude = math.floor(math.log10(size))
         percen = 100 / (pow(10, magnitude) / 1000)
@@ -105,15 +105,19 @@ class Distance(DistanceInterface):
 
         return num_sample
 
-    def calculate_sample_size2(self):
-        z_score = 1.96   # 95% confidence
+    def calculate_sample_size(self):
+        '''
+        https://www.wikihow.com/Calculate-Sample-Size
+        '''
+        # z_score = 1.96   # 95% confidence
         # z_score = 1.645  # 90% confidence
-        # z_score = 2.576  # 99% confidence
-        error = 0.05    # 5%
+        z_score = 2.576  # 99% confidence
+        error = 0.03    # 3%
         sd = 0.5    # expected standard deviation
         size = len(self.dataset.trajectories)
 
-        sample = (((z_score*z_score)*sd*(1-sd)) / (error*error)) / (1+((z_score*z_score)*sd*(1-sd))/((sd*sd)*size))
+        sample = (pow(z_score, 2)*(sd*(1-sd)))/(pow(error, 2)) / \
+                 (1+((pow(z_score, 2)*(sd*(1-sd)))/(pow(error, 2) * size)))
 
         return int(sample)
 
