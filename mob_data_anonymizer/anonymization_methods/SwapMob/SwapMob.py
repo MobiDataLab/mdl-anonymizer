@@ -370,31 +370,3 @@ class SwapMob(AnonymizationMethodInterface):
         anonymized_dataset : Dataset
             The anonymized dataset computed at the run method"""
         return self.anonymized_dataset
-
-
-    @staticmethod
-    def get_instance(data, file=None, filetype=None):
-
-        required_fields = ["spatial_thold", "temporal_thold"]
-        values = {}
-
-        for field in required_fields:
-            values[field] = data.get(field)
-            if not values[field]:
-                logging.info(f"No '{field}' provided. Using {DEFAULT_VALUES[field]}.")
-                values[field] = DEFAULT_VALUES[field]
-
-        dataset = Dataset()
-        if file is None:
-            filename = data.get("input_file")
-        else:
-            filename = file
-        dataset.from_file(filename, filetype, min_locations=5, datetime_key="timestamp")
-        dataset.filter_by_speed()
-
-        min_n_swaps = data.get('min_n_swaps', 1)
-        seed = data.get('seed', None)
-
-        return SwapMob(dataset,
-                       values['spatial_thold'], values['temporal_thold'],
-                       min_n_swaps=min_n_swaps, seed=seed)

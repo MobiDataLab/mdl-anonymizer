@@ -1,0 +1,9 @@
+{
+  "method": "QuadTreeHeatMap",
+  "input_file": "examples/data/preprocessed_dataset_20080608_sample.csv",
+  "params": {
+    "min_k": 5,
+    "min_sector_length": 50,
+    "merge_sectors": true
+  }
+}

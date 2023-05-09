@@ -1,0 +1,9 @@
+{
+  "method": "SimpleGeneralization",
+  "input_file": "examples/data/preprocessed_dataset_20080608_sample.csv",
+  "params":  {
+    "gen_tile_size": 500,
+    "tile_shape": "squared",
+    "traj_anon_tile_size": 1700
+  }
+}

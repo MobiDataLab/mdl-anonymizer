@@ -31,11 +31,9 @@ class ClusteringMethodFactory:
         # Special parameters (if required):
         if 'trajectory_distance' in method_signature.parameters:
             if 'trajectory_distance' in params:
-                print("TD")
                 distance_name = params['trajectory_distance'].pop('name')
                 params['trajectory_distance'] = TrajectoryDistanceFactory.get(distance_name, dataset,
                                                                                 params['trajectory_distance']['params'])
-                print(params['trajectory_distance'])
             else:
                 # Default
                 params['trajectory_distance'] = TrajectoryDistanceFactory.get(DEFAULT_TRAJECTORY_DISTANCE, dataset,
@@ -43,11 +41,9 @@ class ClusteringMethodFactory:
 
         if 'aggregation_method' in method_signature.parameters:
             if 'aggregation_method' in params:
-                print("AM")
                 method_name = params['aggregation_method'].pop('name')
 
                 params['aggregation_method'] = AggregationMethodFactory.get(method_name)
-                print(params['aggregation_method'])
             else:
                 # Default
                 params['aggregation_method'] = AggregationMethodFactory.get(DEFAULT_AGGREGATION)

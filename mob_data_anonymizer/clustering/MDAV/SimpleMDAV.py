@@ -24,13 +24,15 @@ class SimpleMDAV(ClusteringInterface):
     def __init__(self, dataset: Dataset,
                  trajectory_distance: DistanceInterface = None,
                  aggregation_method: TrajectoryAggregationInterface = None):
+        '''
+        trajectory_distance : DistanceInterface, optional
+                    Method to compute the distance between two trajectories (Default is Martinez2021.Distance)
+        aggregation_method : TrajectoryAggregationInterface, optional
+                    Method to aggregate the trajectories within a cluster (Default is Martinez2021.Aggregation)
+        '''
 
         self.mdav_dataset = SimpleMDAVDataset(dataset, trajectory_distance, aggregation_method)
         self.original_dataset = dataset
-
-    # def __init__(self, mdav_dataset: MDAVDatasetInterface):
-    #     self.mdav_dataset = mdav_dataset
-    #     self.original_dataset = None
 
     def set_dataset(self, dataset: Dataset):
         self.mdav_dataset.set_dataset(dataset)
@@ -39,29 +41,15 @@ class SimpleMDAV(ClusteringInterface):
         self.original_dataset = original_dataset
 
     def run(self, k: int):
-
-        # if 2*k > len(self.mdav_dataset):
-        #     raise Exception(f"Only one cluster will be generated: Dataset length={len(self.mdav_dataset)}")
-
         if k < 2:
             raise Exception("k < 2, does not make sense")
 
         expected_clusters = len(self.mdav_dataset) / k
 
-        # TODO: Què fa això aquí?
-        # Es pot treure es per que surtin un sol tqdm
-        stack = inspect.stack()
-        the_class = stack[1][0].f_locals["self"].__class__.__name__
-        progress = True
-
-        if the_class == "TimePartMicroaggregation":
-            progress = False
-
         # We compute the centroid just one time
         centroid = self.mdav_dataset.compute_centroid()
         logging.debug(f'Centroid: {centroid}')
-        if progress:
-            pbar = tqdm(total=expected_clusters)
+        pbar = tqdm(total=expected_clusters)
         while self.mdav_dataset.unselected_length() >= 3 * k:
             # calculate r (farthest from centroid)
             farthest_r, _ = self.mdav_dataset.farthest_from(centroid)
@@ -70,13 +58,11 @@ class SimpleMDAV(ClusteringInterface):
             self.mdav_dataset.distances = self.mdav_dataset.distances[:i]+self.mdav_dataset.distances[i+1:]
             # create cluster with r
             self.mdav_dataset.make_cluster(farthest_r, k)
-            if progress:
-                pbar.update(1)
+            pbar.update(1)
             # create cluster with s
             self.mdav_dataset.calculate_distances(farthest_s)
             self.mdav_dataset.make_cluster(farthest_s, k)
-            if progress:
-                pbar.update(1)
+            pbar.update(1)
 
         logging.debug(f'Unselected_length: {self.mdav_dataset.unselected_length()}')
         if self.mdav_dataset.unselected_length() >= 2 * k:
@@ -85,16 +71,13 @@ class SimpleMDAV(ClusteringInterface):
             self.mdav_dataset.calculate_distances(farthest_r)
             # create cluster with r
             self.mdav_dataset.make_cluster(farthest_r, k)
-            if progress:
-                pbar.update(1)
+            pbar.update(1)
 
         self.mdav_dataset.make_cluster_unselected()
-        # logging.info("\tLast cluster made!")
-        if progress:
-            pbar.update(1)
-            pbar.close()
+        pbar.update(1)
+        pbar.close()
 
-    def get_clusters(self) -> list:
+    def get_clusters(self) -> dict:
         clusters = {}
         for t_index in self.mdav_dataset.assigned_to:
             # Check if this trajectory has been assigned to a cluster

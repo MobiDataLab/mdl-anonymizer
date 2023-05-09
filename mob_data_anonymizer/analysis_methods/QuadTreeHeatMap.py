@@ -341,25 +341,3 @@ class QuadTreeHeatMap(AnalysisMethodInterface):
         if self.result is None:
             self.result = self.get_result()
         self.result.to_file(f"{filepath}", driver="GeoJSON")
-
-    @staticmethod
-    def get_instance(data, file=None, filetype=None):
-        required_fields = ["min_k", "min_sector_length", "merge_sectors", "split_n_locations"]
-        values = {}
-
-        for field in required_fields:
-            values[field] = data.get(field)
-            if values[field] is None:
-                logging.info(f"No '{field}' provided. Using {DEFAULT_VALUES[field]}.")
-                values[field] = DEFAULT_VALUES[field]
-
-        dataset = Dataset()
-        if file is None:
-            filename = data.get("input_file")
-        else:
-            filename = file
-        dataset.from_file(filename, filetype, min_locations=1, datetime_key="timestamp")
-        dataset.filter_by_speed()
-
-        return QuadTreeHeatMap(dataset, values['min_k'], values["min_sector_length"],
-                               values["merge_sectors"], values['split_n_locations'])

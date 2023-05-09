@@ -1,7 +1,6 @@
 import importlib
 import inspect
 import json
-import os
 
 from mob_data_anonymizer.anonymization_methods.AnonymizationMethodInterface import AnonymizationMethodInterface
 from mob_data_anonymizer.entities.Dataset import Dataset
@@ -30,19 +29,14 @@ class AnonymizationMethodFactory:
         # Qué pasa con el constructor que acepta una distancia, agregación, etc...?
         # Params: probar un dict con un parámetro que no sea de los válidos, con uno que sí
 
-        # kwargs = method_config['defaults']
         method_signature = inspect.signature(method_class.__init__)
 
         # Special parameters (if required):
-        # print(method_signature.parameters)
         if 'trajectory_distance' in method_signature.parameters:
-            print("TD required")
             if 'trajectory_distance' in params:
-                print("TD")
                 distance_name = params['trajectory_distance'].pop('name')
                 params['trajectory_distance'] = TrajectoryDistanceFactory.get(distance_name, dataset,
                                                                                   params['trajectory_distance']['params'])
-                print(params['trajectory_distance'])
             else:
                 # Default
                 params['trajectory_distance'] = TrajectoryDistanceFactory.get(DEFAULT_TRAJECTORY_DISTANCE, dataset,
@@ -50,11 +44,9 @@ class AnonymizationMethodFactory:
 
         if 'clustering_method' in method_signature.parameters:
             if 'clustering_method' in params:
-                print("CM")
                 method_name = params['clustering_method'].pop('name')
                 params['clustering_method'] = ClusteringMethodFactory.get(method_name, dataset,
                                                                               params['clustering_method']['params'])
-                print(params['clustering_method'])
             else:
                 # Default
                 params['clustering_method'] = ClusteringMethodFactory.get(DEFAULT_CLUSTERING, dataset,
@@ -62,11 +54,9 @@ class AnonymizationMethodFactory:
 
         if 'aggregation_method' in method_signature.parameters:
             if 'aggregation_method' in params:
-                print("AM")
                 method_name = params['aggregation_method'].pop('name')
                     
                 params['aggregation_method'] = AggregationMethodFactory.get(method_name)
-                print(params['aggregation_method'])
             else:
                 # Default
                 params['aggregation_method'] = AggregationMethodFactory.get(DEFAULT_AGGREGATION)

@@ -1,8 +1,6 @@
 import logging
-
 import pandas as pd
 from skmob.utils import constants
-
 from mob_data_anonymizer.anonymization_methods.AnonymizationMethodInterface import AnonymizationMethodInterface
 from mob_data_anonymizer.anonymization_methods.SwapLocations.trajectory_anonymization import \
     apply_trajectory_anonymization
@@ -68,28 +66,3 @@ class SimpleGeneralization(AnonymizationMethodInterface):
 
     def get_anonymized_dataset(self):
         return self.anonymized_dataset
-
-    @staticmethod
-    def get_instance(data, file=None, filetype=None):
-
-        required_fields = ["gen_tile_size", "traj_anon_tile_size"]
-        values = {}
-
-        for field in required_fields:
-            values[field] = data.get(field)
-            if not values[field]:
-                logging.info(f"No '{field}' provided. Using {DEFAULT_VALUES[field]}.")
-                values[field] = DEFAULT_VALUES[field]
-
-        dataset = Dataset()
-        if file is None:
-            filename = data.get("input_file")
-        else:
-            filename = file
-        dataset.from_file(filename, filetype, min_locations=5, datetime_key="timestamp")
-        dataset.filter_by_speed()
-
-        ts = data.get('tile_shape', DEFAULT_VALUES['tile_shape'])
-
-        return SimpleGeneralization(dataset, gen_tile_size=values['gen_tile_size'],
-                                    traj_anon_tile_size=values['traj_anon_tile_size'], tile_shape=ts)

@@ -1,0 +1,7 @@
+{
+  "original_dataset": "examples/data/cabs_dataset_20080608.parquet",
+  "methods": [
+    {"min_locations":  10},
+    {"max_speed":  300}
+  ]
+}

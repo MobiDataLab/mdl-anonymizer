@@ -167,30 +167,3 @@ class SwapLocations(AnonymizationMethodInterface):
 
     def get_anonymized_dataset(self):
         return self.anonymized_dataset
-
-    @staticmethod
-    def get_instance(data, file=None, filetype=None):
-
-        required_fields = ["k", "max_r_s", "min_r_s", "max_r_t", "min_r_t", "tile_size"]
-        values = {}
-
-        for field in required_fields:
-            values[field] = data.get(field)
-            if not values[field]:
-                logging.info(f"No '{field}' provided. Using {DEFAULT_VALUES[field]}.")
-                values[field] = DEFAULT_VALUES[field]
-
-        dataset = Dataset()
-        if file is None:
-            filename = data.get("input_file")
-        else:
-            filename = file
-        dataset.from_file(filename, filetype, min_locations=5, datetime_key="timestamp")
-        dataset.filter_by_speed()
-
-        step_s = data.get('step_s', None)
-        step_t = data.get('step_t', None)
-
-        return SwapLocations(dataset,
-                             values['k'], values['max_r_s'], values['max_r_t'], values['min_r_s'], values['min_r_t'],
-                             step_s=step_s, step_t=step_t, tile_size=values['tile_size'])

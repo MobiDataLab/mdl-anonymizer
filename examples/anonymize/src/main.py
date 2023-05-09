@@ -19,7 +19,7 @@ from mob_data_anonymizer.clustering.MDAV.SimpleMDAVDataset import SimpleMDAVData
 # from mob_data_anonymizer.clustering.MDAV.SimpleMDAVDataset_ant import SimpleMDAVDataset_ant
 
 from mob_data_anonymizer.entities.Dataset import Dataset
-from mob_data_anonymizer.utils.Stats import Stats
+# from mob_data_anonymizer.utils.Stats import Stats
 import warnings
 warnings.filterwarnings('ignore')
 

@@ -2,10 +2,8 @@ import typer
 
 from typing import Optional
 
-from mob_data_anonymizer import filter_data
-from mob_data_anonymizer import __app_name__, __version__, DEFAULT_PARAMETERS_FILE, ERRORS, SUCCESS, anonymizer, \
-    compute_measures, analyzer
-from mob_data_anonymizer import tasks_manager
+from client import filter_data, tasks_manager, anonymizer, analyzer, compute_measures
+from mob_data_anonymizer import __app_name__, __version__, DEFAULT_PARAMETERS_FILE, ERRORS, SUCCESS
 
 app = typer.Typer()
 
@@ -40,7 +38,7 @@ def anonymize_api(
             prompt="Anonymization parameters file location"
         ),
 ) -> None:
-    code = anonymizer.check_parameters_file(parameters_file)
+    code = anonymizer.check_parameters_file_api(parameters_file)
     if code != SUCCESS:
         typer.secho(
             f'Anonymization failed with "{ERRORS[code]}"',
@@ -82,7 +80,7 @@ def analysis_api(
             prompt="Analysis parameters file location"
         ),
 ) -> None:
-    code = analyzer.check_parameters_file(parameters_file)
+    code = analyzer.check_parameters_file_api(parameters_file)
     if code != SUCCESS:
         typer.secho(
             f'Analysis failed with "{ERRORS[code]}"',
@@ -124,7 +122,7 @@ def measures_api(
             prompt="Measures parameters file location"
         ),
 ) -> None:
-    code = compute_measures.check_parameters_file(parameters_file)
+    code = compute_measures.check_parameters_file_api(parameters_file)
     if code != SUCCESS:
         typer.secho(
             f'Measures failed with "{ERRORS[code]}"',
@@ -166,7 +164,7 @@ def filter_api(
             prompt="Filter parameters file location"
         ),
 ) -> None:
-    code = filter_data.check_parameters_file(parameters_file)
+    code = filter_data.check_parameters_file_api(parameters_file)
     if code != SUCCESS:
         typer.secho(
             f'Filter failed with "{ERRORS[code]}"',

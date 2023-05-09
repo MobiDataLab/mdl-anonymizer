@@ -11,7 +11,7 @@ DEFAULT_SAVE_FILTERED_DATASET = True
 DEFAULT_FILTERED_FILE = "filtered.json"
 
 CONFIG_FILE = ROOT_DIR + "config.json"
-CONFIG_API_FILE = "mob_data_anonymizer/config_api.json"
+CONFIG_API_FILE = "mob_data_anonymizer/server/config_api.json"
 CONFIG_DB_FILE = "mob_data_anonymizer/db/config_db.json"
 
 (

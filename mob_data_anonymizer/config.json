@@ -34,11 +34,13 @@
       "class": "mob_data_anonymizer.distances.trajectory.Martinez2021.Distance.Distance"
     }
   },
+
   "analysis_methods": {
     "QuadTreeHeatMap": {
       "class": "mob_data_anonymizer.analysis_methods.QuadTreeHeatMap.QuadTreeHeatMap"
     }
   },
+
   "measures_methods": {
     "ScikitMeasures": {
       "class": "mob_data_anonymizer.measures_methods.ScikitMeasures.ScikitMeasures"

@@ -1,0 +1,25 @@
+{
+  "method": "TimePartMicroaggregation",
+  "input_file": "examples/data/filtered_dataset_20080608.csv",
+  "output_folder": "examples/output",
+  "main_output_file": "filtered_dataset_20080608_anonymized.csv",
+  "params": {
+    "k": 3,
+    "interval": 900,
+    "clustering_method": {
+      "name": "SimpleMDAV",
+      "params": {
+        "trajectory_distance": {
+          "name": "Martinez2021",
+          "params": {
+            "p_lambda": 0
+          }
+        }
+      }
+    },
+    "aggregation_method": {
+      "name": "Martinez2021",
+      "params": {}
+    }
+  }
+}

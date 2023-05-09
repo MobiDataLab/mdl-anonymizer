@@ -28,13 +28,10 @@ class MeasuresMethodFactory:
         # Special parameters (if required):
         # print(method_signature.parameters)
         if 'trajectory_distance' in method_signature.parameters:
-            print("TD required")
             if 'trajectory_distance' in params:
-                print("TD")
                 distance_name = params['trajectory_distance'].pop('name')
                 params['trajectory_distance'] = TrajectoryDistanceFactory.get(distance_name, original_dataset,
                                                                               params['trajectory_distance']['params'])
-                print(params['trajectory_distance'])
             else:
                 # Default
                 params['trajectory_distance'] = TrajectoryDistanceFactory.get(DEFAULT_TRAJECTORY_DISTANCE,
