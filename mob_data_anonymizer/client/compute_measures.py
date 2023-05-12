@@ -107,6 +107,7 @@ def compute_measures(param_file_path: str):
     results = {}
     measures = data['measures']
     for measure in measures:
+        print("Measures method: ", measure['name'])
         # Get instance of requested method
         method = MeasuresMethodFactory.get(measure['name'], original_dataset, anonymized_dataset, measure['params'])
 

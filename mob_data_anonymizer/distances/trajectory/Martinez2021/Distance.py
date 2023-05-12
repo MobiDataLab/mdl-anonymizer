@@ -27,12 +27,12 @@ class Distance(DistanceInterface):
         if p_lambda is None:
             logging.info("Computing weight parameter and max distance")
             self.p_lambda, self.max_dist = self.__set_weight_parameter()   # max_dist for normalization [0,1]
-            logging.info(f"\tlanda = {self.p_lambda}")
+            logging.info(f"\tlambda = {self.p_lambda}")
             logging.info(f"\tmax dist = {self.max_dist}")
             logging.info("Done!")
         else:
             self.p_lambda = p_lambda
-            logging.info(f"\tTaking landa = {self.p_lambda}")
+            logging.info(f"\tTaking lambda = {self.p_lambda}")
             if max_dist is None and normalized:
                 logging.info("Computing max distance")  # for normalization [0,1]
                 self.max_dist = self.__compute_max_distance()

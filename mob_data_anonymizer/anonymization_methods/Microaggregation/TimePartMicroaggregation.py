@@ -43,7 +43,8 @@ class TimePartMicroaggregation(AnonymizationMethodInterface):
         self.interval = interval
 
     def run(self):
-
+        logging.info(f"k: {self.k}")
+        logging.info(f"Interval: {self.interval}")
         # Partition
         for i, t in enumerate(self.dataset.trajectories):
             t.index = i

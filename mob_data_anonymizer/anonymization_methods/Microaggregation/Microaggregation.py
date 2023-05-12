@@ -40,7 +40,7 @@ class Microaggregation(AnonymizationMethodInterface):
         self.k = k
 
     def run(self):
-
+        logging.info(f"k: {self.k}")
         # Clustering
         logging.info("Starting clustering...")
         for i, t in enumerate(self.dataset.trajectories):

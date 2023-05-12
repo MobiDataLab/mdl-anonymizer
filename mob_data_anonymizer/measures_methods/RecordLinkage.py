@@ -18,7 +18,7 @@ DEFAULT_VALUES = {
 
 
 class RecordLinkage(MeasuresMethodInterface):
-    def __init__(self, original_dataset: Dataset, anom_dataset: Dataset, trajectory_distance, percen_window_size=1.0):
+    def __init__(self, original_dataset: Dataset, anom_dataset: Dataset, trajectory_distance, percen_window_size=None):
         self.original_dataset = original_dataset
         self.anom_dataset = anom_dataset
         self.trajectory_distance = trajectory_distance
@@ -26,17 +26,17 @@ class RecordLinkage(MeasuresMethodInterface):
         self.results = {}
 
     def run(self):
-        self.results["percen_record_linkage"] = round(self.get_fast_record_linkage(self.trajectory_distance,
-                                                                                   self.percen_window_size), 2)
+        self.results["percen_record_linkage"] = round(self.get_fast_record_linkage(self.trajectory_distance), 2)
         print(f'% Record linkage: {self.results["percen_record_linkage"]}')
 
     def get_result(self):
         return self.results
 
-    def get_fast_record_linkage(self, distance, percen_window_size):
-        window_size = (len(self.original_dataset) * percen_window_size) / 100
-        if window_size < 1.0:
-            window_size = len(self.original_dataset)
+    def get_fast_record_linkage(self, distance):
+        if self.percen_window_size is None:
+            window_size = self.calculate_window_size()
+        else:
+            window_size = (len(self.original_dataset) * self.percen_window_size) / 100
 
         logging.info("Calculating fast record linkage (disclosure risk), window size = " + str(window_size))
         distance.compute_reference_trajectory()
@@ -136,3 +136,11 @@ class RecordLinkage(MeasuresMethodInterface):
         pos_after += rest_before
 
         return [x for x in range(pos_before, pos_after + 1)]
+
+    def calculate_window_size(self):
+        size = len(self.original_dataset.trajectories)
+        magnitude = math.floor(math.log10(size))
+        percen = 100 / (pow(10, magnitude) / 100)
+        window_size = int((size * percen) / 100)
+
+        return window_size

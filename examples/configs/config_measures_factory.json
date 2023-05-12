@@ -1,8 +1,8 @@
 {
-  "original_dataset": "examples/data/filtered_dataset_20080608_sample3.csv",
-  "anonymized_dataset": "examples/output/filtered_dataset_20080608_sample3_anonymized.csv",
+  "original_dataset": "examples/data/fr-idf_2022_January.csv",
+  "anonymized_dataset": "examples/output/fr-idf_2022_January_anonymized_tpm_k3_i60.csv",
   "output_folder": "examples/output/",
-  "main_output_file": "measures.json",
+  "main_output_file": "measures_fr-idf_2022_January_anonymized_tpm_k3_i60.json",
   "measures": [
     {"name":  "ScikitMeasures",
      "params":  {
@@ -20,7 +20,7 @@
         "trajectory_distance": {
           "name": "Martinez2021",
           "params": {
-            "p_lambda": 0.00657901067783612
+            "p_lambda": 0.005492628237142597
           }
         }
       }
@@ -32,11 +32,11 @@
     {
       "name": "RecordLinkage",
       "params": {
-        "percen_window_size": 1.0,
+        "percen_window_size": null,
         "trajectory_distance": {
           "name": "Martinez2021",
           "params": {
-            "p_lambda": 0.00657901067783612
+            "p_lambda": 0.005492628237142597
           }
         }
       }

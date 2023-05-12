@@ -71,6 +71,7 @@ def measures(original_file, anom_file, original_filename, anom_filename, params,
     results = {}
     measures = params['measures']
     for measure in measures:
+        print("Measures method: ", measure['name'])
         # Get instance of requested method
         method = MeasuresMethodFactory.get(measure['name'], original_dataset, anonymized_dataset, measure['params'])
 
