@@ -8,7 +8,8 @@ from mob_data_anonymizer.utils.tessellation import spatial_tessellation
 
 tessellation_shape_type = "squared"
 
-def apply_trajectory_anonymization (tdf, tile_size: int = 1000):
+
+def apply_trajectory_anonymization(tdf, tile_size: int = 1000):
     '''
     Apply a simple trajectory anonymization method. Use when you have previously anonymized a dataset at location level.
     :return:
