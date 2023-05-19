@@ -219,3 +219,37 @@ class RecordLinkage(MeasuresMethodInterface):
                  (1+((pow(z_score, 2)*(sd*(1-sd)))/(pow(error, 2) * size)))
 
         return int(sample)
+
+    def get_record_linkage(self, distance):
+        logging.info("Calculating privacy metric (record linkage)")
+        control = {}
+        ids = {}
+        for trajectory in self.original_dataset.trajectories:
+            count = control.get(trajectory)
+            if count is not None:
+                count += 1
+            else:
+                count = 1
+                ids[trajectory] = []
+            control[trajectory] = count
+            ids[trajectory].append(trajectory.id)
+
+        total_prob = 0
+        min_traj = None
+        for traj_anom in tqdm(self.anom_dataset.trajectories):
+            min_dist = float('inf')
+            for traj_ori in self.original_dataset.trajectories:
+                dist = distance.compute_without_map(traj_ori, traj_anom)
+                if dist < min_dist:
+                    min_dist = dist
+                    min_traj = traj_ori
+            ids_group = ids[min_traj]
+            if traj_anom.id in ids_group:
+                count = control[min_traj]
+                partial = 1 / count
+                total_prob += partial
+
+        # # extrapolate
+        # total_prob = (total_prob * len(self.original_dataset)) / len(sample_original)
+
+        return (total_prob / len(self.original_dataset.trajectories)) * 100
