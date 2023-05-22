@@ -309,19 +309,23 @@ class Dataset(ABC):
         for t in self.trajectories:
             t.locations.sort(key=lambda x: x.timestamp)
 
-    def get_bounding_box(self):
+    def get_bounding_box(self) -> GeoDataFrame:
+        """
+        Return a GeoDataFrame with the bounding box of the dataset
+        :return:
+        """
         max_lng = max_lat = min_lat = min_lng = None
 
         for t in self.trajectories:
             for l in t.locations:
                 if max_lat is None or l.y > max_lat:
-                    max_lat = l.y
+                    max_lat = round(l.y, 5)
                 if max_lng is None or l.x > max_lng:
-                    max_lng = l.x
+                    max_lng = round(l.x, 5)
                 if min_lat is None or l.y < min_lat:
-                    min_lat = l.y
+                    min_lat = round(l.y, 5)
                 if min_lng is None or l.x < min_lng:
-                    min_lng = l.x
+                    min_lng = round(l.x, 5)
 
         point_list = [[max_lng, max_lat], [max_lng, min_lat], [min_lng, min_lat], [min_lng, max_lat]]
 
