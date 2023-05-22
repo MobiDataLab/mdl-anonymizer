@@ -1,6 +1,7 @@
 import importlib
 import inspect
 import json
+import os
 
 from mob_data_anonymizer.anonymization_methods.AnonymizationMethodInterface import AnonymizationMethodInterface
 from mob_data_anonymizer.entities.Dataset import Dataset
@@ -10,7 +11,7 @@ from mob_data_anonymizer.factories.trajectory_distance_factory import Trajectory
 from mob_data_anonymizer import CONFIG_FILE, DEFAULT_TRAJECTORY_DISTANCE, DEFAULT_CLUSTERING, DEFAULT_AGGREGATION
 
 
-class AnonymizationMethodFactory:
+class AnoymizationMethodFactory:
     @staticmethod
     def get(method_name: str, dataset: Dataset, params: dict) -> AnonymizationMethodInterface:
 
@@ -29,41 +30,37 @@ class AnonymizationMethodFactory:
         # Qué pasa con el constructor que acepta una distancia, agregación, etc...?
         # Params: probar un dict con un parámetro que no sea de los válidos, con uno que sí
 
+        # kwargs = method_config['defaults']
         method_signature = inspect.signature(method_class.__init__)
 
         # Special parameters (if required):
         if 'trajectory_distance' in method_signature.parameters:
             if 'trajectory_distance' in params:
-                distance_name = params['trajectory_distance'].pop('name')
-                params['trajectory_distance'] = TrajectoryDistanceFactory.get(distance_name, dataset,
-                                                                                  params['trajectory_distance']['params'])
+                method_name = params['trajectory_distance'].pop('name')
+                method_params = params['trajectory_distance'].get('params', {})
+                params['trajectory_distance'] = TrajectoryDistanceFactory.get(method_name, dataset, method_params)
+                print(params['trajectory_distance'])
             else:
                 # Default
                 params['trajectory_distance'] = TrajectoryDistanceFactory.get(DEFAULT_TRAJECTORY_DISTANCE, dataset,
-                                                                                  {})
+                                                                              {})
 
         if 'clustering_method' in method_signature.parameters:
             if 'clustering_method' in params:
                 method_name = params['clustering_method'].pop('name')
-                params['clustering_method'] = ClusteringMethodFactory.get(method_name, dataset,
-                                                                              params['clustering_method']['params'])
+                method_params = params['clustering_method'].get('params', {})
+                params['clustering_method'] = ClusteringMethodFactory.get(method_name, dataset, method_params)
             else:
                 # Default
                 params['clustering_method'] = ClusteringMethodFactory.get(DEFAULT_CLUSTERING, dataset,
-                                                                              {})
+                                                                          {})
 
         if 'aggregation_method' in method_signature.parameters:
             if 'aggregation_method' in params:
                 method_name = params['aggregation_method'].pop('name')
-                    
                 params['aggregation_method'] = AggregationMethodFactory.get(method_name)
             else:
                 # Default
                 params['aggregation_method'] = AggregationMethodFactory.get(DEFAULT_AGGREGATION)
 
         return method_class(dataset, **params)
-
-
-
-
-
