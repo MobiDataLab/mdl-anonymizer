@@ -66,7 +66,7 @@ class Distance(DistanceInterface):
         # logging.info(f"\tTaking sample for lambda = {num_sample} ({percen_sample}%)")
         # sample = self.dataset.trajectories
         self.distance_matrix = defaultdict(dict)
-        self.temporal = defaultdict(dict)
+        self.temporal_matrix = defaultdict(dict)
         max_dist = 0
         max_temp = 0
         mean_dist = 0
@@ -210,120 +210,60 @@ class Distance(DistanceInterface):
     def compute_distance_to_reference_trajectory(self, trajectory):
         return self.compute_without_map(trajectory, self.reference_trajectory)
 
-    def __set_weight_parameter_ant(self):
-        # porcen_sample = 50
-        # num_sample = int((len(self.dataset.trajectories) * porcen_sample) / 100)
-        # logging.info(f"\tTaking sample for landa = {num_sample} ({porcen_sample}%)")
-        # sample = random.sample(self.dataset.trajectories, num_sample)
-        sample = self.dataset.trajectories
-        rsme_dist = 0
-        rsme_temp = 0
-        for t1 in tqdm(sample):
-            dist = 0
-            temp = 0
-            for t2 in sample:
-                d1 = self.__compute_spatial_distance(t1, t2) * 1000 # meters
-                d2 = self.__compute_temporal_distance(t1, t2)   # seconds
-                dist += pow(d1, 2)
-                temp += pow(d2, 2)
-            rsme_dist += sqrt(dist) / len(self.dataset.trajectories)
-            rsme_temp += sqrt(temp) / len(self.dataset.trajectories)
-        rsme_dist /= len(self.dataset.trajectories)
-        rsme_temp /= len(self.dataset.trajectories)
-
-        landa = rsme_dist / rsme_temp
-
-        return landa
-
-    def __set_weight_parameter_ant2(self):
-
-        # We need the maximum distance between points in the data set, maximum time difference between points in
-        # the data set and the avg velocity of the trajectories in the data set
-        avg_speed = 0.0
-        min_timestamp = 9213084687
-        max_timestamp = 0
-
-        for i, t in enumerate(self.dataset.trajectories):
-            # Speed
-            avg_speed += t.get_avg_speed(unit='kms', sp_type=self.spatial_distance)
-
-            # Timestamp
-            if t.get_first_timestamp() < min_timestamp:
-                min_timestamp = t.get_first_timestamp()
-
-            if t.get_last_timestamp() > max_timestamp:
-                max_timestamp = t.get_last_timestamp()
-
-        dif_timestamps = max_timestamp - min_timestamp
-        avg_speed /= len(self.dataset)
-
-        # Max distance
-        max_distance = 0
-        for t1, t2 in itertools.combinations(self.dataset.trajectories, 2):
-            for l1 in t1.locations:
-                for l2 in t2.locations:
-                    d = l1.spatial_distance(l2, type=self.spatial_distance)
-                    if d > max_distance:
-                        max_distance = d
-
-        logging.debug(f"Max distance: {max_distance} km")
-        logging.debug(f"Avg speed: {avg_speed} km/s")
-        logging.debug(f"Dif timestamps: {dif_timestamps}")
-
-        return max_distance / (avg_speed * dif_timestamps)
-
     def compute(self, trajectory1: Trajectory, trajectory2: Trajectory) -> float:
-
-        try:
-            d = self.distance_matrix[trajectory1.id][trajectory2.id]
+        key = trajectory1.str_id + "-" + trajectory2.str_id
+        d = self.distance_matrix.get(key)
+        if d is not None:
             return d
-        except KeyError:
-            # Distance not computed
-            avg_speed_1 = trajectory1.get_avg_speed(sp_type=self.spatial_distance)
-            avg_speed_2 = trajectory2.get_avg_speed(sp_type=self.spatial_distance)
-            avg_speed = (avg_speed_1 + avg_speed_2) / 2
-            avg_speed /= 3.6 # m/s
+        key = trajectory2.str_id + "-" + trajectory1.str_id
+        d = self.distance_matrix.get(key)
+        if d is not None:
+            return d
+        # Distance not computed
+        avg_speed_1 = trajectory1.get_avg_speed(sp_type=self.spatial_distance)
+        avg_speed_2 = trajectory2.get_avg_speed(sp_type=self.spatial_distance)
+        avg_speed = (avg_speed_1 + avg_speed_2) / 2
+        avg_speed /= 3.6 # m/s
 
-            h = round((len(trajectory1) + len(trajectory2)) / 2)
-            gap_1 = len(trajectory1) / h
-            gap_2 = len(trajectory2) / h
+        h = round((len(trajectory1) + len(trajectory2)) / 2)
+        gap_1 = len(trajectory1) / h
+        gap_2 = len(trajectory2) / h
 
-            index_1 = index_2 = 0
-            i = j = 0
+        index_1 = index_2 = 0
+        i = j = 0
 
-            d = 0
+        d = 0
 
-            for k in range(h):
+        for k in range(h):
 
-                if i == len(trajectory1):
-                    i = len(trajectory1) - 1
+            if i == len(trajectory1):
+                i = len(trajectory1) - 1
 
-                if j == len(trajectory2):
-                    j = len(trajectory2) - 1
+            if j == len(trajectory2):
+                j = len(trajectory2) - 1
 
-                loc_1 = trajectory1.locations[i]
-                loc_2 = trajectory2.locations[j]
+            loc_1 = trajectory1.locations[i]
+            loc_2 = trajectory2.locations[j]
 
-                d1 = loc_1.spatial_distance(loc_2, type=self.spatial_distance) * 1000   # meters
-                d2 = self.p_lambda * (loc_1.temporal_distance(loc_2)) * avg_speed  # meters
-                d += pow(d1 + d2, 2)
+            d1 = loc_1.spatial_distance(loc_2, type=self.spatial_distance) * 1000   # meters
+            d2 = self.p_lambda * (loc_1.temporal_distance(loc_2)) * avg_speed  # meters
+            d += pow(d1 + d2, 2)
 
-                index_1 += gap_1
-                index_2 += gap_2
+            index_1 += gap_1
+            index_2 += gap_2
 
-                i = round(index_1)
-                j = round(index_2)
+            i = round(index_1)
+            j = round(index_2)
 
-            d /= h
+        d /= h
 
-            d = sqrt(d)
+        d = sqrt(d)
 
-            if self.normalized:
-                d /= self.max_dist  # normalization [0,1]
+        if self.normalized:
+            d /= self.max_dist  # normalization [0,1]
 
         # Store the distance for later use
-        self.distance_matrix[trajectory1.id][trajectory2.id] = d
-        self.distance_matrix[trajectory2.id][trajectory1.id] = d
+        self.distance_matrix[key] = d
 
         return d
 
@@ -373,94 +313,102 @@ class Distance(DistanceInterface):
         return d
 
     def __compute_spatial_distance(self, trajectory1: Trajectory, trajectory2: Trajectory) -> float:
-        try:
-            d = self.distance_matrix[trajectory1.id][trajectory2.id]
+        key = trajectory1.str_id + "-" + trajectory2.str_id
+        d = self.distance_matrix.get(key)
+        if d is not None:
             return d
-        except KeyError:
-            # Distance not computed
-            h = round((len(trajectory1) + len(trajectory2)) / 2)
-            gap_1 = len(trajectory1) / h
-            gap_2 = len(trajectory2) / h
+        key = trajectory2.str_id + "-" + trajectory1.str_id
+        d = self.distance_matrix.get(key)
+        if d is not None:
+            return d
 
-            index_1 = index_2 = 0
-            i = j = 0
+        # Distance not computed
+        h = round((len(trajectory1) + len(trajectory2)) / 2)
+        gap_1 = len(trajectory1) / h
+        gap_2 = len(trajectory2) / h
 
-            d = 0
+        index_1 = index_2 = 0
+        i = j = 0
 
-            for k in range(h):
+        d = 0
 
-                if i == len(trajectory1):
-                    i = len(trajectory1) - 1
+        for k in range(h):
 
-                if j == len(trajectory2):
-                    j = len(trajectory2) - 1
+            if i == len(trajectory1):
+                i = len(trajectory1) - 1
 
-                loc_1 = trajectory1.locations[i]
-                loc_2 = trajectory2.locations[j]
+            if j == len(trajectory2):
+                j = len(trajectory2) - 1
 
-                d += pow(loc_1.spatial_distance(loc_2, type=self.spatial_distance), 2)
+            loc_1 = trajectory1.locations[i]
+            loc_2 = trajectory2.locations[j]
 
-                index_1 += gap_1
-                index_2 += gap_2
+            d += pow(loc_1.spatial_distance(loc_2, type=self.spatial_distance), 2)
 
-                i = round(index_1)
-                j = round(index_2)
+            index_1 += gap_1
+            index_2 += gap_2
 
-            d /= h
+            i = round(index_1)
+            j = round(index_2)
 
-            d = sqrt(d)
+        d /= h
+
+        d = sqrt(d)
 
         # Store the distance for later use
-        self.distance_matrix[trajectory1.id][trajectory2.id] = d
-        self.distance_matrix[trajectory2.id][trajectory1.id] = d
+        self.distance_matrix[key] = d
 
         return d
 
     def __compute_temporal_distance(self, trajectory1: Trajectory, trajectory2: Trajectory) -> float:
-        try:
-            d = self.temporal_matrix[trajectory1.id][trajectory2.id]
+        key = trajectory1.str_id + "-" + trajectory2.str_id
+        d = self.temporal_matrix.get(key)
+        if d is not None:
             return d
-        except KeyError:
+        key = trajectory2.str_id + "-" + trajectory1.str_id
+        d = self.temporal_matrix.get(key)
+        if d is not None:
+            return d
+
         # Distance not computed
-            avg_speed_1 = trajectory1.get_avg_speed(sp_type=self.spatial_distance)
-            avg_speed_2 = trajectory2.get_avg_speed(sp_type=self.spatial_distance)
-            avg_speed = (avg_speed_1 + avg_speed_2) / 2
+        avg_speed_1 = trajectory1.get_avg_speed(sp_type=self.spatial_distance)
+        avg_speed_2 = trajectory2.get_avg_speed(sp_type=self.spatial_distance)
+        avg_speed = (avg_speed_1 + avg_speed_2) / 2
 
-            h = round((len(trajectory1) + len(trajectory2)) / 2)
-            gap_1 = len(trajectory1) / h
-            gap_2 = len(trajectory2) / h
+        h = round((len(trajectory1) + len(trajectory2)) / 2)
+        gap_1 = len(trajectory1) / h
+        gap_2 = len(trajectory2) / h
 
-            index_1 = index_2 = 0
-            i = j = 0
+        index_1 = index_2 = 0
+        i = j = 0
 
-            d = 0
+        d = 0
 
-            for k in range(h):
+        for k in range(h):
 
-                if i == len(trajectory1):
-                    i = len(trajectory1) - 1
+            if i == len(trajectory1):
+                i = len(trajectory1) - 1
 
-                if j == len(trajectory2):
-                    j = len(trajectory2) - 1
+            if j == len(trajectory2):
+                j = len(trajectory2) - 1
 
-                loc_1 = trajectory1.locations[i]
-                loc_2 = trajectory2.locations[j]
+            loc_1 = trajectory1.locations[i]
+            loc_2 = trajectory2.locations[j]
 
-                d += pow(loc_1.temporal_distance(loc_2) * avg_speed, 2)
+            d += pow(loc_1.temporal_distance(loc_2) * avg_speed, 2)
 
-                index_1 += gap_1
-                index_2 += gap_2
+            index_1 += gap_1
+            index_2 += gap_2
 
-                i = round(index_1)
-                j = round(index_2)
+            i = round(index_1)
+            j = round(index_2)
 
-            d /= h
+        d /= h
 
-            d = sqrt(d)
+        d = sqrt(d)
 
         # Store the distance for later use
-        self.temporal_matrix[trajectory1.id][trajectory2.id] = d
-        self.temporal_matrix[trajectory2.id][trajectory1.id] = d
+        self.temporal_matrix[key] = d
 
         return d
 
