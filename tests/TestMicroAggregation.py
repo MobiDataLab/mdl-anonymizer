@@ -24,7 +24,7 @@ class TestMicroAggregation(unittest.TestCase):
         self.assertEqual(anon_dataset.get_number_of_locations(), 387)
         self.assertEqual(anon_dataset.get_min_timestamp(), 1669044256)
         self.assertEqual(anon_dataset.get_max_timestamp(), 1669051521)
-        self.assertEqual(anon_dataset.get_max_trajectory_length(), 14)
+        self.assertEqual(anon_dataset.get_max_trajectory_n_locations(), 14)
 
     def test_params(self):
         params = {
@@ -53,7 +53,7 @@ class TestMicroAggregation(unittest.TestCase):
         self.assertEqual(anon_dataset.get_number_of_locations(), 388)
         self.assertEqual(anon_dataset.get_min_timestamp(), 1669044914)
         self.assertEqual(anon_dataset.get_max_timestamp(), 1669051109)
-        self.assertEqual(anon_dataset.get_max_trajectory_length(), 12)
+        self.assertEqual(anon_dataset.get_max_trajectory_n_locations(), 12)
 
 
 if __name__ == '__main__':

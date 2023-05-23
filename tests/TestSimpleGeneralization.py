@@ -24,7 +24,7 @@ class TestSimpleGeneralization(unittest.TestCase):
         self.assertEqual(anon_dataset.get_number_of_locations(), 344)
         self.assertEqual(anon_dataset.get_min_timestamp(), 1669043011)
         self.assertEqual(anon_dataset.get_max_timestamp(), 1669058195)
-        self.assertEqual(anon_dataset.get_max_trajectory_length(), 26)
+        self.assertEqual(anon_dataset.get_max_trajectory_n_locations(), 26)
 
     def test_params(self):
 
@@ -42,7 +42,7 @@ class TestSimpleGeneralization(unittest.TestCase):
         self.assertEqual(anon_dataset.get_number_of_locations(), 337)
         self.assertEqual(anon_dataset.get_min_timestamp(), 1669043011)
         self.assertEqual(anon_dataset.get_max_timestamp(), 1669058195)
-        self.assertEqual(anon_dataset.get_max_trajectory_length(), 24)
+        self.assertEqual(anon_dataset.get_max_trajectory_n_locations(), 24)
 
 
 if __name__ == '__main__':

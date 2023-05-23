@@ -1,6 +1,7 @@
 import csv
 import datetime
 import logging
+import sys
 from functools import reduce
 import random
 import pandas
@@ -280,8 +281,11 @@ class Dataset(ABC):
     def get_number_of_locations(self):
         return sum([len(t) for t in self.trajectories])
 
-    def get_max_trajectory_length(self):
-        return max([len(t) for t in self.trajectories])
+    def get_max_trajectory_n_locations(self):
+        if len(self.trajectories) > 0:
+            return max([len(t) for t in self.trajectories])
+
+        return None
 
     def get_max_timestamp(self):
         timestamp = None
@@ -335,7 +339,7 @@ class Dataset(ABC):
 
         return polygon
 
-    def filter(self, min_locations=3):
+    def filter_by_n_locations(self, min_locations=3):
         self.trajectories = [t for t in self.trajectories if len(t) >= min_locations]
 
         count_locations = sum([len(t) for t in self.trajectories])
@@ -363,6 +367,19 @@ class Dataset(ABC):
             logging.info(
                 f"Dataset sampled. "
                 f"Now it has {len(self)} trajectories and {count_locations} locations.")
+
+    def filter_by_length(self, min_length: float = 0, max_length: float = sys.maxsize):
+        """
+        :param min_length: in km
+        :param max_length: in km
+        :return:
+        """
+
+        logging.info(f"Filtering dataset by trajectory length")
+        self.trajectories = [t for t in self.trajectories if min_length <= t.get_length() <= max_length]
+        count_locations = sum([len(t) for t in self.trajectories])
+        logging.info(f"Dataset filtered."
+                     f"Now it has {len(self)} trajectories and {count_locations} locations.")
 
     def __len__(self):
         return len(self.trajectories)
