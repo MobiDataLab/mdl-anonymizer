@@ -1,0 +1,61 @@
+import logging
+import unittest
+
+from mob_data_anonymizer.entities.Dataset import Dataset
+from mob_data_anonymizer.factories.anonymization_method_factory import AnoymizationMethodFactory
+
+
+class TestTimePartitionMicroAggregation(unittest.TestCase):
+
+    def setUp(self):
+        self.dataset = Dataset()
+        self.dataset.from_file("../examples/data/mock_dataset.csv")
+
+    def test_default(self):
+
+        # logging.basicConfig(format=%(asctime)s %(levelname)-8s %(message)s',
+        #                     level=logging.DEBUG)
+
+        method = AnoymizationMethodFactory.get("TimePartMicroaggregation", self.dataset, {})
+        method.run()
+        anon_dataset = method.get_anonymized_dataset()
+
+        self.assertEqual(len(anon_dataset), 46)
+        self.assertEqual(anon_dataset.get_number_of_locations(), 382)
+        self.assertEqual(anon_dataset.get_min_timestamp(), 1669043640)
+        self.assertEqual(anon_dataset.get_max_timestamp(), 1669052037)
+        self.assertEqual(anon_dataset.get_max_trajectory_n_locations(), 14)
+
+    def test_params(self):
+        params = {
+            'k': 5,
+            'interval': 600,
+            'clustering_method': {
+                'name': 'SimpleMDAV',
+                'params': {
+                    'trajectory_distance': {
+                        'name': 'Martinez2021'
+                    }
+                },
+                'aggregation_method': {
+                    'name': 'Martinez2021'
+                }
+            },
+            'aggregation_method': {
+                'name': 'Martinez2021'
+            }
+        }
+
+        method = AnoymizationMethodFactory.get("TimePartMicroaggregation", self.dataset, params)
+        method.run()
+        anon_dataset = method.get_anonymized_dataset()
+
+        self.assertEqual(len(anon_dataset), 46)
+        self.assertEqual(anon_dataset.get_number_of_locations(), 394)
+        self.assertEqual(anon_dataset.get_min_timestamp(), 1669043928)
+        self.assertEqual(anon_dataset.get_max_timestamp(), 1669050490)
+        self.assertEqual(anon_dataset.get_max_trajectory_n_locations(), 15)
+
+
+if __name__ == '__main__':
+    unittest.main()
