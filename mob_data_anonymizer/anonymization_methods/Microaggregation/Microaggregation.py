@@ -66,7 +66,7 @@ class Microaggregation(AnonymizationMethodInterface):
             cluster_trajectories = self.clusters[c]
 
             # Initialize anonymized trajectories
-            anon_trajectories = list(map(lambda t: Trajectory(t.id), cluster_trajectories))
+            anon_trajectories = list(map(lambda t: Trajectory(t.id, t.user_id), cluster_trajectories))
 
             aggregate_trajectory = self.aggregation_method.compute(cluster_trajectories)
             self.centroids[c] = aggregate_trajectory

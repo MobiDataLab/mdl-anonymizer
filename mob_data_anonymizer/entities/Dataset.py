@@ -249,10 +249,10 @@ class Dataset(ABC):
         current_traj = None
         for record in np_dataset:
             if current_traj is None:  # First trajectory
-                current_traj = Trajectory(id=record[3], user_id=record[4])
+                current_traj = Trajectory(id=int(record[3]), user_id=int(record[4]))
             elif record[3] != current_traj.id:  # Trajectory ID changed
                 self.add_trajectory(current_traj)  # Store trajectory
-                current_traj = Trajectory(id=record[3], user_id=record[4])  # New trajectory
+                current_traj = Trajectory(id=int(record[3]), user_id=int(record[4]))  # New trajectory
             # Add location
             loc = TimestampedLocation(record[2], record[0], record[1])
             current_traj.add_location(loc, sort=False)
