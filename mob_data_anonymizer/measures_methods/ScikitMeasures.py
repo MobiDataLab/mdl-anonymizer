@@ -51,7 +51,6 @@ class ScikitMeasures(MeasuresMethodInterface):
             self.pre_anonymized_tdf.sort_values("datetime", inplace=True)
 
         # Tessellation
-        bounding_box = self.__get_bounding_box(self.pre_original_tdf)
         logging.info("Tessellating original dataset")
         self.original_tdf, tiles = spatial_tessellation(self.pre_original_tdf, "squared",
                                                         meters=self.tile_size)
@@ -84,48 +83,32 @@ class ScikitMeasures(MeasuresMethodInterface):
     def run(self):
         self.results["visits_per_location_original"], self.results["visits_per_location_anonymized"] \
             = round_tuple(self.cmp_visits_per_location(), 4)
-        print(f"visits per location: Original={self.results['visits_per_location_original']} - "
-              f"Anonymized={self.results['visits_per_location_anonymized']}")
+        # print(f"visits per location: Original={self.results['visits_per_location_original']} - "
+        #       f"Anonymized={self.results['visits_per_location_anonymized']}")
 
         self.results["distance_straight_line_original"], self.results["distance_straight_line_anonymized"] \
             = round_tuple(self.cmp_distance_straight_line(), 4)
-        print(f"Distance straight line: Original={self.results['distance_straight_line_original']} - "
-              f"Anonymized={self.results['distance_straight_line_anonymized']}")
+        # print(f"Distance straight line: Original={self.results['distance_straight_line_original']} - "
+        #       f"Anonymized={self.results['distance_straight_line_anonymized']}")
 
         self.results["uncorrelated_location_entropy_original"], self.results["uncorrelated_location_entropy_anonymized"] \
             = round_tuple(self.cmp_uncorrelated_location_entropy(), 4)
-        print(f"Uncorrelated location entropy: Original={self.results['uncorrelated_location_entropy_original']} - "
-              f"Anonymized={self.results['uncorrelated_location_entropy_anonymized']}")
+        # print(f"Uncorrelated location entropy: Original={self.results['uncorrelated_location_entropy_original']} - "
+        #       f"Anonymized={self.results['uncorrelated_location_entropy_anonymized']}")
 
         self.results["random_location_entropy_original"], self.results["random_location_entropy_anonymized"] \
             = round_tuple(self.cmp_random_location_entropy(), 4)
-        print(f"Random location entropy: Original={self.results['random_location_entropy_original']} - "
-              f"Anonymized={self.results['random_location_entropy_anonymized']}")
+        # print(f"Random location entropy: Original={self.results['random_location_entropy_original']} - "
+        #       f"Anonymized={self.results['random_location_entropy_anonymized']}")
 
         self.results["mean_square_displacement_original"], self.results["mean_square_displacement_anonymized"] \
             = round_tuple(self.cmp_mean_square_displacement(), 4)
-        print(f"Mean square displacement: Original={self.results['mean_square_displacement_original']} - "
-              f"Anonymized={self.results['mean_square_displacement_anonymized']}")
+        # print(f"Mean square displacement: Original={self.results['mean_square_displacement_original']} - "
+        #       f"Anonymized={self.results['mean_square_displacement_anonymized']}")
 
     def get_result(self):
         return self.results
 
-    def __get_bounding_box(self, tdf):
-        # Build bounding box for tesselation
-        # Get max, min lat
-        max_lat = tdf['lat'].max()
-        min_lat = tdf['lat'].min()
-
-        # Get max, min lng
-        max_lng = tdf['lng'].max()
-        min_lng = tdf['lng'].min()
-
-        point_list = [[max_lng, max_lat], [max_lng, min_lat], [min_lng, min_lat], [min_lng, max_lat]]
-
-        poly = geometry.Polygon(point_list)
-        polygon = GeoDataFrame(index=[0], crs=DEFAULT_CRS, geometry=[poly])
-
-        return polygon
 
     ### COLLECTIVE
 
