@@ -6,9 +6,12 @@ from geopandas import GeoDataFrame
 from skmob.utils.constants import DEFAULT_CRS
 
 from entities.Dataset import Dataset
+from tests.TestBase import TestBase
 
 
-class TestDataset(unittest.TestCase):
+class TestDataset(TestBase):
+    def setUp(self):
+        super().setUp()
 
     def test_load_dataset(self):
         dataset = Dataset()

@@ -1,4 +1,3 @@
-import logging
 import unittest
 
 import geopandas.testing
@@ -6,15 +5,21 @@ import shapely
 from geopandas import GeoDataFrame
 from skmob.utils.constants import DEFAULT_CRS
 
+from entities.Dataset import Dataset
 from mob_data_anonymizer.factories.analysis_method_factory import AnalysisMethodFactory
-from mob_data_anonymizer.entities.Dataset import Dataset
+from tests import TEST_ROOT_DIR
+from tests.TestBase import TestBase
 
 
-class TestQuadTreeHeatMap(unittest.TestCase):
+class TestQuadTreeHeatMap(TestBase):
 
     def setUp(self):
+
+        super().setUp()
+
         self.dataset = Dataset()
-        self.dataset.from_file("../examples/data/mock_dataset.csv")
+        path = f"{TEST_ROOT_DIR}/../examples/data/mock_dataset.csv"
+        self.dataset.from_file(path)
 
     def test_default(self):
 

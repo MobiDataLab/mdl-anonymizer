@@ -1,20 +1,22 @@
-import logging
 import unittest
 
 from entities.Dataset import Dataset
 from factories.anonymization_method_factory import AnoymizationMethodFactory
+from tests import TEST_ROOT_DIR
+from tests.TestBase import TestBase
 
 
-class TestMicroAggregation(unittest.TestCase):
+class TestMicroAggregation(TestBase):
 
     def setUp(self):
+        super().setUp()
+
         self.dataset = Dataset()
-        self.dataset.from_file("../examples/data/mock_dataset.csv")
+        path = f"{TEST_ROOT_DIR}/../examples/data/mock_dataset.csv"
+        self.dataset.from_file(path)
 
     def test_default(self):
 
-        # logging.basicConfig(format=%(asctime)s %(levelname)-8s %(message)s',
-        #                     level=logging.DEBUG)
 
         method = AnoymizationMethodFactory.get("Microaggregation", self.dataset, {})
         method.run()

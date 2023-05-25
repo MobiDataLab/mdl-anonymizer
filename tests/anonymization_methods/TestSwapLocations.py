@@ -1,20 +1,21 @@
-import logging
 import unittest
 
 from entities.Dataset import Dataset
 from factories.anonymization_method_factory import AnoymizationMethodFactory
+from tests import TEST_ROOT_DIR
+from tests.TestBase import TestBase
 
 
-class TestSwapLocations(unittest.TestCase):
+class TestSwapLocations(TestBase):
 
     def setUp(self):
+        super().setUp()
+
         self.dataset = Dataset()
-        self.dataset.from_file("../examples/data/mock_dataset.csv")
+        path = f"{TEST_ROOT_DIR}/../examples/data/mock_dataset.csv"
+        self.dataset.from_file(path)
 
     def test_default(self):
-
-        # logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s',
-        #                     level=logging.DEBUG)
 
         swap_locations = AnoymizationMethodFactory.get("SwapLocations", self.dataset, {'seed': 20})
         swap_locations.run()
