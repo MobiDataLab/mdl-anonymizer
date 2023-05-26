@@ -17,31 +17,10 @@ class TestMartinez2021distance(TestBase):
         self.dataset.from_file(path)
 
     def test_default(self):
-
         distance = TrajectoryDistanceFactory.get("Martinez2021", self.dataset, {})
         d = distance.compute(self.dataset.get_trajectory(1), self.dataset.get_trajectory(2))
 
         self.assertEqual(d, 937.0414983342348)
-
-    def test_normalize(self):
-        params = {
-            'normalize': True,
-        }
-        distance = TrajectoryDistanceFactory.get("Martinez2021", self.dataset, params)
-        d = distance.compute(self.dataset.get_trajectory(1), self.dataset.get_trajectory(2))
-
-        self.assertEqual(d, 0.04716909971646222)
-
-    def test_normalize_max_distance(self):
-        pass
-        # params = {
-        #     'max_dist': 4012,
-        #     'normalize': True,
-        # }
-        # distance = TrajectoryDistanceFactory.get("Martinez2021", self.dataset, params)
-        # d = distance.compute(self.dataset.get_trajectory(1), self.dataset.get_trajectory(2))
-        #
-        # self.assertEqual(d, 0.04716909971646222)
 
     def test_lambda(self):
         params = {
@@ -52,6 +31,26 @@ class TestMartinez2021distance(TestBase):
         d = distance.compute(self.dataset.get_trajectory(3), self.dataset.get_trajectory(4))
 
         self.assertEqual(d, 2168.2984763410896)
+
+    def test_lambda_max_distance(self):
+        params = {
+            'p_lambda': 0.16,
+            'max_dist': 19865,
+            'normalized': True
+        }
+        distance = TrajectoryDistanceFactory.get("Martinez2021", self.dataset, params)
+        d = distance.compute(self.dataset.get_trajectory(1), self.dataset.get_trajectory(2))
+
+        self.assertEqual(d, 0.047126622056823324)
+
+    def test_normalize(self):
+        params = {
+            'normalized': True,
+        }
+        distance = TrajectoryDistanceFactory.get("Martinez2021", self.dataset, params)
+        d = distance.compute(self.dataset.get_trajectory(1), self.dataset.get_trajectory(2))
+
+        self.assertEqual(d, 0.04716909971646222)
 
 
 if __name__ == '__main__':
