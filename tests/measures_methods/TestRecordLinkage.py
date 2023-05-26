@@ -6,7 +6,7 @@ from tests import TEST_ROOT_DIR
 from tests.TestBase import TestBase
 
 
-class TestPropensityScore(TestBase):
+class TestRecordLinkage(TestBase):
 
     def setUp(self):
 
@@ -22,11 +22,12 @@ class TestPropensityScore(TestBase):
 
     def test_default(self):
 
-        measure = MeasuresMethodFactory.get('PropensityScore', self.dataset, self.a_dataset, {})
+        measure = MeasuresMethodFactory.get('RecordLinkage', self.dataset, self.a_dataset, {'seed': 20})
         measure.run()
         result = measure.get_result()
 
-        self.assertAlmostEqual(result['propensity'], 0.741456, delta=0.033454)
+        self.assertEqual(result['percen_record_linkage'], 28.26)
+        self.assertEqual(result['percen_record_linkage_sample'], 28.26)
 
 
 if __name__ == '__main__':

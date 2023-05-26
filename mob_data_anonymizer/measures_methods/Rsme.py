@@ -27,7 +27,7 @@ class Rsme(MeasuresMethodInterface):
 
     def run(self):
         self.results["rsme"] = round(self.get_rsme(self.trajectory_distance), 4)
-        print(f'RSME: {self.results["rsme"]}')
+        # print(f'RSME: {self.results["rsme"]}')
 
     def get_result(self):
         return self.results

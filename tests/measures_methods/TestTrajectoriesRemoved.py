@@ -6,7 +6,7 @@ from tests import TEST_ROOT_DIR
 from tests.TestBase import TestBase
 
 
-class TestPropensityScore(TestBase):
+class TestTrajectoriesRemoved(TestBase):
 
     def setUp(self):
 
@@ -22,11 +22,12 @@ class TestPropensityScore(TestBase):
 
     def test_default(self):
 
-        measure = MeasuresMethodFactory.get('PropensityScore', self.dataset, self.a_dataset, {})
+        measure = MeasuresMethodFactory.get('TrajectoriesRemoved', self.dataset, self.a_dataset, {})
         measure.run()
         result = measure.get_result()
 
-        self.assertAlmostEqual(result['propensity'], 0.741456, delta=0.033454)
+        self.assertEqual(result['percen_traj_removed'], 0.0)
+        self.assertEqual(result['percen_loc_removed'], -1.04)
 
 
 if __name__ == '__main__':
