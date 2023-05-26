@@ -22,11 +22,24 @@ class TestPropensityScore(TestBase):
 
     def test_default(self):
 
-        measure = MeasuresMethodFactory.get('PropensityScore', self.dataset, self.a_dataset, {})
+        measure = MeasuresMethodFactory.get('PropensityScore', self.dataset, self.a_dataset, {'seed': 20})
         measure.run()
         result = measure.get_result()
 
-        self.assertAlmostEqual(result['propensity'], 0.741456, delta=0.033454)
+        self.assertEqual(result['propensity'], 0.7252)
+
+    def test_params(self):
+
+        params = {
+            'tiles_size': 2000,
+            'seed': 20
+        }
+
+        measure = MeasuresMethodFactory.get('PropensityScore', self.dataset, self.a_dataset, params)
+        measure.run()
+        result = measure.get_result()
+
+        self.assertEqual(result['propensity'], 0.2855)
 
 
 if __name__ == '__main__':

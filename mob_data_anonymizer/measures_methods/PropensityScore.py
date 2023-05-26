@@ -1,7 +1,10 @@
+import random
+
 from mob_data_anonymizer.measures_methods.MeasuresMethodInterface import MeasuresMethodInterface
 from mob_data_anonymizer.entities.Dataset import Dataset
 from skmob.tessellation import tilers
 import pandas as pd
+import numpy as np
 from pandas import DateOffset
 from datetime import datetime
 from sklearn.utils import shuffle
@@ -25,21 +28,27 @@ DEFAULT_VALUES = {
 
 
 class PropensityScore(MeasuresMethodInterface):
-    def __init__(self, original_dataset: Dataset, anom_dataset: Dataset, tiles_size=200, time_interval=None):
+    def __init__(self, original_dataset: Dataset, anom_dataset: Dataset, tiles_size=200, time_interval=None, seed=None):
         self.original_dataset = original_dataset
         self.anom_dataset = anom_dataset
         self.tiles_size = tiles_size
         self.time_interval = time_interval
         self.results = {}
+        self.seed = seed
 
     def run(self):
-        self.results["propensity"] = round(self.get_propensity_score(), 4)
+        self.results["propensity"] = round(self.get_propensity_score(self.tiles_size, self.time_interval), 4)
         # print(f'Propensity score: {self.results["propensity"]}')
 
     def get_result(self):
         return self.results
 
     def get_propensity_score(self, tiles_size=200, time_interval=None):
+
+        # Setup seed
+        if self.seed is not None:
+            random.seed(self.seed)
+            np.random.seed(self.seed)
 
         # Compute tessellation and data ranges for the original dataset
         logging.info(f"Tessellation")
@@ -87,22 +96,14 @@ class PropensityScore(MeasuresMethodInterface):
         df2['clas'] = clas
         df = df1.append(df2, ignore_index=True)
         df = shuffle(df)
-        # print(df)
 
-        train, test = train_test_split(df)
+        train, test = train_test_split(df, random_state=self.seed)
         X_train = train.drop(columns=['clas'])
         y_train = train['clas']
         X_test = test.drop(columns=['clas'])
         y_test = test['clas']
         X_all = df.drop(columns=['clas'])
         y_all = df['clas']
-
-        # print(pd.DataFrame(X_all).shape)
-
-        # print(pd.DataFrame(X_train).shape)
-        # print(pd.DataFrame(y_train).shape)
-        # print(pd.DataFrame(X_test).shape)
-        # print(pd.DataFrame(y_test).shape)
 
         # model = LogisticRegression()
         # model = GradientBoostingClassifier()
@@ -119,7 +120,7 @@ class PropensityScore(MeasuresMethodInterface):
         # sys.exit(0)
 
         # model = LogisticRegression()
-        model = xgb.XGBClassifier()
+        model = xgb.XGBClassifier(random_state=self.seed)
         # model = ExtraTreesClassifier()
 
         model.fit(X_train, y_train)
