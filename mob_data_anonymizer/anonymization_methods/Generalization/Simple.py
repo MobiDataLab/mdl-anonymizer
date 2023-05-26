@@ -58,7 +58,7 @@ class SimpleGeneralization(AnonymizationMethodInterface):
             mtdf = mtdf.groupby([constants.TID, constants.UID, constants.LATITUDE, constants.LONGITUDE],
                                 as_index=False).mean()
 
-        mtdf.to_csv("anonymized_pre.csv")
+        # mtdf.to_csv("anonymized_pre.csv")
         logging.info(f"Anonymized dataset has {len(mtdf)} locations before trajectory anonymization")
         mtdf = apply_trajectory_anonymization(mtdf, tile_size=self.traj_anon_tile_size)
         logging.info(f"Anonymized dataset has {len(mtdf)} locations")

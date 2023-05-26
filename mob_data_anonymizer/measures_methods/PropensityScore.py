@@ -34,7 +34,7 @@ class PropensityScore(MeasuresMethodInterface):
 
     def run(self):
         self.results["propensity"] = round(self.get_propensity_score(), 4)
-        print(f'Propensity score: {self.results["propensity"]}')
+        # print(f'Propensity score: {self.results["propensity"]}')
 
     def get_result(self):
         return self.results
@@ -61,11 +61,11 @@ class PropensityScore(MeasuresMethodInterface):
             datetime_ranges = pd.date_range(min_datetime, max_datetime, freq=offset)
 
         original_sequences = self.__compute_trajectory_sequences(self.original_dataset, tessellation, datetime_ranges)
-        print('trajectory sequences computed')
+        # print('trajectory sequences computed')
         anonymized_sequences = self.__compute_trajectory_sequences(self.anom_dataset, tessellation,
                                                                    datetime_ranges)
 
-        print('trajectory sequences computed 2')
+        # print('trajectory sequences computed 2')
 
         # Check the max len of the sequences and repadding if necessary
         max_orig = max([len(original_sequences[i]) for i in original_sequences.keys()])
@@ -125,11 +125,11 @@ class PropensityScore(MeasuresMethodInterface):
         model.fit(X_train, y_train)
         preds_train = model.predict(X_train)
         preds_test = model.predict(X_test)
-        print('accuracy in train:', accuracy_score(y_train, preds_train))
-        print('accuracy in test:', accuracy_score(y_test, preds_test))
+        # print('accuracy in train:', accuracy_score(y_train, preds_train))
+        # print('accuracy in test:', accuracy_score(y_test, preds_test))
 
         preds_all = model.predict(X_all)
-        print('accuracy in all:', accuracy_score(y_all, preds_all))
+        # print('accuracy in all:', accuracy_score(y_all, preds_all))
 
         # probs = np.max(model.predict_proba(X_all), axis=1)
         probs = model.predict_proba(X_all)[:,1]
@@ -146,7 +146,7 @@ class PropensityScore(MeasuresMethodInterface):
         tdf = dataset.to_tdf()
 
         max_tile_id = tessellation['tile_ID'].max()
-        print(f'MAX tile: {max_tile_id}')
+        # print(f'MAX tile: {max_tile_id}')
         # Map locations to spatial tiles
         st_tdf = tdf.mapping(tessellation, remove_na=True)
 
@@ -159,7 +159,7 @@ class PropensityScore(MeasuresMethodInterface):
 
             # Update the max tile id
             max_tile_id = max_tile_id * len(datetime_ranges)
-            print(f'New MAX tile: {max_tile_id}')
+            # print(f'New MAX tile: {max_tile_id}')
 
         # Scale ids
         tile_ids = st_tdf['tile_ID']

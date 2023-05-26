@@ -153,7 +153,7 @@ class SwapLocations(AnonymizationMethodInterface):
 
         anon_tdf = anon_tdf.sort_values(by=['tid', 'datetime'])
 
-        anon_tdf.to_csv("anonymized_dataset_details_pre_traj.csv")
+        # anon_tdf.to_csv("anonymized_dataset_details_pre_traj.csv")
 
         logging.info("Applying trajectory anonymization")
         anon_tdf = apply_trajectory_anonymization(anon_tdf, tile_size=self.tile_size)

@@ -1,6 +1,7 @@
 import csv
 import datetime
 import logging
+import sys
 from functools import reduce
 import random
 import pandas
@@ -55,7 +56,7 @@ class Dataset(ABC):
                 # df = pandas.read_parquet(filename)
                 df = pq.read_table(filename).to_pandas()
             else:
-                raise Exception("File format not supported")
+                raise TypeError("File format not supported")
         else:  # file object from api
             logging.info("Loading dataset from file object...")
             if filetype[-8:] == '.parquet':
@@ -156,8 +157,8 @@ class Dataset(ABC):
         # Sort by uid
         tdf.sort_values(constants.TID)
 
-        user_id = tdf.loc[0, constants.UID]
-        traj_id = tdf.loc[0, constants.TID]
+        user_id = tdf[constants.UID].iloc[0]
+        traj_id = tdf[constants.TID].iloc[0]
 
         T = Trajectory(traj_id, user_id)
 
@@ -255,10 +256,10 @@ class Dataset(ABC):
         current_traj = None
         for record in np_dataset:
             if current_traj is None:  # First trajectory
-                current_traj = Trajectory(id=record[3], user_id=record[4])
+                current_traj = Trajectory(id=int(record[3]), user_id=int(record[4]))
             elif record[3] != current_traj.id:  # Trajectory ID changed
                 self.add_trajectory(current_traj)  # Store trajectory
-                current_traj = Trajectory(id=record[3], user_id=record[4])  # New trajectory
+                current_traj = Trajectory(id=int(record[3]), user_id=int(record[4]))  # New trajectory
             # Add location
             loc = TimestampedLocation(record[2], record[0], record[1])
             current_traj.add_location(loc, sort=False)
@@ -287,8 +288,11 @@ class Dataset(ABC):
     def get_number_of_locations(self):
         return sum([len(t) for t in self.trajectories])
 
-    def get_max_trajectory_length(self):
-        return max([len(t) for t in self.trajectories])
+    def get_max_trajectory_n_locations(self):
+        if len(self.trajectories) > 0:
+            return max([len(t) for t in self.trajectories])
+
+        return None
 
     def get_max_timestamp(self):
         timestamp = None
@@ -316,19 +320,23 @@ class Dataset(ABC):
         for t in self.trajectories:
             t.locations.sort(key=lambda x: x.timestamp)
 
-    def get_bounding_box(self):
+    def get_bounding_box(self) -> GeoDataFrame:
+        """
+        Return a GeoDataFrame with the bounding box of the dataset
+        :return:
+        """
         max_lng = max_lat = min_lat = min_lng = None
 
         for t in self.trajectories:
             for l in t.locations:
                 if max_lat is None or l.y > max_lat:
-                    max_lat = l.y
+                    max_lat = round(l.y, 5)
                 if max_lng is None or l.x > max_lng:
-                    max_lng = l.x
+                    max_lng = round(l.x, 5)
                 if min_lat is None or l.y < min_lat:
-                    min_lat = l.y
+                    min_lat = round(l.y, 5)
                 if min_lng is None or l.x < min_lng:
-                    min_lng = l.x
+                    min_lng = round(l.x, 5)
 
         point_list = [[max_lng, max_lat], [max_lng, min_lat], [min_lng, min_lat], [min_lng, max_lat]]
 
@@ -338,7 +346,7 @@ class Dataset(ABC):
 
         return polygon
 
-    def filter(self, min_locations=3):
+    def filter_by_n_locations(self, min_locations=3):
         self.trajectories = [t for t in self.trajectories if len(t) >= min_locations]
 
         count_locations = sum([len(t) for t in self.trajectories])
@@ -359,6 +367,19 @@ class Dataset(ABC):
         count_locations = sum([len(t) for t in self.trajectories])
 
         logging.info(f"Dataset filtered. Removed trajectories with some one-time speed above {max_speed_kmh}. "
+                     f"Now it has {len(self)} trajectories and {count_locations} locations.")
+
+    def filter_by_length(self, min_length: float = 0, max_length: float = sys.maxsize):
+        """
+        :param min_length: in km
+        :param max_length: in km
+        :return:
+        """
+
+        logging.info(f"Filtering dataset by trajectory length")
+        self.trajectories = [t for t in self.trajectories if min_length <= t.get_length() <= max_length]
+        count_locations = sum([len(t) for t in self.trajectories])
+        logging.info(f"Dataset filtered."
                      f"Now it has {len(self)} trajectories and {count_locations} locations.")
 
     def __len__(self):

@@ -15,7 +15,9 @@ DEFAULT_VALUES = {
 class SwapMob(AnonymizationMethodInterface):
     """Implements the SwapMob anonymization method from Julián Salas, David Megías & Vicenç Torra ( https://doi.org/10.1007/978-3-319-99771-1_22 )"""
 
-    def __init__(self, dataset: Dataset, spatial_thold: float, temporal_thold: float,
+    def __init__(self, dataset: Dataset,
+                 spatial_thold: float = DEFAULT_VALUES['spatial_thold'],
+                 temporal_thold: float = DEFAULT_VALUES['temporal_thold'],
                  min_n_swaps: int = 1, seed: int = None):
         """
         Parameters

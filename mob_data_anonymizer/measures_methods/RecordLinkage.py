@@ -20,19 +20,26 @@ DEFAULT_VALUES = {
 
 
 class RecordLinkage(MeasuresMethodInterface):
-    def __init__(self, original_dataset: Dataset, anom_dataset: Dataset, trajectory_distance, percen_window_size=None):
+    def __init__(self, original_dataset: Dataset, anom_dataset: Dataset, trajectory_distance, percen_window_size=None,
+                 seed: int = None):
         self.original_dataset = original_dataset
         self.anom_dataset = anom_dataset
         self.trajectory_distance = trajectory_distance
         self.percen_window_size = percen_window_size
         self.results = {}
+        self.seed = seed
 
     def run(self):
+
+        # Set seed
+        if self.seed is not None:
+            random.seed(self.seed)
+
         self.results["percen_record_linkage"] = round(self.get_fast_record_linkage(self.trajectory_distance), 2)
-        print(f'% Record linkage: {self.results["percen_record_linkage"]}')
+        # print(f'% Record linkage: {self.results["percen_record_linkage"]}')
 
         self.results["percen_record_linkage_sample"] = round(self.get_sample_record_linkage(self.trajectory_distance), 2)
-        print(f'% Record linkage: {self.results["percen_record_linkage_sample"]}')
+        # print(f'% Record linkage: {self.results["percen_record_linkage_sample"]}')
 
     def get_result(self):
         return self.results
@@ -123,6 +130,7 @@ class RecordLinkage(MeasuresMethodInterface):
         :return: The list of indexes of myList of the closest value to myNumber
         :rtype: list of int
         """
+
         pos = RecordLinkage.__take_closest(myList, myNumber)
         cut = int(window_size / 2)
         rest_before = 0
@@ -144,6 +152,9 @@ class RecordLinkage(MeasuresMethodInterface):
 
     def calculate_window_size(self):
         size = len(self.original_dataset.trajectories)
+        if size < 100:
+            return size
+
         magnitude = math.floor(math.log10(size))
         percen = 100 / (pow(10, magnitude) / 100)
         window_size = int((size * percen) / 100)

@@ -1,3 +1,5 @@
+from more_itertools import pairwise
+
 from mob_data_anonymizer.entities.TimestampedLocation import TimestampedLocation
 
 
@@ -56,6 +58,16 @@ class Trajectory:
                 return loc
 
         return None
+
+    def get_length(self, unit='km'):
+        def distance(pair):
+            return pair[0].spatial_distance(pair[1])
+
+        pairs = pairwise(self.locations)
+
+        length = sum(map(distance, pairs))
+
+        return length
 
     def get_avg_speed(self, unit='kmh', sp_type='Haversine') -> float:
 
