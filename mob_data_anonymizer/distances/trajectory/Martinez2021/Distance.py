@@ -29,12 +29,12 @@ class Distance(DistanceInterface):
         needed_mem = (pow(len(self.dataset.trajectories), 2) * 12) / (1024 * 1024)
         if available_mem > needed_mem:
             self.compute = self.compute_no_memory_control
-            logging.info(f"Computing distances without memory control. "
-                         f"Available: {available_mem}, Needed: {needed_mem}")
+            logging.info(f"Computing distances without memory control. ")
+                         # f"Available: {available_mem}, Needed: {needed_mem}")
         else:
             self.compute = self.compute_with_memory_control
-            logging.info(f"Computing distances with memory control. "
-                         f"Available: {available_mem}, Needed: {needed_mem}")
+            logging.info(f"Computing distances with memory control. ")
+                         # f"Available: {available_mem}, Needed: {needed_mem}")
         if p_lambda is None:
             logging.info("Computing weight parameter and max distance")
             self.p_lambda, self.max_dist = self.__set_weight_parameter()   # max_dist for normalization [0,1]
