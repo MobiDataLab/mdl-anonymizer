@@ -10,20 +10,31 @@ from mob_data_anonymizer.entities.Dataset import Dataset
 from mob_data_anonymizer.entities.Trajectory import Trajectory
 from mob_data_anonymizer.entities.TimestampedLocation import TimestampedLocation
 from mob_data_anonymizer.distances.trajectory.DistanceInterface import DistanceInterface
+from mob_data_anonymizer.utils.utils import memory
 
 
 class Distance(DistanceInterface):
     def __init__(self, dataset: Dataset, sp_type='Haversine', p_lambda=None, max_dist=None, normalized=False):
         self.dataset = dataset
         self.spatial_distance = sp_type
-        self.distance_matrix = defaultdict(dict)
-        self.temporal_matrix = defaultdict(dict)
+        self.distance_matrix = {}
+        self.temporal_matrix = {}
         self.mean_spatial_distance = 0
         self.mean_temporal_distance = 0
         self.normalized = normalized
         self.average_speed = self.__compute_average_speed()
         self.max_dist = 0  # for normalization [0,1]
         self.reference_trajectory = None
+        available_mem = memory()
+        needed_mem = (pow(len(self.dataset.trajectories), 2) * 12) / (1024 * 1024)
+        if available_mem > needed_mem:
+            self.compute = self.compute_no_memory_control
+            logging.info(f"Computing distances without memory control. "
+                         f"Available: {available_mem}, Needed: {needed_mem}")
+        else:
+            self.compute = self.compute_with_memory_control
+            logging.info(f"Computing distances with memory control. "
+                         f"Available: {available_mem}, Needed: {needed_mem}")
         if p_lambda is None:
             logging.info("Computing weight parameter and max distance")
             self.p_lambda, self.max_dist = self.__set_weight_parameter()   # max_dist for normalization [0,1]
@@ -40,8 +51,11 @@ class Distance(DistanceInterface):
             else:
                 self.max_dist = max_dist
                 logging.info(f"\tTaking max distance = {self.max_dist}")
-        self.distance_matrix = defaultdict(dict)
-        self.temporal_matrix = defaultdict(dict)
+        self.distance_matrix = {}
+        self.temporal_matrix = {}
+
+    def compute(self, trajectory1: Trajectory, trajectory2: Trajectory) -> float:
+        pass
 
     def __set_weight_parameter(self):
         if len(self.dataset.trajectories) > 10000:
@@ -65,8 +79,8 @@ class Distance(DistanceInterface):
         #     sample = random.sample(self.dataset.trajectories, num_sample)
         # logging.info(f"\tTaking sample for lambda = {num_sample} ({percen_sample}%)")
         # sample = self.dataset.trajectories
-        self.distance_matrix = defaultdict(dict)
-        self.temporal_matrix = defaultdict(dict)
+        self.distance_matrix = {}
+        self.temporal_matrix = {}
         max_dist = 0
         max_temp = 0
         mean_dist = 0
@@ -210,7 +224,7 @@ class Distance(DistanceInterface):
     def compute_distance_to_reference_trajectory(self, trajectory):
         return self.compute_without_map(trajectory, self.reference_trajectory)
 
-    def compute(self, trajectory1: Trajectory, trajectory2: Trajectory) -> float:
+    def compute_no_memory_control(self, trajectory1: Trajectory, trajectory2: Trajectory) -> float:
         key = trajectory1.str_id + "-" + trajectory2.str_id
         d = self.distance_matrix.get(key)
         if d is not None:
@@ -263,6 +277,66 @@ class Distance(DistanceInterface):
             d /= self.max_dist  # normalization [0,1]
 
         # Store the distance for later use
+        self.distance_matrix[key] = d
+
+        return d
+
+    def compute_with_memory_control(self, trajectory1: Trajectory, trajectory2: Trajectory) -> float:
+        key = trajectory1.str_id + "-" + trajectory2.str_id
+        d = self.distance_matrix.get(key)
+        if d is not None:
+            return d
+        key = trajectory2.str_id + "-" + trajectory1.str_id
+        d = self.distance_matrix.get(key)
+        if d is not None:
+            return d
+        # Distance not computed
+        avg_speed_1 = trajectory1.get_avg_speed(sp_type=self.spatial_distance)
+        avg_speed_2 = trajectory2.get_avg_speed(sp_type=self.spatial_distance)
+        avg_speed = (avg_speed_1 + avg_speed_2) / 2
+        avg_speed /= 3.6 # m/s
+
+        h = round((len(trajectory1) + len(trajectory2)) / 2)
+        gap_1 = len(trajectory1) / h
+        gap_2 = len(trajectory2) / h
+
+        index_1 = index_2 = 0
+        i = j = 0
+
+        d = 0
+
+        for k in range(h):
+
+            if i == len(trajectory1):
+                i = len(trajectory1) - 1
+
+            if j == len(trajectory2):
+                j = len(trajectory2) - 1
+
+            loc_1 = trajectory1.locations[i]
+            loc_2 = trajectory2.locations[j]
+
+            d1 = loc_1.spatial_distance(loc_2, type=self.spatial_distance) * 1000   # meters
+            d2 = self.p_lambda * (loc_1.temporal_distance(loc_2)) * avg_speed  # meters
+            d += pow(d1 + d2, 2)
+
+            index_1 += gap_1
+            index_2 += gap_2
+
+            i = round(index_1)
+            j = round(index_2)
+
+        d /= h
+
+        d = sqrt(d)
+
+        if self.normalized:
+            d /= self.max_dist  # normalization [0,1]
+
+        # Store the distance for later use
+        if memory() < 1000:  #MB
+            print("Memory low, cleaning memory")
+            self.distance_matrix = {}
         self.distance_matrix[key] = d
 
         return d
@@ -414,3 +488,7 @@ class Distance(DistanceInterface):
 
     def filter_dataset(self):
         return self.dataset
+
+    def clear_memory(self):
+        self.distance_matrix = {}
+        self.temporal_matrix = {}

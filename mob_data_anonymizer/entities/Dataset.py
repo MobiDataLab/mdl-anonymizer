@@ -125,6 +125,13 @@ class Dataset(ABC):
             f"Dataset loaded: {len(self)} trajectories, {count_locations} locations, from {len(users)} users. "
             f"Every trajectory has, at least, {min_locations} locations")
 
+        if self.sample is not None:
+            self.trajectories = random.sample(self.trajectories, self.sample)
+            count_locations = sum([len(t) for t in self.trajectories])
+            logging.info(
+                f"Dataset sampled. "
+                f"Now it has {len(self)} trajectories and {count_locations} locations.")
+
     def to_csv(self, filename="output_dataset.csv"):
         """
         Export a loaded dataset to a csv
@@ -353,12 +360,6 @@ class Dataset(ABC):
 
         logging.info(f"Dataset filtered. Removed trajectories with some one-time speed above {max_speed_kmh}. "
                      f"Now it has {len(self)} trajectories and {count_locations} locations.")
-        if self.sample is not None:
-            self.trajectories = random.sample(self.trajectories, self.sample)
-            count_locations = sum([len(t) for t in self.trajectories])
-            logging.info(
-                f"Dataset sampled. "
-                f"Now it has {len(self)} trajectories and {count_locations} locations.")
 
     def __len__(self):
         return len(self.trajectories)
