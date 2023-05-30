@@ -11,7 +11,7 @@ from mob_data_anonymizer.factories.trajectory_distance_factory import Trajectory
 from mob_data_anonymizer import CONFIG_FILE, DEFAULT_TRAJECTORY_DISTANCE, DEFAULT_CLUSTERING, DEFAULT_AGGREGATION
 
 
-class AnoymizationMethodFactory:
+class AnonymizationMethodFactory:
     @staticmethod
     def get(method_name: str, dataset: Dataset, params: dict) -> AnonymizationMethodInterface:
 
