@@ -1,7 +1,7 @@
 import unittest
 
 from entities.Dataset import Dataset
-from factories.anonymization_method_factory import AnoymizationMethodFactory
+from factories.anonymization_method_factory import AnonymizationMethodFactory
 from tests import TEST_ROOT_DIR
 from tests.TestBase import TestBase
 
@@ -20,7 +20,7 @@ class TestSimpleGeneralization(TestBase):
         # logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s',
         #                     level=logging.DEBUG)
 
-        swap_locations = AnoymizationMethodFactory.get("SimpleGeneralization", self.dataset, {})
+        swap_locations = AnonymizationMethodFactory.get("SimpleGeneralization", self.dataset, {})
         swap_locations.run()
         anon_dataset = swap_locations.get_anonymized_dataset()
 
@@ -38,7 +38,7 @@ class TestSimpleGeneralization(TestBase):
             "overlapping_strategy": "one"
         }
 
-        swap_locations = AnoymizationMethodFactory.get("SimpleGeneralization", self.dataset, params)
+        swap_locations = AnonymizationMethodFactory.get("SimpleGeneralization", self.dataset, params)
         swap_locations.run()
         anon_dataset = swap_locations.get_anonymized_dataset()
 

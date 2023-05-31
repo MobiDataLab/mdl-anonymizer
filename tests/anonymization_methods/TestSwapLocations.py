@@ -1,7 +1,7 @@
 import unittest
 
 from entities.Dataset import Dataset
-from factories.anonymization_method_factory import AnoymizationMethodFactory
+from factories.anonymization_method_factory import AnonymizationMethodFactory
 from tests import TEST_ROOT_DIR
 from tests.TestBase import TestBase
 
@@ -17,7 +17,7 @@ class TestSwapLocations(TestBase):
 
     def test_default(self):
 
-        swap_locations = AnoymizationMethodFactory.get("SwapLocations", self.dataset, {'seed': 20})
+        swap_locations = AnonymizationMethodFactory.get("SwapLocations", self.dataset, {'seed': 20})
         swap_locations.run()
         anon_dataset = swap_locations.get_anonymized_dataset()
 
@@ -39,7 +39,7 @@ class TestSwapLocations(TestBase):
             'seed': 23
         }
 
-        swap_locations = AnoymizationMethodFactory.get("SwapLocations", self.dataset, params)
+        swap_locations = AnonymizationMethodFactory.get("SwapLocations", self.dataset, params)
         swap_locations.run()
         anon_dataset = swap_locations.get_anonymized_dataset()
 

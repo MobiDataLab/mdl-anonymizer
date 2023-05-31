@@ -1,7 +1,7 @@
 import unittest
 
 from entities.Dataset import Dataset
-from factories.anonymization_method_factory import AnoymizationMethodFactory
+from factories.anonymization_method_factory import AnonymizationMethodFactory
 from tests import TEST_ROOT_DIR
 from tests.TestBase import TestBase
 
@@ -18,7 +18,7 @@ class TestMicroAggregation(TestBase):
     def test_default(self):
 
 
-        method = AnoymizationMethodFactory.get("Microaggregation", self.dataset, {})
+        method = AnonymizationMethodFactory.get("Microaggregation", self.dataset, {})
         method.run()
         anon_dataset = method.get_anonymized_dataset()
 
@@ -47,7 +47,7 @@ class TestMicroAggregation(TestBase):
             }
         }
 
-        swap_locations = AnoymizationMethodFactory.get("Microaggregation", self.dataset, params)
+        swap_locations = AnonymizationMethodFactory.get("Microaggregation", self.dataset, params)
         swap_locations.run()
         anon_dataset = swap_locations.get_anonymized_dataset()
 

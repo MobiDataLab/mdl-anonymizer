@@ -1,7 +1,7 @@
 import unittest
 
 from entities.Dataset import Dataset
-from factories.anonymization_method_factory import AnoymizationMethodFactory
+from factories.anonymization_method_factory import AnonymizationMethodFactory
 from factories.trajectory_distance_factory import TrajectoryDistanceFactory
 from tests import TEST_ROOT_DIR
 from tests.TestBase import TestBase

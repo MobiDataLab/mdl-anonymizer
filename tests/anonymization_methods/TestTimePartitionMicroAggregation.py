@@ -1,7 +1,7 @@
 import unittest
 
 from mob_data_anonymizer.entities.Dataset import Dataset
-from mob_data_anonymizer.factories.anonymization_method_factory import AnoymizationMethodFactory
+from mob_data_anonymizer.factories.anonymization_method_factory import AnonymizationMethodFactory
 from tests import TEST_ROOT_DIR
 from tests.TestBase import TestBase
 
@@ -17,7 +17,7 @@ class TestTimePartitionMicroAggregation(TestBase):
 
     def test_default(self):
 
-        method = AnoymizationMethodFactory.get("TimePartMicroaggregation", self.dataset, {})
+        method = AnonymizationMethodFactory.get("TimePartMicroaggregation", self.dataset, {})
         method.run()
         anon_dataset = method.get_anonymized_dataset()
 
@@ -47,7 +47,7 @@ class TestTimePartitionMicroAggregation(TestBase):
             }
         }
 
-        method = AnoymizationMethodFactory.get("TimePartMicroaggregation", self.dataset, params)
+        method = AnonymizationMethodFactory.get("TimePartMicroaggregation", self.dataset, params)
         method.run()
         anon_dataset = method.get_anonymized_dataset()
 
