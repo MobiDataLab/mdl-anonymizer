@@ -8,7 +8,7 @@ from mob_data_anonymizer import CONFIG_FILE
 
 class AggregationMethodFactory:
     @staticmethod
-    def get(method_name: str) -> TrajectoryAggregationInterface:
+    def get(method_name: str, params: dict) -> TrajectoryAggregationInterface:
 
         with open(CONFIG_FILE, 'r') as f:
             config = json.load(f)
@@ -21,8 +21,7 @@ class AggregationMethodFactory:
         module = importlib.import_module(module_name)
         method_class = getattr(module, class_name)
 
-        # Aggregation methods are static, so we just return the class
-        return method_class
+        return method_class(**params)
 
 
 

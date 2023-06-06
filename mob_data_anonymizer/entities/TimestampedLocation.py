@@ -32,8 +32,10 @@ class TimestampedLocation:
         return self.timestamp == other.timestamp and self.x == other.x and self.y == other.y
 
     def distance(self, location):
-        # TODO: Weight fields?
         return sqrt((location.x - self.x) ** 2 + (location.y - self.y) ** 2 + (location.timestamp - self.timestamp) ** 2)
+
+    def distance_weighted(self, location, p_lambda):
+        return sqrt((location.x - self.x) ** 2 + (location.y - self.y) ** 2 + (p_lambda*(location.timestamp - self.timestamp)) ** 2)
 
     def spatial_distance(self, another_location, type ='Haversine', unit=Unit.KILOMETERS):
 

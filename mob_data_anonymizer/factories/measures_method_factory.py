@@ -1,6 +1,7 @@
 import importlib
 import json
 import inspect
+import logging
 
 from mob_data_anonymizer.measures_methods.MeasuresMethodInterface import MeasuresMethodInterface
 from mob_data_anonymizer.factories.trajectory_distance_factory import TrajectoryDistanceFactory
@@ -32,10 +33,13 @@ class MeasuresMethodFactory:
                 distance_name = params['trajectory_distance'].pop('name')
                 params['trajectory_distance'] = TrajectoryDistanceFactory.get(distance_name, original_dataset,
                                                                               params['trajectory_distance']['params'])
+                name = distance_name
             else:
                 # Default
                 params['trajectory_distance'] = TrajectoryDistanceFactory.get(DEFAULT_TRAJECTORY_DISTANCE,
                                                                               original_dataset, {})
+                name = DEFAULT_TRAJECTORY_DISTANCE
+            logging.info(f"Trajectory distance for measures: {name}")
 
         return method_class(original_dataset, anom_dataset, **params)
 

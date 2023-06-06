@@ -1,6 +1,7 @@
 import importlib
 import inspect
 import json
+import logging
 import os
 
 from mob_data_anonymizer.anonymization_methods.AnonymizationMethodInterface import AnonymizationMethodInterface
@@ -39,28 +40,37 @@ class AnonymizationMethodFactory:
                 method_name = params['trajectory_distance'].pop('name')
                 method_params = params['trajectory_distance'].get('params', {})
                 params['trajectory_distance'] = TrajectoryDistanceFactory.get(method_name, dataset, method_params)
-                print(params['trajectory_distance'])
+                name = method_name
             else:
                 # Default
                 params['trajectory_distance'] = TrajectoryDistanceFactory.get(DEFAULT_TRAJECTORY_DISTANCE, dataset,
                                                                               {})
+                name = DEFAULT_TRAJECTORY_DISTANCE
+            logging.info(f"Trajectory distance for anonymization: {name}")
 
         if 'clustering_method' in method_signature.parameters:
             if 'clustering_method' in params:
                 method_name = params['clustering_method'].pop('name')
                 method_params = params['clustering_method'].get('params', {})
                 params['clustering_method'] = ClusteringMethodFactory.get(method_name, dataset, method_params)
+                name = method_name
             else:
                 # Default
                 params['clustering_method'] = ClusteringMethodFactory.get(DEFAULT_CLUSTERING, dataset,
                                                                           {})
+                name = DEFAULT_CLUSTERING
+            logging.info(f"Clustering method for anonymization: {name}")
 
         if 'aggregation_method' in method_signature.parameters:
             if 'aggregation_method' in params:
                 method_name = params['aggregation_method'].pop('name')
-                params['aggregation_method'] = AggregationMethodFactory.get(method_name)
+                method_params = params['aggregation_method'].get('params', {})
+                params['aggregation_method'] = AggregationMethodFactory.get(method_name, method_params)
+                name = method_name
             else:
                 # Default
-                params['aggregation_method'] = AggregationMethodFactory.get(DEFAULT_AGGREGATION)
+                params['aggregation_method'] = AggregationMethodFactory.get(DEFAULT_AGGREGATION, {})
+                name = DEFAULT_AGGREGATION
+            logging.info(f"Aggregation method for anonymization: {name}")
 
         return method_class(dataset, **params)

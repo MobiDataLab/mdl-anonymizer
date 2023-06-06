@@ -1,6 +1,6 @@
 {
   "method": "TimePartMicroaggregation",
-  "input_file": "examples/data/filtered_dataset_20080608.csv",
+  "input_file": "examples/data/filtered_dataset_20080608_sample3.csv",
   "output_folder": "examples/output",
   "main_output_file": "filtered_dataset_20080608_anonymized.csv",
   "params": {
@@ -18,7 +18,7 @@
       }
     },
     "aggregation_method": {
-      "name": "Martinez2021",
+      "name": "Mean_trajectory",
       "params": {}
     }
   }

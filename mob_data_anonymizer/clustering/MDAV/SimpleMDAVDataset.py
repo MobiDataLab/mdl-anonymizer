@@ -1,4 +1,4 @@
-from mob_data_anonymizer.aggregation.Martinez2021.Aggregation import Aggregation
+from mob_data_anonymizer.aggregation.Martinez2021.mean_trajectory import Mean_trajectory
 from mob_data_anonymizer.aggregation.TrajectoryAggregationInterface import TrajectoryAggregationInterface
 from mob_data_anonymizer.clustering.MDAV.interfaces.MDAVDatasetInterface import MDAVDatasetInterface
 from mob_data_anonymizer.entities.Dataset import Dataset
@@ -19,7 +19,7 @@ class SimpleMDAVDataset(MDAVDatasetInterface):
         self.assigned_to = {}                             # Cluster assigned to every trajectory
         self.cluster_id = 0
         if not aggregation_method:
-            self.aggregation_method = Aggregation
+            self.aggregation_method = Mean_trajectory
         else:
             self.aggregation_method = aggregation_method
 

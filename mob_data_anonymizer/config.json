@@ -24,8 +24,14 @@
   },
 
   "aggregation_methods": {
-    "Martinez2021": {
-      "class": "mob_data_anonymizer.aggregation.Martinez2021.Aggregation.Aggregation"
+    "Mean_trajectory": {
+      "class": "mob_data_anonymizer.aggregation.Martinez2021.mean_trajectory.Mean_trajectory"
+    },
+    "Closest_locations_to_mean_trajectory": {
+      "class": "mob_data_anonymizer.aggregation.Martinez2021.closest_locations_to_mean_trajectory.Closest_locations_to_mean_trajectory"
+    },
+    "Closest_trajectory_to_mean_trajectory": {
+      "class": "mob_data_anonymizer.aggregation.Martinez2021.closest_trajectory_to_mean_trajectory.Closest_trajectory_to_mean_trajectory"
     }
   },
 

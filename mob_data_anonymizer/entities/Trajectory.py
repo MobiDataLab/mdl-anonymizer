@@ -1,4 +1,5 @@
 from more_itertools import pairwise
+from math import sqrt
 
 from mob_data_anonymizer.entities.TimestampedLocation import TimestampedLocation
 
@@ -104,6 +105,48 @@ class Trajectory:
                     return True
             except IndexError:
                 return False
+
+    def default_distance(self, trajectory, p_lambda) -> float:
+        avg_speed_1 = self.get_avg_speed(sp_type="Haversine")
+        avg_speed_2 = trajectory.get_avg_speed(sp_type="Haversine")
+        avg_speed = (avg_speed_1 + avg_speed_2) / 2
+        avg_speed /= 3.6  # m/s
+
+        h = round((len(self) + len(trajectory)) / 2)
+        gap_1 = len(self) / h
+        gap_2 = len(trajectory) / h
+
+        index_1 = index_2 = 0
+        i = j = 0
+
+        d = 0
+
+        for k in range(h):
+
+            if i == len(self):
+                i = len(self) - 1
+
+            if j == len(trajectory):
+                j = len(trajectory) - 1
+
+            loc_1 = self.locations[i]
+            loc_2 = trajectory.locations[j]
+
+            d1 = loc_1.spatial_distance(loc_2, type="Haversine") * 1000  # meters
+            d2 = p_lambda * (loc_1.temporal_distance(loc_2)) * avg_speed  # meters
+            d += pow(d1 + d2, 2)
+
+            index_1 += gap_1
+            index_2 += gap_2
+
+            i = round(index_1)
+            j = round(index_2)
+
+        d /= h
+
+        d = sqrt(d)
+
+        return d
 
     def __len__(self):
         return len(self.locations)

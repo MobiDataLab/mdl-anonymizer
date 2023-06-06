@@ -1,6 +1,7 @@
 import importlib
 import inspect
 import json
+import logging
 
 from mob_data_anonymizer.distances.trajectory.DistanceInterface import DistanceInterface
 from mob_data_anonymizer.entities.Dataset import Dataset
@@ -34,18 +35,24 @@ class ClusteringMethodFactory:
                 method_name = params['trajectory_distance'].pop('name')
                 method_params = params['trajectory_distance'].get('params', {})
                 params['trajectory_distance'] = TrajectoryDistanceFactory.get(method_name, dataset, method_params)
+                name = method_name
             else:
                 # Default
                 params['trajectory_distance'] = TrajectoryDistanceFactory.get(DEFAULT_TRAJECTORY_DISTANCE, dataset,{})
+                name = DEFAULT_TRAJECTORY_DISTANCE
+            logging.info(f"Trajectory distance for clustering: {name}")
 
         if 'aggregation_method' in method_signature.parameters:
             if 'aggregation_method' in params:
                 method_name = params['aggregation_method'].pop('name')
                 method_params = params['aggregation_method'].get('params', {})
-                params['aggregation_method'] = AggregationMethodFactory.get(method_name)
+                params['aggregation_method'] = AggregationMethodFactory.get(method_name, method_params)
+                name = method_name
             else:
                 # Default
-                params['aggregation_method'] = AggregationMethodFactory.get(DEFAULT_AGGREGATION)
+                params['aggregation_method'] = AggregationMethodFactory.get(DEFAULT_AGGREGATION, {})
+                name = DEFAULT_AGGREGATION
+            logging.info(f"Aggregation method for clustering: {name}")
 
         return method_class(**params)
 

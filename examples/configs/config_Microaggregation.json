@@ -1,6 +1,6 @@
 {
   "method": "Microaggregation",
-  "input_file": "examples/data/filtered_dataset_20080608.csv",
+  "input_file": "examples/data/filtered_dataset_20080608_sample3.csv",
   "_p_lambda_calculated": 0.00657901067783612,
   "output_folder": "examples/output",
   "main_output_file": "filtered_dataset_20080608_anonymized.csv",
@@ -18,7 +18,7 @@
       }
     },
     "aggregation_method": {
-      "name": "Martinez2021",
+      "name": "Mean_trajectory",
       "params": {}
     }
   }

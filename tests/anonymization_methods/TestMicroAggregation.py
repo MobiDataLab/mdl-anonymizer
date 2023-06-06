@@ -39,11 +39,11 @@ class TestMicroAggregation(TestBase):
                     }
                 },
                 'aggregation_method': {
-                    'name': 'Martinez2021'
+                    'name': 'Mean_trajectory'
                 }
             },
             'aggregation_method': {
-                'name': 'Martinez2021'
+                'name': 'Mean_trajectory'
             }
         }
 

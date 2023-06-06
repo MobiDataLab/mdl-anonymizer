@@ -2,7 +2,7 @@ import logging
 import random
 import time
 
-from mob_data_anonymizer.aggregation.Martinez2021.Aggregation import Aggregation
+from mob_data_anonymizer.aggregation.Martinez2021.mean_trajectory import Mean_trajectory
 from mob_data_anonymizer.aggregation.TrajectoryAggregationInterface import TrajectoryAggregationInterface
 from mob_data_anonymizer.anonymization_methods.AnonymizationMethodInterface import AnonymizationMethodInterface
 from mob_data_anonymizer.clustering.ClusteringInterface import ClusteringInterface

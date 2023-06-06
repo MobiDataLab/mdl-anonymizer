@@ -5,7 +5,7 @@ from mob_data_anonymizer.entities.TimestampedLocation import TimestampedLocation
 from mob_data_anonymizer.entities.Trajectory import Trajectory
 
 
-class Aggregation(TrajectoryAggregationInterface):
+class Mean_trajectory(TrajectoryAggregationInterface):
 
     @staticmethod
     def compute(trajectories: list) -> Trajectory:

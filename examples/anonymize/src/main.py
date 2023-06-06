@@ -12,7 +12,7 @@ from mob_data_anonymizer.anonymization_methods.SwapMob.SwapMob import SwapMob
 from mob_data_anonymizer.anonymization_methods.Microaggregation.Microaggregation import Microaggregation
 from mob_data_anonymizer.anonymization_methods.Microaggregation.TimePartMicroaggregation import TimePartMicroaggregation
 from mob_data_anonymizer.distances.trajectory.Martinez2021.Distance import Distance
-from mob_data_anonymizer.aggregation.Martinez2021.Aggregation import Aggregation
+from mob_data_anonymizer.aggregation.Martinez2021.mean_trajectory import Mean_trajectory
 from mob_data_anonymizer.clustering.MDAV.SimpleMDAV import SimpleMDAV
 from mob_data_anonymizer.clustering.MDAV.SimpleMDAVDataset import SimpleMDAVDataset
 # from mob_data_anonymizer.clustering.MDAV.SimpleMDAV_ant import SimpleMDAV_ant
