@@ -288,7 +288,11 @@ class Dataset(ABC):
     def get_number_of_locations(self):
         return sum([len(t) for t in self.trajectories])
 
-    def get_max_trajectory_n_locations(self):
+    def get_n_locations_longest_trajectory(self):
+        '''
+        Return the number of locations of the longest trajectory
+        :return:
+        '''
         if len(self.trajectories) > 0:
             return max([len(t) for t in self.trajectories])
 
