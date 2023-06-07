@@ -17,10 +17,7 @@ class TestSimpleGeneralization(TestBase):
 
     def test_default(self):
 
-        # logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s',
-        #                     level=logging.DEBUG)
-
-        swap_locations = AnonymizationMethodFactory.get("SimpleGeneralization", self.dataset, {})
+        swap_locations = AnonymizationMethodFactory.get("SimpleGeneralization", self.dataset)
         swap_locations.run()
         anon_dataset = swap_locations.get_anonymized_dataset()
 
@@ -28,7 +25,7 @@ class TestSimpleGeneralization(TestBase):
         self.assertEqual(anon_dataset.get_number_of_locations(), 344)
         self.assertEqual(anon_dataset.get_min_timestamp(), 1669043011)
         self.assertEqual(anon_dataset.get_max_timestamp(), 1669058195)
-        self.assertEqual(anon_dataset.get_max_trajectory_n_locations(), 26)
+        self.assertEqual(anon_dataset.get_n_locations_longest_trajectory(), 26)
 
     def test_params(self):
 
@@ -46,7 +43,7 @@ class TestSimpleGeneralization(TestBase):
         self.assertEqual(anon_dataset.get_number_of_locations(), 337)
         self.assertEqual(anon_dataset.get_min_timestamp(), 1669043011)
         self.assertEqual(anon_dataset.get_max_timestamp(), 1669058195)
-        self.assertEqual(anon_dataset.get_max_trajectory_n_locations(), 24)
+        self.assertEqual(anon_dataset.get_n_locations_longest_trajectory(), 24)
 
 
 if __name__ == '__main__':

@@ -27,7 +27,7 @@ class TestDataset(TestBase):
         self.assertEqual(dataset.get_number_of_locations(), 383)
         self.assertEqual(dataset.get_min_timestamp(), 1669043011)
         self.assertEqual(dataset.get_max_timestamp(), 1669058195)
-        self.assertEqual(dataset.get_max_trajectory_n_locations(), 28)
+        self.assertEqual(dataset.get_n_locations_longest_trajectory(), 28)
 
         point_list = [[1.27465, 41.14071], [1.27465, 41.10911], [1.23216, 41.10911], [1.23216, 41.14071]]
         poly = shapely.geometry.Polygon(point_list)
@@ -44,7 +44,7 @@ class TestDataset(TestBase):
         self.assertEqual(dataset.get_number_of_locations(), 331)
         self.assertEqual(dataset.get_min_timestamp(), 1669043011)
         self.assertEqual(dataset.get_max_timestamp(), 1669056327)
-        self.assertEqual(dataset.get_max_trajectory_n_locations(), 28)
+        self.assertEqual(dataset.get_n_locations_longest_trajectory(), 28)
 
         dataset.filter_by_n_locations(10)
 
@@ -52,7 +52,7 @@ class TestDataset(TestBase):
         self.assertEqual(dataset.get_number_of_locations(), 104)
         self.assertEqual(dataset.get_min_timestamp(), 1669043011)
         self.assertEqual(dataset.get_max_timestamp(), 1669056327)
-        self.assertEqual(dataset.get_max_trajectory_n_locations(), 28)
+        self.assertEqual(dataset.get_n_locations_longest_trajectory(), 28)
 
         dataset.filter_by_length(min_length=3, max_length=10)
 
@@ -60,7 +60,7 @@ class TestDataset(TestBase):
         self.assertEqual(dataset.get_number_of_locations(), 43)
         self.assertEqual(dataset.get_min_timestamp(), 1669043011)
         self.assertEqual(dataset.get_max_timestamp(), 1669053074)
-        self.assertEqual(dataset.get_max_trajectory_n_locations(), 20)
+        self.assertEqual(dataset.get_n_locations_longest_trajectory(), 20)
 
 
 if __name__ == '__main__':

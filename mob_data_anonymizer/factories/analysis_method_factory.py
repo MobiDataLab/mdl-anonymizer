@@ -8,7 +8,9 @@ from mob_data_anonymizer import CONFIG_FILE
 
 class AnalysisMethodFactory:
     @staticmethod
-    def get(method_name: str, dataset: Dataset, params: dict) -> AnalysisMethodInterface:
+    def get(method_name: str, dataset: Dataset, params: dict = None) -> AnalysisMethodInterface:
+        if params is None:
+            params = {}
 
         with open(CONFIG_FILE, 'r') as f:
             config = json.load(f)

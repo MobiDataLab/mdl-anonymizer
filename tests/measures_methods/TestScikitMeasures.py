@@ -22,7 +22,7 @@ class TestScikitMeasures(TestBase):
 
     def test_default(self):
 
-        measure = MeasuresMethodFactory.get('ScikitMeasures', self.dataset, self.a_dataset, {})
+        measure = MeasuresMethodFactory.get('ScikitMeasures', self.dataset, self.a_dataset)
         measure.run()
         result = measure.get_result()
 

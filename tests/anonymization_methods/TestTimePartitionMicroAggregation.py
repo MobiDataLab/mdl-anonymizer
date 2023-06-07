@@ -17,7 +17,7 @@ class TestTimePartitionMicroAggregation(TestBase):
 
     def test_default(self):
 
-        method = AnonymizationMethodFactory.get("TimePartMicroaggregation", self.dataset, {})
+        method = AnonymizationMethodFactory.get("TimePartMicroaggregation", self.dataset)
         method.run()
         anon_dataset = method.get_anonymized_dataset()
 
@@ -25,7 +25,7 @@ class TestTimePartitionMicroAggregation(TestBase):
         self.assertEqual(anon_dataset.get_number_of_locations(), 382)
         self.assertEqual(anon_dataset.get_min_timestamp(), 1669043640)
         self.assertEqual(anon_dataset.get_max_timestamp(), 1669052037)
-        self.assertEqual(anon_dataset.get_max_trajectory_n_locations(), 14)
+        self.assertEqual(anon_dataset.get_n_locations_longest_trajectory(), 14)
 
     def test_params(self):
         params = {
@@ -55,7 +55,7 @@ class TestTimePartitionMicroAggregation(TestBase):
         self.assertEqual(anon_dataset.get_number_of_locations(), 394)
         self.assertEqual(anon_dataset.get_min_timestamp(), 1669043928)
         self.assertEqual(anon_dataset.get_max_timestamp(), 1669050490)
-        self.assertEqual(anon_dataset.get_max_trajectory_n_locations(), 15)
+        self.assertEqual(anon_dataset.get_n_locations_longest_trajectory(), 15)
 
 
 if __name__ == '__main__':

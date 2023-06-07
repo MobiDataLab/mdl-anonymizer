@@ -28,7 +28,7 @@ class TestSwapMob(TestBase):
         self.assertEqual(anon_dataset.get_number_of_locations(), 260)
         self.assertEqual(anon_dataset.get_min_timestamp(), 1669043570)
         self.assertEqual(anon_dataset.get_max_timestamp(), 1669056327)
-        self.assertEqual(anon_dataset.get_max_trajectory_n_locations(), 25)
+        self.assertEqual(anon_dataset.get_n_locations_longest_trajectory(), 25)
 
     def test_params(self):
         params = {
@@ -46,7 +46,7 @@ class TestSwapMob(TestBase):
         self.assertEqual(anon_dataset.get_number_of_locations(), 37)
         self.assertEqual(anon_dataset.get_min_timestamp(), 1669044361)
         self.assertEqual(anon_dataset.get_max_timestamp(), 1669048131)
-        self.assertEqual(anon_dataset.get_max_trajectory_n_locations(), 12)
+        self.assertEqual(anon_dataset.get_n_locations_longest_trajectory(), 12)
 
 
 if __name__ == '__main__':

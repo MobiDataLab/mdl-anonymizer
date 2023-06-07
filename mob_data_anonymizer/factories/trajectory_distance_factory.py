@@ -8,7 +8,9 @@ from mob_data_anonymizer import CONFIG_FILE
 
 class TrajectoryDistanceFactory:
     @staticmethod
-    def get(distance_name: str, dataset: Dataset, params: dict) -> DistanceInterface:
+    def get(distance_name: str, dataset: Dataset, params: dict = None) -> DistanceInterface:
+        if params is None:
+            params = {}
 
         with open(CONFIG_FILE, 'r') as f:
             config = json.load(f)

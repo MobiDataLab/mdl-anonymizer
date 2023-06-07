@@ -8,7 +8,10 @@ from mob_data_anonymizer import CONFIG_FILE
 
 class AggregationMethodFactory:
     @staticmethod
-    def get(method_name: str, params: dict) -> TrajectoryAggregationInterface:
+    def get(method_name: str, params: dict = None) -> TrajectoryAggregationInterface:
+
+        if params is None:
+            params = {}
 
         with open(CONFIG_FILE, 'r') as f:
             config = json.load(f)

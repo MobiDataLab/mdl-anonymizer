@@ -22,7 +22,7 @@ class TestTrajectoriesRemoved(TestBase):
 
     def test_default(self):
 
-        measure = MeasuresMethodFactory.get('TrajectoriesRemoved', self.dataset, self.a_dataset, {})
+        measure = MeasuresMethodFactory.get('TrajectoriesRemoved', self.dataset, self.a_dataset)
         measure.run()
         result = measure.get_result()
 

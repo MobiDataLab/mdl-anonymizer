@@ -14,7 +14,9 @@ from mob_data_anonymizer import CONFIG_FILE, DEFAULT_TRAJECTORY_DISTANCE, DEFAUL
 
 class AnonymizationMethodFactory:
     @staticmethod
-    def get(method_name: str, dataset: Dataset, params: dict) -> AnonymizationMethodInterface:
+    def get(method_name: str, dataset: Dataset, params: dict = None) -> AnonymizationMethodInterface:
+        if params is None:
+            params = {}
 
         with open(CONFIG_FILE, 'r') as f:
             config = json.load(f)
@@ -27,11 +29,6 @@ class AnonymizationMethodFactory:
         module = importlib.import_module(module_name)
         method_class = getattr(module, class_name)
 
-        # Constructor solo con defaults?
-        # Qué pasa con el constructor que acepta una distancia, agregación, etc...?
-        # Params: probar un dict con un parámetro que no sea de los válidos, con uno que sí
-
-        # kwargs = method_config['defaults']
         method_signature = inspect.signature(method_class.__init__)
 
         # Special parameters (if required):
@@ -43,8 +40,7 @@ class AnonymizationMethodFactory:
                 name = method_name
             else:
                 # Default
-                params['trajectory_distance'] = TrajectoryDistanceFactory.get(DEFAULT_TRAJECTORY_DISTANCE, dataset,
-                                                                              {})
+                params['trajectory_distance'] = TrajectoryDistanceFactory.get(DEFAULT_TRAJECTORY_DISTANCE, dataset)
                 name = DEFAULT_TRAJECTORY_DISTANCE
             logging.info(f"Trajectory distance for anonymization: {name}")
 
@@ -56,8 +52,7 @@ class AnonymizationMethodFactory:
                 name = method_name
             else:
                 # Default
-                params['clustering_method'] = ClusteringMethodFactory.get(DEFAULT_CLUSTERING, dataset,
-                                                                          {})
+                params['clustering_method'] = ClusteringMethodFactory.get(DEFAULT_CLUSTERING, dataset)
                 name = DEFAULT_CLUSTERING
             logging.info(f"Clustering method for anonymization: {name}")
 
@@ -69,7 +64,7 @@ class AnonymizationMethodFactory:
                 name = method_name
             else:
                 # Default
-                params['aggregation_method'] = AggregationMethodFactory.get(DEFAULT_AGGREGATION, {})
+                params['aggregation_method'] = AggregationMethodFactory.get(DEFAULT_AGGREGATION)
                 name = DEFAULT_AGGREGATION
             logging.info(f"Aggregation method for anonymization: {name}")
 

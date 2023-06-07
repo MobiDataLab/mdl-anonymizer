@@ -12,7 +12,9 @@ from mob_data_anonymizer import CONFIG_FILE, DEFAULT_TRAJECTORY_DISTANCE, DEFAUL
 
 class ClusteringMethodFactory:
     @staticmethod
-    def get(method_name: str, dataset: Dataset, params: dict) -> DistanceInterface:
+    def get(method_name: str, dataset: Dataset, params: dict = None) -> DistanceInterface:
+        if params is None:
+            params = {}
 
         with open(CONFIG_FILE, 'r') as f:
             config = json.load(f)

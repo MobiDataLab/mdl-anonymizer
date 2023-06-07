@@ -16,9 +16,7 @@ class TestMicroAggregation(TestBase):
         self.dataset.from_file(path)
 
     def test_default(self):
-
-
-        method = AnonymizationMethodFactory.get("Microaggregation", self.dataset, {})
+        method = AnonymizationMethodFactory.get("Microaggregation", self.dataset)
         method.run()
         anon_dataset = method.get_anonymized_dataset()
 
@@ -26,7 +24,7 @@ class TestMicroAggregation(TestBase):
         self.assertEqual(anon_dataset.get_number_of_locations(), 387)
         self.assertEqual(anon_dataset.get_min_timestamp(), 1669044256)
         self.assertEqual(anon_dataset.get_max_timestamp(), 1669051521)
-        self.assertEqual(anon_dataset.get_max_trajectory_n_locations(), 14)
+        self.assertEqual(anon_dataset.get_n_locations_longest_trajectory(), 14)
 
     def test_params(self):
         params = {
@@ -55,7 +53,7 @@ class TestMicroAggregation(TestBase):
         self.assertEqual(anon_dataset.get_number_of_locations(), 388)
         self.assertEqual(anon_dataset.get_min_timestamp(), 1669044914)
         self.assertEqual(anon_dataset.get_max_timestamp(), 1669051109)
-        self.assertEqual(anon_dataset.get_max_trajectory_n_locations(), 12)
+        self.assertEqual(anon_dataset.get_n_locations_longest_trajectory(), 12)
 
 
 if __name__ == '__main__':

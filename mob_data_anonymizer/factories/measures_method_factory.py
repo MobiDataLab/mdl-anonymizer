@@ -11,7 +11,9 @@ from mob_data_anonymizer import CONFIG_FILE, DEFAULT_TRAJECTORY_DISTANCE, DEFAUL
 
 class MeasuresMethodFactory:
     @staticmethod
-    def get(method_name: str, original_dataset: Dataset, anom_dataset, params: dict) -> MeasuresMethodInterface:
+    def get(method_name: str, original_dataset: Dataset, anom_dataset, params: dict = None) -> MeasuresMethodInterface:
+        if params is None:
+            params = {}
 
         with open(CONFIG_FILE, 'r') as f:
             config = json.load(f)

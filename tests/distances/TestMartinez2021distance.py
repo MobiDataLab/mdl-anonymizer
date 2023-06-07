@@ -17,7 +17,7 @@ class TestMartinez2021distance(TestBase):
         self.dataset.from_file(path)
 
     def test_default(self):
-        distance = TrajectoryDistanceFactory.get("Martinez2021", self.dataset, {})
+        distance = TrajectoryDistanceFactory.get("Martinez2021", self.dataset)
         d = distance.compute(self.dataset.get_trajectory(1), self.dataset.get_trajectory(2))
 
         self.assertEqual(d, 937.0414983342348)
