@@ -4,7 +4,7 @@ import os
 import typer
 import warnings
 import sys
-from client.make_api_call import MakeApiCall
+from mob_data_anonymizer.client.make_api_call import MakeApiCall
 from shapely.errors import ShapelyDeprecationWarning
 from mob_data_anonymizer import PARAMETERS_FILE_DOESNT_EXIST, PARAMETERS_FILE_NOT_JSON, INPUT_FILE_NOT_EXIST, \
     PARAMETERS_NOT_VALID, SUCCESS, WRONG_METHOD, OUTPUT_FOLDER_NOT_EXIST

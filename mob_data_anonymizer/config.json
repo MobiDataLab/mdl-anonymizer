@@ -3,6 +3,9 @@
     "SimpleGeneralization": {
       "class": "mob_data_anonymizer.anonymization_methods.Generalization.Simple.SimpleGeneralization"
     },
+    "ProtectedGeneralization": {
+      "class": "mob_data_anonymizer.anonymization_methods.Generalization.Protected.ProtectedGeneralization"
+    },
     "SwapLocations": {
       "class": "mob_data_anonymizer.anonymization_methods.SwapLocations.SwapLocations.SwapLocations"
     },

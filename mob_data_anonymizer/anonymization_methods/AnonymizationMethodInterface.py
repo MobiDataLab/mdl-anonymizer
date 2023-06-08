@@ -5,7 +5,6 @@ from mob_data_anonymizer.entities.Dataset import Dataset
 
 class AnonymizationMethodInterface:
 
-    @staticmethod
     @abstractmethod
     def run(self):
         pass

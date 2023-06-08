@@ -1,0 +1,9 @@
+{
+  "method": "ProtectedGeneralization",
+  "input_file": "examples/data/mock_dataset.csv",
+  "output_folder": "examples/output",
+  "main_output_file": "mock_dataset_anonymized.csv",
+  "params":  {
+    "k": 2
+  }
+}
