@@ -3,7 +3,7 @@ import json
 import os
 import typer
 import warnings
-from client.make_api_call import MakeApiCall
+from mob_data_anonymizer.client.make_api_call import MakeApiCall
 from shapely.errors import ShapelyDeprecationWarning
 from mob_data_anonymizer.factories.measures_method_factory import MeasuresMethodFactory
 from mob_data_anonymizer import PARAMETERS_FILE_DOESNT_EXIST, PARAMETERS_FILE_NOT_JSON, INPUT_FILE_NOT_EXIST, \

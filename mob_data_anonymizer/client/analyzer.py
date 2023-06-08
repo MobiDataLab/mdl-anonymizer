@@ -1,7 +1,7 @@
 import io
 import json
 import os
-from client.make_api_call import MakeApiCall
+from mob_data_anonymizer.client.make_api_call import MakeApiCall
 from mob_data_anonymizer.entities.Dataset import Dataset
 from mob_data_anonymizer.factories.analysis_method_factory import AnalysisMethodFactory
 from mob_data_anonymizer import PARAMETERS_FILE_DOESNT_EXIST, SUCCESS, PARAMETERS_FILE_NOT_JSON, PARAMETERS_NOT_VALID, \

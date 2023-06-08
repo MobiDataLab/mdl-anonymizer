@@ -4,7 +4,7 @@ import os
 
 from mob_data_anonymizer.entities.Dataset import Dataset
 from mob_data_anonymizer.factories.anonymization_method_factory import AnonymizationMethodFactory
-from client.make_api_call import MakeApiCall
+from mob_data_anonymizer.client.make_api_call import MakeApiCall
 from mob_data_anonymizer import PARAMETERS_FILE_DOESNT_EXIST, SUCCESS, PARAMETERS_FILE_NOT_JSON, PARAMETERS_NOT_VALID, \
     WRONG_METHOD, INPUT_FILE_NOT_EXIST, OUTPUT_FOLDER_NOT_EXIST, DEFAULT_OUTPUT_FILE, CONFIG_FILE
 

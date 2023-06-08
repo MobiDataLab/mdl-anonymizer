@@ -1,4 +1,4 @@
-from client.make_api_call import MakeApiCall
+from mob_data_anonymizer.client.make_api_call import MakeApiCall
 import json
 import re
 import ntpath
