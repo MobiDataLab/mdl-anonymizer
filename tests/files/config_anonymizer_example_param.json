@@ -1,0 +1,9 @@
+{
+  "input_file": "../examples/data/mock_dataset.csv",
+  "main_output_file": "test_cli.csv",
+  "method": "SimpleGeneralization",
+  "output_folder": "files",
+  "params": {
+    "gen_tile_size": 1000
+  }
+}

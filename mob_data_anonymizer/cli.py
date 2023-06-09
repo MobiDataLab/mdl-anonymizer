@@ -24,7 +24,7 @@ def anonymize(
             fg=typer.colors.RED,
         )
 
-        raise typer.Exit(1)
+        raise typer.Exit(code)
     else:
         anonymizer.anonymizer(parameters_file)
 
@@ -45,7 +45,7 @@ def anonymize_api(
             fg=typer.colors.RED,
         )
 
-        raise typer.Exit(1)
+        raise typer.Exit(code)
     else:
         anonymizer.anonymizer_api(parameters_file)
 
@@ -66,7 +66,7 @@ def analysis(
             fg=typer.colors.RED,
         )
 
-        raise typer.Exit(1)
+        raise typer.Exit(code)
     else:
         analyzer.run_analysis(parameters_file)
 
@@ -87,7 +87,7 @@ def analysis_api(
             fg=typer.colors.RED,
         )
 
-        raise typer.Exit(1)
+        raise typer.Exit(code)
     else:
         analyzer.run_analysis_api(parameters_file)
 
@@ -108,7 +108,7 @@ def measures(
             fg=typer.colors.RED,
         )
 
-        raise typer.Exit(1)
+        raise typer.Exit(code)
     else:
         compute_measures.compute_measures(parameters_file)
 
@@ -129,7 +129,7 @@ def measures_api(
             fg=typer.colors.RED,
         )
 
-        raise typer.Exit(1)
+        raise typer.Exit(code)
     else:
         compute_measures.compute_measures_api(parameters_file)
 
@@ -150,7 +150,7 @@ def filter(
             fg=typer.colors.RED,
         )
 
-        raise typer.Exit(1)
+        raise typer.Exit(code)
     else:
         filter_data.filter_dataset(parameters_file)
 
@@ -171,7 +171,7 @@ def filter_api(
             fg=typer.colors.RED,
         )
 
-        raise typer.Exit(1)
+        raise typer.Exit(code)
     else:
         filter_data.filter_dataset_api(parameters_file)
 
