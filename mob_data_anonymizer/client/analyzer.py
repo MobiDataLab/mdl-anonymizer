@@ -83,7 +83,7 @@ def run_analysis(file_path: str):
     dataset.from_file(filename)
 
     # Get instance of requested method
-    method = AnalysisMethodFactory.get(data['method'], dataset, data['params'])
+    method = AnalysisMethodFactory.get(data['method'], dataset, data.get('params', None))
 
     output_folder = data.get('output_folder', '')
     if output_folder != '':

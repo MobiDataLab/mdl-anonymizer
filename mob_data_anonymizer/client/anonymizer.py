@@ -82,13 +82,15 @@ def anonymizer(file_path: str):
     filename = data.get("input_file")
     dataset = Dataset()
     dataset.from_file(filename)
+    print("Dataset loaded")
 
     # Get instance of requested method
-    method = AnonymizationMethodFactory.get(data['method'], dataset, data['params'])
+    method = AnonymizationMethodFactory.get(data['method'], dataset, data.get('params', None))
 
     # Run method
+    print("Anonymizing...")
     method.run()
-
+    print("Saving file...")
     # Save output file
     output_folder = data.get('output_folder', '')
     if output_folder != '':
