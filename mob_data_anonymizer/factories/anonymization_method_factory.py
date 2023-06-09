@@ -9,12 +9,14 @@ from mob_data_anonymizer.entities.Dataset import Dataset
 from mob_data_anonymizer.factories.aggregation_method_factory import AggregationMethodFactory
 from mob_data_anonymizer.factories.clustering_method_factory import ClusteringMethodFactory
 from mob_data_anonymizer.factories.trajectory_distance_factory import TrajectoryDistanceFactory
-from mob_data_anonymizer import CONFIG_FILE, DEFAULT_TRAJECTORY_DISTANCE, DEFAULT_CLUSTERING, DEFAULT_AGGREGATION
+from mob_data_anonymizer import CONFIG_FILE, DEFAULT_TRAJECTORY_DISTANCE, DEFAULT_CLUSTERING, DEFAULT_AGGREGATION, \
+    WRONG_METHOD_PARAMETER
 
 
 class AnonymizationMethodFactory:
     @staticmethod
     def get(method_name: str, dataset: Dataset, params: dict = None) -> AnonymizationMethodInterface:
+
         if params is None:
             params = {}
 
@@ -68,4 +70,8 @@ class AnonymizationMethodFactory:
                 name = DEFAULT_AGGREGATION
             logging.info(f"Aggregation method for anonymization: {name}")
 
-        return method_class(dataset, **params)
+        try:
+            return method_class(dataset, **params)
+        except TypeError:
+            # Wrong parameter
+            raise ValueError(WRONG_METHOD_PARAMETER) from None

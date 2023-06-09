@@ -3,7 +3,7 @@ import json
 
 from mob_data_anonymizer.analysis_methods.AnalysisMethodInterface import AnalysisMethodInterface
 from mob_data_anonymizer.entities.Dataset import Dataset
-from mob_data_anonymizer import CONFIG_FILE
+from mob_data_anonymizer import CONFIG_FILE, WRONG_METHOD_PARAMETER
 
 
 class AnalysisMethodFactory:
@@ -23,7 +23,11 @@ class AnalysisMethodFactory:
         module = importlib.import_module(module_name)
         method_class = getattr(module, class_name)
 
-        return method_class(dataset, **params)
+        try:
+            return method_class(dataset, **params)
+        except TypeError:
+            # Wrong parameter
+            raise ValueError(WRONG_METHOD_PARAMETER) from None
 
 
 

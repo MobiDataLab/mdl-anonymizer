@@ -26,7 +26,12 @@ class TrajectoryDistanceFactory:
         # Some distances need the whole dataset
         params['dataset'] = dataset
 
-        return method_class(**params)
+        try:
+            return method_class(**params)
+        except TypeError:
+            # Wrong parameter
+            raise ValueError("Wrong parameter") from None
+
 
 
 
