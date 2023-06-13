@@ -89,7 +89,13 @@ def anonymizer(file_path: str):
 
     # Run method
     print("Anonymizing...")
-    method.run()
+    try:
+        method.run()
+    except BaseException as e:
+        print("ERROR", e)
+        exit()
+
+
     print("Saving file...")
     # Save output file
     output_folder = data.get('output_folder', '')

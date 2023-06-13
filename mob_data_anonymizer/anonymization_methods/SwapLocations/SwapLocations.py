@@ -147,6 +147,9 @@ class SwapLocations(AnonymizationMethodInterface):
                 tdf = tdf.drop(l.index.tolist())
                 pbar.update(len(l))
 
+        if anon_tdf.empty:
+            raise ValueError("Anonymization not possible with the provided parameters. Try to relax them.")
+
         # Remove trajectories with just one location
         s = anon_tdf['tid'].value_counts()
         anon_tdf = anon_tdf[anon_tdf['tid'].map(s) >= 2]
