@@ -3,6 +3,7 @@ import itertools
 import logging
 
 import pandas as pd
+from geopandas import GeoDataFrame
 from haversine import haversine, Unit
 from shapely.ops import unary_union
 from skmob import TrajDataFrame
@@ -261,7 +262,14 @@ def get_grid_shape(tiles):
     return round(total_height / height), round(total_width / width)
 
 
-def pre_combine_tiles(tiles, mtdf, min_k):
+def preprocessing_merge_tiles(tiles: GeoDataFrame, mtdf: TrajDataFrame, min_k: int):
+    '''
+    Check the original tessellation and try to merge cells with less than min_k locations
+    :param tiles: original tessellation
+    :param mtdf: locations
+    :param min_k: min value of locations per cell
+    :return:
+    '''
     def get_super_sets(list_of_sets: list[set]):
         '''
         Check if some of the sets in the list has some item in common. If that's the case merge the sets in a superset
@@ -287,27 +295,27 @@ def pre_combine_tiles(tiles, mtdf, min_k):
 
         return supersets
 
-    def combine_tiles(tile_ids, all_tiles):
+    def merge_tiles(tile_ids: list[str], tessellation: GeoDataFrame):
         '''
 
         :param tile_ids: Set with the tile ids of the tiles to be combined
-        :param all_tiles: The whole tessellation
+        :param tessellation: The whole tessellation
         :return: The whole tessellation with the tiles combined
         '''
-        polygons = list(map(lambda id: all_tiles[all_tiles.tile_ID == id].geometry.values[0], tile_ids))
+        polygons = list(map(lambda id: tessellation[tessellation.tile_ID == id].geometry.values[0], tile_ids))
 
         new_polygon = unary_union(polygons)
 
         # Delete rows
         for id in tile_ids:
-            all_tiles = all_tiles.drop(all_tiles[all_tiles.tile_ID == id].index)
+            tessellation = tessellation.drop(tessellation[tessellation.tile_ID == id].index)
 
         # Add new row to geoseries
-        row = pd.Series([f'{".".join(sorted(tile_ids))}', new_polygon, None, None, None], index=all_tiles.columns)
+        row = pd.Series([f'{".".join(sorted(tile_ids))}', new_polygon, None, None, None], index=tessellation.columns)
 
-        all_tiles = all_tiles.append(row, ignore_index=True)
+        tessellation = pd.concat([tessellation, row.to_frame().T], ignore_index=True)
 
-        return all_tiles
+        return tessellation
 
     rows, columns = get_grid_shape(tiles)
     max_tile_id = (rows * columns) - 1
@@ -383,7 +391,7 @@ def pre_combine_tiles(tiles, mtdf, min_k):
     tiles_to_join = get_super_sets(tiles_to_join)
 
     for s in tiles_to_join:
-        tiles = combine_tiles(s, tiles)
+        tiles = merge_tiles(s, tiles)
 
     return tiles
 
@@ -407,10 +415,10 @@ class ProtectedGeneralization(AnonymizationMethodInterface):
         logging.info("Starting tessellation")
         mtdf, tessellation = spatial_tessellation(tdf, "squared", self.tile_size)
 
-        # logging.info("Preprocessing tiles")
-        # tessellation = pre_combine_tiles(tessellation, mtdf, 2 * self.k)
-        # mtdf = tdf.mapping(tessellation, remove_na=True)
-        # # tessellation.to_csv(f"prejoining_tessellation_k{self.k}.csv")
+        logging.info("Preprocessing tiles")
+        tessellation = preprocessing_merge_tiles(tessellation, mtdf, 2 * self.k)
+        mtdf = tdf.mapping(tessellation, remove_na=True)
+        # tessellation.to_csv(f"prejoining_tessellation_k{self.k}.csv")
         logging.info("Generating sequences")
         sequences = generate_sequences(mtdf)
 
@@ -444,7 +452,7 @@ class ProtectedGeneralization(AnonymizationMethodInterface):
         else:
             mtdf = generate_generalized_trajectories_avg(mtdf, sequences, tessellation)
 
-        mtdf.to_csv(f"filtered_dataset_20080608_tmp_k{self.k}_kw{self.knowledge}_t{self.tile_size}.csv")
+        # mtdf.to_csv(f"filtered_dataset_20080608_tmp_k{self.k}_kw{self.knowledge}_t{self.tile_size}.csv")
         logging.info("Cleaning TDF")
         mtdf = clean_tdf(mtdf)
 

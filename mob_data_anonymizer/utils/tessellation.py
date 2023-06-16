@@ -26,13 +26,14 @@ def _get_bounding_box(tdf):
     return polygon
 
 
-def spatial_tessellation(tdf: TrajDataFrame, tiles_shape, meters=250, tiles=None, bounding_box=None) -> TrajDataFrame:
+def spatial_tessellation(tdf: TrajDataFrame, tiles_shape: str, meters: int = 250, tiles: GeoDataFrame=None, bounding_box=None) \
+        -> tuple:
     '''
 
     :param tdf: tdf to be tessellated
     :param tiles_shape:
     :param meters: size of the tiles
-    :param tiles: If a tiles file is provided is used, if not the are computed
+    :param tiles: If a tiles TrajDataFrame is provided is used, if not the are computed
     :param bounding_box: If a bounding_box is not provided, it is computed
     :return: tuple of tdf mapped to tiles and tiles computed
     '''
