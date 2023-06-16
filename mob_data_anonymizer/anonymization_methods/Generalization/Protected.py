@@ -1,6 +1,7 @@
 import collections
 import itertools
 import logging
+import math
 
 import pandas as pd
 from geopandas import GeoDataFrame
@@ -251,15 +252,37 @@ def clean_tdf(mtdf: TrajDataFrame):
     return mtdf
 
 
-def get_grid_shape(tiles):
-    bbox = tiles['geometry'].total_bounds
-    total_width = haversine((bbox[1], bbox[0]), (bbox[1], bbox[2]), unit=Unit.METERS)
-    total_height = haversine((bbox[1], bbox[0]), (bbox[3], bbox[0]), unit=Unit.METERS)
-    cell_bbox = tiles['geometry'][0].bounds
-    width = haversine((cell_bbox[1], cell_bbox[0]), (cell_bbox[1], cell_bbox[2]), unit=Unit.METERS)
-    height = haversine((cell_bbox[1], cell_bbox[0]), (cell_bbox[3], cell_bbox[0]), unit=Unit.METERS)
+def get_grid_shape(grid: GeoDataFrame):
+    '''
+    Return the number of rows and columns of a grid geodataframe
+    :param tiles:
+    :return:
+    '''
+    t = grid.copy()
 
-    return round(total_height / height), round(total_width / width)
+    tmp_crs = constants.UNIVERSAL_CRS
+    total_area = t.to_crs(tmp_crs)
+
+    cell = GeoDataFrame(index=[0], crs=constants.DEFAULT_CRS, geometry=[t['geometry'][0]])
+    cell_area = cell.to_crs(tmp_crs)
+
+    total_boundaries = dict({'min_x': total_area.total_bounds[0],
+                      'min_y': total_area.total_bounds[1],
+                      'max_x': total_area.total_bounds[2],
+                      'max_y': total_area.total_bounds[3]})
+
+    cell_boundaries = dict({'min_x': cell_area.total_bounds[0],
+                             'min_y': cell_area.total_bounds[1],
+                             'max_x': cell_area.total_bounds[2],
+                             'max_y': cell_area.total_bounds[3]})
+
+    total_width = math.fabs(total_boundaries['max_x'] - total_boundaries['min_x'])
+    total_height = math.fabs(total_boundaries['max_y'] - total_boundaries['min_y'])
+
+    cell_width = math.fabs(cell_boundaries['max_x'] - cell_boundaries['min_x'])
+    cell_height = math.fabs(cell_boundaries['max_y'] - cell_boundaries['min_y'])
+
+    return round(total_height / cell_height), round(total_width / cell_width)
 
 
 def preprocessing_merge_tiles(tiles: GeoDataFrame, mtdf: TrajDataFrame, min_k: int):
@@ -348,10 +371,10 @@ def preprocessing_merge_tiles(tiles: GeoDataFrame, mtdf: TrajDataFrame, min_k: i
         tile_lng = tile['lng']
 
         # Look the four adjacents files
-        tile_up = tile_id + 1 if tile_id - 1 < max_tile_id else None
-        tile_down = tile_id - 1 if tile_id - 1 >= 0 else None
-        tile_left = tile_id - columns if tile_id - columns >= 0 else None
-        tile_right = tile_id + columns if tile_id + columns < max_tile_id else None
+        tile_up = tile_id + 1 if (tile_id + 1) % rows != 0 else None
+        tile_down = tile_id - 1 if tile_id % rows != 0 else None
+        tile_left = tile_id - rows if tile_id - rows >= 0 else None
+        tile_right = tile_id + rows if tile_id + rows < max_tile_id else None
 
         candidate_ids = (tile_up, tile_right, tile_down, tile_left)
 
@@ -369,7 +392,7 @@ def preprocessing_merge_tiles(tiles: GeoDataFrame, mtdf: TrajDataFrame, min_k: i
                 locs = row['n_locs'].iloc[0]
                 g = locs / (d ** 2)
 
-                # The tile will be join with the adjacent tile which attracts it more
+                # The tile will be merged with the adjacent tile which 'attracts' it more
                 if g > max_gravity:
                     max_gravity = g
                     selected_tile = row
@@ -417,8 +440,9 @@ class ProtectedGeneralization(AnonymizationMethodInterface):
 
         logging.info("Preprocessing tiles")
         tessellation = preprocessing_merge_tiles(tessellation, mtdf, 2 * self.k)
+
         mtdf = tdf.mapping(tessellation, remove_na=True)
-        # tessellation.to_csv(f"prejoining_tessellation_k{self.k}.csv")
+
         logging.info("Generating sequences")
         sequences = generate_sequences(mtdf)
 
