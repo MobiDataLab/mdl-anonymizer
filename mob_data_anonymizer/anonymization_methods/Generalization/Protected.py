@@ -3,6 +3,8 @@ import itertools
 import logging
 
 import pandas as pd
+from haversine import haversine, Unit
+from shapely.ops import unary_union
 from skmob import TrajDataFrame
 from skmob.utils import constants
 from tqdm import tqdm
@@ -61,19 +63,20 @@ def get_combinations_by_trajectory(combinations: dict, k):
     bad_combinations = {}
     good_combinations = {}
     for code in combinations:
-        tid = combinations[code][1][0]
-        if combinations[code][0] < k:
-            if tid in bad_combinations:
-                bad_combinations[tid].append(code)
-            else:
-                bad_combinations[tid] = [code]
 
+        # Is this a bad or good combinations(depending on k)
+        if combinations[code][0] < k:
+            dict_to_update = bad_combinations
             number_bad_combs += 1
         else:
-            if tid in good_combinations:
-                good_combinations[tid].append(code)
+            dict_to_update = good_combinations
+
+        # Update the data of all the related trajectories
+        for tid in combinations[code][1]:
+            if tid in dict_to_update:
+                dict_to_update[tid].append(code)
             else:
-                good_combinations[tid] = [code]
+                dict_to_update[tid] = [code]
 
     return bad_combinations, good_combinations, number_bad_combs
 
@@ -115,9 +118,6 @@ def remove_tiles(sequences: list[str], bad_combinations: dict, good_combinations
                     for c in candidates:
                         if all_tiles_good.count(c) < min_count:
                             most_common_tile = c
-
-                    # Y otra idea: antes de empezar, tras la tessellation, juntar celdas con menos de 2k localizaciones?
-
 
                 # Remove this tile from the original sequence
                 sequence = [t for t in sequence if t != most_common_tile]
@@ -171,10 +171,20 @@ def generate_generalized_trajectories_centroid(mtdf: TrajDataFrame, sequences, t
     s = mtdf['tid'].value_counts()
     mtdf = mtdf[mtdf['tid'].map(s) >= 2]
 
+    mtdf = mtdf.rename(columns={
+        constants.LATITUDE: 'orig_lat',
+        constants.LONGITUDE: 'orig_lng',
+        'x': constants.LATITUDE,
+        'y': constants.LONGITUDE,
+    })
+
     return mtdf
 
 
 def generate_generalized_trajectories_avg(mtdf, sequences, tiles):
+
+    # Remove some columns from tiles file and merge with mtdf
+    tiles = tiles.drop(['n_locs', 'lng', 'lat'], axis="columns", errors="ignore")
     mtdf = pd.merge(mtdf, tiles, how="left", on="tile_ID")
 
     # Mark locations to keep (those whose tile appears in the new sequences)
@@ -193,22 +203,24 @@ def generate_generalized_trajectories_avg(mtdf, sequences, tiles):
     mtdf = pd.merge(mtdf, new_lng, how="left", on="tile_ID", suffixes=('', '_new'))
     mtdf = pd.merge(mtdf, new_lat, how="left", on="tile_ID", suffixes=('', '_new'))
 
-    mtdf.rename(columns={
-        constants.LATITUDE + '_new': 'y',
-        constants.LONGITUDE + '_new': 'x',
-    }, inplace=True)
+    mtdf = mtdf.rename(columns={
+        constants.LATITUDE: 'orig_lat',
+        constants.LONGITUDE: 'orig_lng',
+        constants.LATITUDE + '_new': constants.LATITUDE,
+        constants.LONGITUDE + '_new': constants.LONGITUDE,
+    })
 
     return mtdf
 
 
 def clean_tdf(mtdf: TrajDataFrame):
     # Rename and reorder columns
-    mtdf.rename(columns={
-        constants.LATITUDE: 'orig_lat',
-        constants.LONGITUDE: 'orig_lng',
-        'x': constants.LONGITUDE,
-        'y': constants.LATITUDE,
-    }, inplace=True)
+    # mtdf.rename(columns={
+    #     constants.LATITUDE: 'orig_lat',
+    #     constants.LONGITUDE: 'orig_lng',
+    #     'x': constants.LONGITUDE,
+    #     'y': constants.LATITUDE,
+    # }, inplace=True)
 
     # We want to group locations in the same tile, but just if they are contiguous
     # (not if a user has come back to a previous tile)
@@ -238,6 +250,144 @@ def clean_tdf(mtdf: TrajDataFrame):
     return mtdf
 
 
+def get_grid_shape(tiles):
+    bbox = tiles['geometry'].total_bounds
+    total_width = haversine((bbox[1], bbox[0]), (bbox[1], bbox[2]), unit=Unit.METERS)
+    total_height = haversine((bbox[1], bbox[0]), (bbox[3], bbox[0]), unit=Unit.METERS)
+    cell_bbox = tiles['geometry'][0].bounds
+    width = haversine((cell_bbox[1], cell_bbox[0]), (cell_bbox[1], cell_bbox[2]), unit=Unit.METERS)
+    height = haversine((cell_bbox[1], cell_bbox[0]), (cell_bbox[3], cell_bbox[0]), unit=Unit.METERS)
+
+    return round(total_height / height), round(total_width / width)
+
+
+def pre_combine_tiles(tiles, mtdf, min_k):
+    def get_super_sets(list_of_sets: list[set]):
+        '''
+        Check if some of the sets in the list has some item in common. If that's the case merge the sets in a superset
+        :param list_of_sets:
+        :return: the list of final supersets
+        '''
+        while True:
+            merged_one = False
+            supersets = [list_of_sets[0]]
+            for s in list_of_sets[1:]:
+                for ss in supersets:
+                    if s & ss:
+                        ss |= s
+                        merged_one = True
+                        break
+                else:
+                    supersets.append(s)
+
+            if not merged_one:
+                break
+
+            list_of_sets = supersets
+
+        return supersets
+
+    def combine_tiles(tile_ids, all_tiles):
+        '''
+
+        :param tile_ids: Set with the tile ids of the tiles to be combined
+        :param all_tiles: The whole tessellation
+        :return: The whole tessellation with the tiles combined
+        '''
+        polygons = list(map(lambda id: all_tiles[all_tiles.tile_ID == id].geometry.values[0], tile_ids))
+
+        new_polygon = unary_union(polygons)
+
+        # Delete rows
+        for id in tile_ids:
+            all_tiles = all_tiles.drop(all_tiles[all_tiles.tile_ID == id].index)
+
+        # Add new row to geoseries
+        row = pd.Series([f'{".".join(sorted(tile_ids))}', new_polygon, None, None, None], index=all_tiles.columns)
+
+        all_tiles = all_tiles.append(row, ignore_index=True)
+
+        return all_tiles
+
+    rows, columns = get_grid_shape(tiles)
+    max_tile_id = (rows * columns) - 1
+
+    # Count the number of locations in every tile
+    s = mtdf['tile_ID'].value_counts()
+    tiles = pd.merge(tiles, s, left_on="tile_ID", right_index=True)
+    tiles = tiles.rename(columns={
+        'tile_ID_y': 'n_locs',
+    })
+    tiles = tiles.drop('tile_ID_x', axis="columns")
+
+    # Compute centroids of the tiles as avg of locations
+    mtdf_tiles = pd.merge(mtdf, tiles, how="left", on="tile_ID")
+    new_lng = mtdf_tiles.groupby('tile_ID', as_index=False)[constants.LONGITUDE].mean()
+    new_lat = mtdf_tiles.groupby('tile_ID', as_index=False)[constants.LATITUDE].mean()
+    tiles = pd.merge(tiles, new_lng, how="left", on="tile_ID")
+    tiles = pd.merge(tiles, new_lat, how="left", on="tile_ID")
+
+    # Get tiles with less than 2*k locations
+    tiles_to_check = tiles[tiles['n_locs'] < min_k]
+    tiles_to_check = tiles_to_check.sort_values(by=['n_locs', 'tile_ID'])
+
+    # We start to try to join tiles
+    tiles_to_join = []      # List of sets with the ids to be joined
+
+    for index, tile in tiles_to_check.iterrows():
+        tile_id = int(tile['tile_ID'])
+        tile_lat = tile['lat']
+        tile_lng = tile['lng']
+
+        # Look the four adjacents files
+        tile_up = tile_id + 1 if tile_id - 1 < max_tile_id else None
+        tile_down = tile_id - 1 if tile_id - 1 >= 0 else None
+        tile_left = tile_id - columns if tile_id - columns >= 0 else None
+        tile_right = tile_id + columns if tile_id + columns < max_tile_id else None
+
+        candidate_ids = (tile_up, tile_right, tile_down, tile_left)
+
+        max_gravity = 0
+        selected_tile = None
+        selected_id = None
+        for candidate_id in candidate_ids:
+            row = tiles[tiles.tile_ID == str(candidate_id)]
+
+            if not row.empty:
+                row_lat = row['lat'].iloc[0]
+                row_lng = row['lng'].iloc[0]
+                # Compute gravity
+                d = haversine((tile_lat, tile_lng), (row_lat, row_lng))
+                locs = row['n_locs'].iloc[0]
+                g = locs / (d ** 2)
+
+                # The tile will be join with the adjacent tile which attracts it more
+                if g > max_gravity:
+                    max_gravity = g
+                    selected_tile = row
+                    selected_id = candidate_id
+
+        if selected_tile is not None:
+
+            # Add to tiles to join
+            for group in tiles_to_join:
+                # If one of the tiles has been market to be joined before, we add a new tile to this set
+                if not group.isdisjoint({tile_id, selected_id}):
+                    group |= {str(tile_id), str(selected_id)}
+                    break
+            else:
+                # Otherwise, we create a new set of tiles to be joined
+                tiles_to_join.append({str(tile_id), str(selected_id)})
+
+    # Merge all the sets to get disjoint supersets
+    tiles_to_join = get_super_sets(tiles_to_join)
+
+    for s in tiles_to_join:
+        tiles = combine_tiles(s, tiles)
+
+    return tiles
+
+
 class ProtectedGeneralization(AnonymizationMethodInterface):
 
     def __init__(self, dataset: Dataset, tile_size: int = DEFAULT_VALUES['tile_size'],
@@ -256,6 +406,11 @@ class ProtectedGeneralization(AnonymizationMethodInterface):
 
         logging.info("Starting tessellation")
         mtdf, tessellation = spatial_tessellation(tdf, "squared", self.tile_size)
+
+        # logging.info("Preprocessing tiles")
+        # tessellation = pre_combine_tiles(tessellation, mtdf, 2 * self.k)
+        # mtdf = tdf.mapping(tessellation, remove_na=True)
+        # # tessellation.to_csv(f"prejoining_tessellation_k{self.k}.csv")
         logging.info("Generating sequences")
         sequences = generate_sequences(mtdf)
 
@@ -265,9 +420,7 @@ class ProtectedGeneralization(AnonymizationMethodInterface):
         logging.info("Computing unique combinations by trajectory")
         bad_combinations, good_combinations, number_of_bad_comb = get_combinations_by_trajectory(combinations_count,
                                                                                                  self.k)
-        # print(bad_combinations_traj)
-        # print(bad_combinations_tile)
-        # exit()
+
         logging.info(f'Total combinations: {len(combinations_count.keys())}. Bad: {number_of_bad_comb}')
 
         logging.info("REMOVING TRAJECTORY TILES")
@@ -291,6 +444,7 @@ class ProtectedGeneralization(AnonymizationMethodInterface):
         else:
             mtdf = generate_generalized_trajectories_avg(mtdf, sequences, tessellation)
 
+        mtdf.to_csv(f"filtered_dataset_20080608_tmp_k{self.k}_kw{self.knowledge}_t{self.tile_size}.csv")
         logging.info("Cleaning TDF")
         mtdf = clean_tdf(mtdf)
 
