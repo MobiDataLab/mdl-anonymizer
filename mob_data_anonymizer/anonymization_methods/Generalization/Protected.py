@@ -2,10 +2,14 @@ import collections
 import itertools
 import logging
 import math
+from bisect import bisect_left
+from datetime import datetime
 
 import pandas as pd
+import pytz
 from geopandas import GeoDataFrame
 from haversine import haversine, Unit
+from pandas import DateOffset
 from shapely.ops import unary_union
 from skmob import TrajDataFrame
 from skmob.utils import constants
@@ -26,7 +30,7 @@ DEFAULT_VALUES = {
 def generate_sequences(df: TrajDataFrame):
     traj_sequences = {}
     for index, l in df.iterrows():
-        traj_sequences[l['tid']] = traj_sequences.get(l['tid'], []) + [l['tile_ID']]
+        traj_sequences[l['tid']] = traj_sequences.get(l['tid'], []) + [str(l['tile_ID'])]
 
     for tid in traj_sequences.keys():
         seq = traj_sequences[tid]
@@ -84,48 +88,112 @@ def get_combinations_by_trajectory(combinations: dict, k):
 
 
 def remove_tiles(sequences: list[str], bad_combinations: dict, good_combinations: dict, show_progress: bool = False):
+
+    def duplicates_preprocessing(seq, seq_good_combs):
+        '''
+        In case of sequence with duplicated element (loops) a special process is needed before removing tiles
+        :return:
+        '''
+
+        def parent_combination(c):
+            '''
+            Compute the parent combination of form '1#3_2#2' -> '1_2'
+            :param c:
+            :return:
+            '''
+            tiles = c.split("_")
+            parent_tiles = list(map(lambda x: x[:x.find('#')], tiles))
+            return "_".join(parent_tiles)
+
+        # Compute a new sequence adding to every tile the number of the occurrence
+        # f.e. S=[1,2,3,1] -> S=[1#1, 2#1, 3#1, 1#2]
+        new_seq = []
+        c = {}
+        for tile in seq:
+            c[tile] = c.get(tile, 0) + 1
+            new_seq.append(f'{tile}#{c[tile]}')
+
+        # Recompute combinations
+        new_combs = []
+        for combs in itertools.combinations(new_seq, 2):
+            code = "_".join(map(str, combs))
+            new_combs.append(code)
+
+        # The good combinations of the new sequence are those with parent tile is original good combination
+        new_good, new_bad = [], []
+        for c in new_combs:
+            if parent_combination(c) in seq_good_combs:
+                new_good.append(c)
+            else:
+                new_bad.append(c)
+
+        return new_seq, new_bad, new_good
+
+    def fix_bad_combinations(seq, seq_bad_combinations, seq_good_combinations):
+
+        while seq_bad_combinations:
+            # Look for the most common tile in bad combinations
+            tmp = list(map(lambda x: x.split("_"), seq_bad_combinations))
+            all_tiles = [x for sublist in tmp for x in sublist]
+
+            # Count the occurrences of all tiles
+            counter = collections.Counter(all_tiles)
+            # d is a dict with the number of occurrences as keys, and a list of tiles as values
+            # f.e. {5: [tile1, tile2], 3:[tile3, tile4, tile6], 2: [tile5]}
+            d = collections.defaultdict(list)
+            for k, v in counter.items():
+                d[v].append(k)
+
+            # Get most common tile and number of occurrences
+            lmc = counter.most_common()
+            most_common_tile, count = lmc[0]
+
+            # Check if there are other tiles with the same number of occurrences (a draw)
+            # If there are more than 0 tiles with the same number of occurrences and trajectory has good combinations
+            if len(d[count]) > 1 and seq_bad_combinations is not None:
+
+                # We should decide what tile to remove
+                candidates = d[count]
+
+                # We'll remove the tile within less good combinations
+                tmp_good = list(map(lambda x: x.split("_"), seq_bad_combinations))
+                all_tiles_good = [x for sublist in tmp_good for x in sublist]
+
+                min_count = 99999
+                for c in candidates:
+                    if all_tiles_good.count(c) < min_count:
+                        most_common_tile = c
+
+            # Remove this tile from the original sequence
+            seq = [t for t in seq if t != most_common_tile]
+            # Remove combinations with this tile
+            seq_bad_combinations = [x for x in seq_bad_combinations if most_common_tile not in x.split("_")]
+
+        return seq
+
     new_sequences = {}
     for tid in tqdm(sequences, disable=(not show_progress)):
-        sequence = sequences[tid]
 
-        # If this trajectory has unique combinations
-        if tid in bad_combinations:
-            uniq_combs = bad_combinations[tid]
+        if tid not in good_combinations:
+            # This trajectory does not have any good combination -> Remove everything
+            sequence = []
+        else:
+            sequence = sequences[tid]
 
-            while uniq_combs:
-                # Look for the most common tile in unique combinations
-                tmp = list(map(lambda x: x.split("_"), uniq_combs))
-                all_tiles = [x for sublist in tmp for x in sublist]
+            # If this trajectory has bad combinations
+            if tid in bad_combinations:
 
-                # Count the occurrences of all tiles
-                counter = collections.Counter(all_tiles)
-                d = collections.defaultdict(list)
-                for k, v in counter.items():
-                    d[v].append(k)
-                lmc = counter.most_common()
-                most_common_tile, count = lmc[0]
-
-                # Check if there are other tiles with the same number of occurrences (a draw)
-                # If there are more than 0 tile with the same number of occurrences and trajectory has good combinations
-                if len(d[count]) > 1 and tid in good_combinations:
-
-                    # We should decide what tile to remove
-                    candidates = d[count]
-
-                    # We'll remove the tile within less good combinations
-                    tmp_good = list(map(lambda x: x.split("_"), good_combinations[tid]))
-                    all_tiles_good = [x for sublist in tmp_good for x in sublist]
-
-                    min_count = 99999
-                    for c in candidates:
-                        if all_tiles_good.count(c) < min_count:
-                            most_common_tile = c
-
-                # Remove this tile from the original sequence
-                sequence = [t for t in sequence if t != most_common_tile]
-
-                # Remove combinations with this tile
-                uniq_combs = [x for x in uniq_combs if most_common_tile not in x.split("_")]
+                # Are there duplicated elements in the sequence? This means loops in the trajectory
+                if len(sequence) != len(set(sequence)):
+                    sequence, bad_combs, good_combs = duplicates_preprocessing(sequence, good_combinations.get(tid, None))
+                    sequence = fix_bad_combinations(sequence, bad_combs, good_combs)
+                    # Keep parent tiles
+                    sequence = list(map(lambda x: x[:x.find('#')], sequence))
+                    # Remove consecutive duplicates
+                    sequence = [i for i, j in itertools.zip_longest(sequence, sequence[1:])
+                             if i != j]
+                else:
+                    sequence = fix_bad_combinations(sequence, bad_combinations[tid], good_combinations.get(tid, None))
 
         new_sequences[tid] = sequence
 
@@ -134,11 +202,17 @@ def remove_tiles(sequences: list[str], bad_combinations: dict, good_combinations
 
 def mark_locations_to_keep(df: TrajDataFrame, sequences: list[str]):
     def check_trajectory(df1, seq):
+        '''
+        Check what locations have to be preserved based on the anonymized sequence
+        :param df1: Dataframe with the locations of the trajectory
+        :param seq: Trajectory sequence
+        :return:
+        '''
         seq_index = -1
         current = None
         for index, row in df1.iterrows():
 
-            if current == row['tile_ID'] or seq_index < len(seq) - 1 and row['tile_ID'] == seq[seq_index + 1]:
+            if current == row['tile_ID'] or (seq_index < len(seq) - 1 and str(row['tile_ID']) == seq[seq_index + 1]):
                 df1.at[index, 'keep'] = True
                 if current != row['tile_ID']:
                     seq_index += 1
@@ -149,6 +223,7 @@ def mark_locations_to_keep(df: TrajDataFrame, sequences: list[str]):
 
     df['keep'] = False
 
+    # Check every trajectory
     for tid in df['tid'].unique():
         if tid in sequences.keys():
             s = check_trajectory(df[df['tid'] == tid], sequences[tid])
@@ -184,7 +259,6 @@ def generate_generalized_trajectories_centroid(mtdf: TrajDataFrame, sequences, t
 
 
 def generate_generalized_trajectories_avg(mtdf, sequences, tiles):
-
     # Remove some columns from tiles file and merge with mtdf
     tiles = tiles.drop(['n_locs', 'lng', 'lat'], axis="columns", errors="ignore")
     mtdf = pd.merge(mtdf, tiles, how="left", on="tile_ID")
@@ -216,14 +290,6 @@ def generate_generalized_trajectories_avg(mtdf, sequences, tiles):
 
 
 def clean_tdf(mtdf: TrajDataFrame):
-    # Rename and reorder columns
-    # mtdf.rename(columns={
-    #     constants.LATITUDE: 'orig_lat',
-    #     constants.LONGITUDE: 'orig_lng',
-    #     'x': constants.LONGITUDE,
-    #     'y': constants.LATITUDE,
-    # }, inplace=True)
-
     # We want to group locations in the same tile, but just if they are contiguous
     # (not if a user has come back to a previous tile)
     mtdf = mtdf.sort_values(by=[constants.TID, constants.DATETIME])
@@ -267,14 +333,14 @@ def get_grid_shape(grid: GeoDataFrame):
     cell_area = cell.to_crs(tmp_crs)
 
     total_boundaries = dict({'min_x': total_area.total_bounds[0],
-                      'min_y': total_area.total_bounds[1],
-                      'max_x': total_area.total_bounds[2],
-                      'max_y': total_area.total_bounds[3]})
+                             'min_y': total_area.total_bounds[1],
+                             'max_x': total_area.total_bounds[2],
+                             'max_y': total_area.total_bounds[3]})
 
     cell_boundaries = dict({'min_x': cell_area.total_bounds[0],
-                             'min_y': cell_area.total_bounds[1],
-                             'max_x': cell_area.total_bounds[2],
-                             'max_y': cell_area.total_bounds[3]})
+                            'min_y': cell_area.total_bounds[1],
+                            'max_x': cell_area.total_bounds[2],
+                            'max_y': cell_area.total_bounds[3]})
 
     total_width = math.fabs(total_boundaries['max_x'] - total_boundaries['min_x'])
     total_height = math.fabs(total_boundaries['max_y'] - total_boundaries['min_y'])
@@ -293,6 +359,7 @@ def preprocessing_merge_tiles(tiles: GeoDataFrame, mtdf: TrajDataFrame, min_k: i
     :param min_k: min value of locations per cell
     :return:
     '''
+
     def get_super_sets(list_of_sets: list[set]):
         '''
         Check if some of the sets in the list has some item in common. If that's the case merge the sets in a superset
@@ -363,7 +430,7 @@ def preprocessing_merge_tiles(tiles: GeoDataFrame, mtdf: TrajDataFrame, min_k: i
     tiles_to_check = tiles_to_check.sort_values(by=['n_locs', 'tile_ID'])
 
     # We start to try to join tiles
-    tiles_to_join = []      # List of sets with the ids to be joined
+    tiles_to_join = []  # List of sets with the ids to be joined
 
     for index, tile in tiles_to_check.iterrows():
         tile_id = int(tile['tile_ID'])
@@ -419,15 +486,66 @@ def preprocessing_merge_tiles(tiles: GeoDataFrame, mtdf: TrajDataFrame, min_k: i
     return tiles
 
 
+def time_tessellation(tdf: TrajDataFrame, tiles: GeoDataFrame, time_interval: int):
+    n_tiles = len(tiles)
+
+    # Compute datatime ranges
+    datetime_ranges = None
+
+    offset = DateOffset(minutes=time_interval)
+    min_datetime = tdf[constants.DATETIME].min()
+    max_datetime = tdf[constants.DATETIME].max()
+
+    datetime_ranges = pd.date_range(start=min_datetime, end=max_datetime, freq=offset)
+    # print(min_datetime, max_datetime)
+    print(datetime_ranges)
+
+    # Add temporal tiles to the tessellation
+    tiles = tiles.rename(columns={
+        'tile_ID': 's_tile_ID',
+    })
+    tiles['s_tile_ID'] = pd.to_numeric(tiles['s_tile_ID'])
+    tiles['time_level'] = 0
+    tiles['tile_ID'] = tiles['s_tile_ID']
+    tiles_2 = tiles.copy()
+    for time_level, t in enumerate(datetime_ranges):
+        if time_level > 0:
+            tiles_2['time_level'] = time_level
+            tiles_2['tile_ID'] = tiles_2['s_tile_ID'] + (n_tiles * time_level)
+            tiles = pd.concat([tiles, tiles_2], ignore_index=True)
+
+    # Modify tile_Ids based on location timestamp
+    # print(tdf)
+    # print(n_tiles)
+    tdf['tile_ID'] = tdf.apply(
+        lambda row: row['tile_ID'] + (
+                n_tiles * (bisect_left(datetime_ranges, row[constants.DATETIME]) - 1)),
+        axis=1)
+
+    return tdf, tiles
+
+
 class ProtectedGeneralization(AnonymizationMethodInterface):
 
     def __init__(self, dataset: Dataset, tile_size: int = DEFAULT_VALUES['tile_size'],
+                 time_interval: int = None,
                  k: int = DEFAULT_VALUES['k'], knowledge: int = DEFAULT_VALUES['knowledge'],
                  strategy: str = DEFAULT_VALUES['strategy']):
+        '''
+
+        :param dataset:
+        :param tile_size:
+        :param time_interval: in minutes
+        :param k:
+        :param knowledge:
+        :param strategy:
+        '''
+
         self.dataset = dataset
         self.anonymized_dataset = dataset.__class__()
 
         self.tile_size = tile_size
+        self.time_interval = time_interval
         self.k = k
         self.knowledge = knowledge
         self.strategy = strategy
@@ -438,10 +556,15 @@ class ProtectedGeneralization(AnonymizationMethodInterface):
         logging.info("Starting tessellation")
         mtdf, tessellation = spatial_tessellation(tdf, "squared", self.tile_size)
 
-        logging.info("Preprocessing tiles")
-        tessellation = preprocessing_merge_tiles(tessellation, mtdf, 2 * self.k)
+        if self.time_interval is not None:
+            logging.info("Time tessellation")
+            mtdf['tile_ID'] = pd.to_numeric(mtdf['tile_ID'])
+            mtdf, tessellation = time_tessellation(mtdf, tessellation, self.time_interval)
 
-        mtdf = tdf.mapping(tessellation, remove_na=True)
+        logging.info("Preprocessing tiles")
+        # tessellation = preprocessing_merge_tiles(tessellation, mtdf, 2 * self.k)
+        #
+        # mtdf = tdf.mapping(tessellation, remove_na=True)
 
         logging.info("Generating sequences")
         sequences = generate_sequences(mtdf)
@@ -456,7 +579,6 @@ class ProtectedGeneralization(AnonymizationMethodInterface):
         logging.info(f'Total combinations: {len(combinations_count.keys())}. Bad: {number_of_bad_comb}')
 
         logging.info("REMOVING TRAJECTORY TILES")
-
         while number_of_bad_comb > 0:
             logging.info("Starting iteration")
             logging.info("\tStarting removing")
@@ -470,14 +592,14 @@ class ProtectedGeneralization(AnonymizationMethodInterface):
                                                                                                      self.k)
             logging.info(f'Total combinations: {len(combinations_count.keys())}. Unique: {number_of_bad_comb}')
 
-        logging.info("Generating sequences")
+        logging.info("Generating anonymized trajectories")
         if self.strategy == 'centroid':
             mtdf = generate_generalized_trajectories_centroid(mtdf, sequences, tessellation)
         else:
             mtdf = generate_generalized_trajectories_avg(mtdf, sequences, tessellation)
 
         # mtdf.to_csv(f"filtered_dataset_20080608_tmp_k{self.k}_kw{self.knowledge}_t{self.tile_size}.csv")
-        logging.info("Cleaning TDF")
+        logging.info("Cleaning dataframe")
         mtdf = clean_tdf(mtdf)
 
         logging.info(f"Finished! Anonymized dataset has {len(mtdf)} locations")
