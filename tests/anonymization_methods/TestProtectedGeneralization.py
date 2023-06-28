@@ -48,8 +48,8 @@ class TestProtectedGeneralization(TestBase):
         self.assertEqual(anon_dataset.get_min_timestamp(), 1669043570)
         self.assertEqual(anon_dataset.get_max_timestamp(), 1669049917)
         self.assertEqual(anon_dataset.get_n_locations_longest_trajectory(), 4)
-        self.assertEqual(anon_dataset.trajectories[1].locations[0].x, 41.13955)
-        self.assertEqual(anon_dataset.trajectories[1].locations[0].y, 1.25911)
+        self.assertEqual(anon_dataset.trajectories[1].locations[0].x, 1.25911)
+        self.assertEqual(anon_dataset.trajectories[1].locations[0].y, 41.13955)
         self.assertEqual(anon_dataset.trajectories[1].locations[0].timestamp, 1669045159)
 
     def test_time(self):
@@ -73,6 +73,29 @@ class TestProtectedGeneralization(TestBase):
         self.assertEqual(anon_dataset.trajectories[1].locations[0].x, 1.2420129776000977)
         self.assertEqual(anon_dataset.trajectories[1].locations[0].y, 41.1143798828125)
         self.assertEqual(anon_dataset.trajectories[1].locations[0].timestamp, 1669044651)
+
+    def test_time_strategy(self):
+        params = {
+            "tile_size": 500,
+            "k": 2,
+            "knowledge": 2,
+            "strategy": 'centroid',
+            "time_interval": 10,
+            "time_strategy": 'same'
+        }
+
+        method = AnonymizationMethodFactory.get("ProtectedGeneralization", self.dataset, params)
+        method.run()
+        anon_dataset = method.get_anonymized_dataset()
+
+        self.assertEqual(len(anon_dataset), 35)
+        self.assertEqual(anon_dataset.get_number_of_locations(), 96)
+        self.assertEqual(anon_dataset.get_min_timestamp(), 1669044211)
+        self.assertEqual(anon_dataset.get_max_timestamp(), 1669050811)
+        self.assertEqual(anon_dataset.get_n_locations_longest_trajectory(), 5)
+        self.assertEqual(anon_dataset.trajectories[1].locations[0].x, 1.24264)
+        self.assertEqual(anon_dataset.trajectories[1].locations[0].y, 41.11418)
+        self.assertEqual(anon_dataset.trajectories[1].locations[0].timestamp, 1669044211)
 
 
 if __name__ == '__main__':

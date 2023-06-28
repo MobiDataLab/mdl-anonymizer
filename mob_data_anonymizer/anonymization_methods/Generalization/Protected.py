@@ -24,7 +24,9 @@ DEFAULT_VALUES = {
     "tile_size": 500,
     "k": 3,
     "knowledge": 2,
-    "strategy": 'avg'
+    "strategy": 'avg',
+    "time_interval": None,
+    "time_strategy": 'keep'
 }
 
 
@@ -232,7 +234,7 @@ def mark_locations_to_keep(df: TrajDataFrame, sequences: list[str]):
     return df
 
 
-def generate_generalized_trajectories_centroid(mtdf: TrajDataFrame, sequences, tiles):
+def generate_generalized_trajectories_centroid(mtdf: TrajDataFrame, sequences, tiles, dt_ranges=None):
     tiles['x'] = round(tiles['geometry'].centroid.x, 5)
     tiles['y'] = round(tiles['geometry'].centroid.y, 5)
 
@@ -248,17 +250,27 @@ def generate_generalized_trajectories_centroid(mtdf: TrajDataFrame, sequences, t
     s = mtdf['tid'].value_counts()
     mtdf = mtdf[mtdf['tid'].map(s) >= 2]
 
+    if dt_ranges is not None:
+        dtr = dt_ranges.strftime("%Y-%m-%d %H:%M:%S").tolist()
+        mtdf['new_timestamp'] = mtdf.apply(lambda row: dtr[int(row['time_level'])], axis=1)
+
+        mtdf = mtdf.rename(columns={
+            constants.DATETIME: 'orig_datetime',
+            'new_timestamp': constants.DATETIME,
+        })
+        mtdf[constants.DATETIME] = pd.to_datetime(mtdf[constants.DATETIME])
+
     mtdf = mtdf.rename(columns={
         constants.LATITUDE: 'orig_lat',
         constants.LONGITUDE: 'orig_lng',
-        'x': constants.LATITUDE,
-        'y': constants.LONGITUDE,
+        'x': constants.LONGITUDE,
+        'y': constants.LATITUDE,
     })
 
     return mtdf
 
 
-def generate_generalized_trajectories_avg(mtdf, sequences, tiles, timestamp=False):
+def generate_generalized_trajectories_avg(mtdf, sequences, tiles, dt_ranges=None):
     # Remove some columns from tiles file and merge with mtdf
     tiles = tiles.drop(['n_locs', 'lng', 'lat'], axis="columns", errors="ignore")
     mtdf = pd.merge(mtdf, tiles, how="left", on="tile_ID")
@@ -276,9 +288,10 @@ def generate_generalized_trajectories_avg(mtdf, sequences, tiles, timestamp=Fals
     new_lng = mtdf.groupby('tile_ID', as_index=False)[constants.LONGITUDE].mean()
     new_lat = mtdf.groupby('tile_ID', as_index=False)[constants.LATITUDE].mean()
 
-    # if timestamp:
-    #     new_timestamp = mtdf.groupby('tile_ID', as_index=False)[constants.DATETIME].mean()
-    #     mtdf = pd.merge(mtdf, new_timestamp, how="left", on="tile_ID", suffixes=('', '_new'))
+    if dt_ranges is not None:
+        dtr = dt_ranges.strftime("%Y-%m-%d %H:%M:%S").tolist()
+        mtdf['new_timestamp'] = mtdf.apply(lambda row: dtr[int(row['time_level'])], axis=1)
+
 
     mtdf = pd.merge(mtdf, new_lng, how="left", on="tile_ID", suffixes=('', '_new'))
     mtdf = pd.merge(mtdf, new_lat, how="left", on="tile_ID", suffixes=('', '_new'))
@@ -290,11 +303,12 @@ def generate_generalized_trajectories_avg(mtdf, sequences, tiles, timestamp=Fals
         constants.LONGITUDE + '_new': constants.LONGITUDE,
     })
 
-    # if timestamp:
-    #     mtdf = mtdf.rename(columns={
-    #         constants.DATETIME: 'orig_datetime',
-    #         constants.DATETIME + '_new': constants.DATETIME,
-    #     })
+    if dt_ranges is not None:
+        mtdf = mtdf.rename(columns={
+            constants.DATETIME: 'orig_datetime',
+            'new_timestamp': constants.DATETIME,
+        })
+        mtdf[constants.DATETIME] = pd.to_datetime(mtdf[constants.DATETIME])
 
     return mtdf
 
@@ -302,7 +316,6 @@ def generate_generalized_trajectories_avg(mtdf, sequences, tiles, timestamp=Fals
 def clean_tdf(mtdf: TrajDataFrame):
     # We want to group locations in the same tile, but just if they are contiguous
     # (not if a user has come back to a previous tile)
-    mtdf = mtdf.sort_values(by=[constants.TID, constants.DATETIME])
 
     # Compare the tile_ID with the tile_ID of the previous location
     mtdf['pre_TILE'] = (mtdf['tile_ID'] != mtdf['tile_ID'].shift(1))
@@ -316,6 +329,7 @@ def clean_tdf(mtdf: TrajDataFrame):
     # Group intra-clusters by averaging timestamp
     mtdf = mtdf.groupby([constants.TID, constants.UID, constants.LATITUDE, constants.LONGITUDE, 'cum_sum'],
                         as_index=False).mean()
+
     mtdf = mtdf.sort_values(by=[constants.TID, constants.DATETIME], ignore_index=True)
 
     mtdf = mtdf[
@@ -553,7 +567,7 @@ def time_tessellation(tdf: TrajDataFrame, tiles: GeoDataFrame, time_interval: in
         tiles['s_tile_ID'] = tiles['tile_ID']
         tiles['time_level'] = np.int8(0)
 
-        return tdf, tiles
+        return tdf, tiles, None
 
     n_tiles = len(tiles)
 
@@ -594,15 +608,15 @@ def time_tessellation(tdf: TrajDataFrame, tiles: GeoDataFrame, time_interval: in
     tiles['s_tile_ID'] = tiles['s_tile_ID'].astype('str')
     tdf['tile_ID'] = tdf['tile_ID'].astype('str')
 
-    return tdf, tiles
+    return tdf, tiles, datetime_ranges
 
 
 class ProtectedGeneralization(AnonymizationMethodInterface):
 
     def __init__(self, dataset: Dataset, tile_size: int = DEFAULT_VALUES['tile_size'],
-                 time_interval: int = None,
+                 time_interval: int = DEFAULT_VALUES['time_interval'],
                  k: int = DEFAULT_VALUES['k'], knowledge: int = DEFAULT_VALUES['knowledge'],
-                 strategy: str = DEFAULT_VALUES['strategy']):
+                 strategy: str = DEFAULT_VALUES['strategy'], time_strategy: str = DEFAULT_VALUES['time_strategy']):
         '''
 
         :param dataset:
@@ -610,7 +624,8 @@ class ProtectedGeneralization(AnonymizationMethodInterface):
         :param time_interval: in minutes
         :param k:
         :param knowledge:
-        :param strategy:
+        :param strategy: 'avg' or 'centroid'
+        :param time_strategy: 'same' or 'keep'
         '''
 
         self.dataset = dataset
@@ -621,6 +636,7 @@ class ProtectedGeneralization(AnonymizationMethodInterface):
         self.k = k
         self.knowledge = knowledge
         self.strategy = strategy
+        self.time_strategy = time_strategy
 
     def run(self):
         tdf = self.dataset.to_tdf()
@@ -630,7 +646,7 @@ class ProtectedGeneralization(AnonymizationMethodInterface):
         logging.info(f"Number of tiles: {len(tessellation)}")
 
         logging.info("Time tessellation")
-        mtdf, tessellation = time_tessellation(mtdf, tessellation, self.time_interval)
+        mtdf, tessellation, datetime_ranges = time_tessellation(mtdf, tessellation, self.time_interval)
         logging.info(f"Number of tiles: {len(tessellation)}")
 
         logging.info("Preprocessing tiles")
@@ -663,10 +679,12 @@ class ProtectedGeneralization(AnonymizationMethodInterface):
             logging.info(f'Total combinations: {len(combinations_count.keys())}. Unique: {number_of_bad_comb}')
 
         logging.info("Generating anonymized trajectories")
+        # Use the datetime ranges if we have to use equal timestamps
+        dt_ranges = datetime_ranges if (self.time_interval is not None and self.time_strategy == 'same') else None
         if self.strategy == 'centroid':
-            mtdf = generate_generalized_trajectories_centroid(mtdf, sequences, tessellation)
+            mtdf = generate_generalized_trajectories_centroid(mtdf, sequences, tessellation, dt_ranges)
         else:
-            mtdf = generate_generalized_trajectories_avg(mtdf, sequences, tessellation, self.time_interval is not None)
+            mtdf = generate_generalized_trajectories_avg(mtdf, sequences, tessellation, dt_ranges)
 
         logging.info("Cleaning dataframe")
         mtdf = clean_tdf(mtdf)
