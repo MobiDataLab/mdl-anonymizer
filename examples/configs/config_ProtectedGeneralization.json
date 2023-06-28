@@ -4,6 +4,9 @@
   "output_folder": "examples/output",
   "main_output_file": "mock_dataset_anonymized.csv",
   "params":  {
-    "k": 2
+    "k": 3,
+    "knowledge": 2,
+    "strategy":"avg",
+    "time_interval": 60
   }
 }
