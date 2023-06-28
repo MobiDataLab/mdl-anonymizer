@@ -5,6 +5,7 @@ import math
 from bisect import bisect_left
 from datetime import datetime
 
+import numpy as np
 import pandas as pd
 import pytz
 from geopandas import GeoDataFrame
@@ -88,7 +89,6 @@ def get_combinations_by_trajectory(combinations: dict, k):
 
 
 def remove_tiles(sequences: list[str], bad_combinations: dict, good_combinations: dict, show_progress: bool = False):
-
     def duplicates_preprocessing(seq, seq_good_combs):
         '''
         In case of sequence with duplicated element (loops) a special process is needed before removing tiles
@@ -156,7 +156,7 @@ def remove_tiles(sequences: list[str], bad_combinations: dict, good_combinations
                 candidates = d[count]
 
                 # We'll remove the tile within less good combinations
-                tmp_good = list(map(lambda x: x.split("_"), seq_bad_combinations))
+                tmp_good = list(map(lambda x: x.split("_"), seq_good_combinations))
                 all_tiles_good = [x for sublist in tmp_good for x in sublist]
 
                 min_count = 99999
@@ -185,13 +185,13 @@ def remove_tiles(sequences: list[str], bad_combinations: dict, good_combinations
 
                 # Are there duplicated elements in the sequence? This means loops in the trajectory
                 if len(sequence) != len(set(sequence)):
-                    sequence, bad_combs, good_combs = duplicates_preprocessing(sequence, good_combinations.get(tid, None))
+                    sequence, bad_combs, good_combs = duplicates_preprocessing(sequence,                                                                               good_combinations.get(tid, None))
                     sequence = fix_bad_combinations(sequence, bad_combs, good_combs)
                     # Keep parent tiles
                     sequence = list(map(lambda x: x[:x.find('#')], sequence))
                     # Remove consecutive duplicates
                     sequence = [i for i, j in itertools.zip_longest(sequence, sequence[1:])
-                             if i != j]
+                                if i != j]
                 else:
                     sequence = fix_bad_combinations(sequence, bad_combinations[tid], good_combinations.get(tid, None))
 
@@ -258,7 +258,7 @@ def generate_generalized_trajectories_centroid(mtdf: TrajDataFrame, sequences, t
     return mtdf
 
 
-def generate_generalized_trajectories_avg(mtdf, sequences, tiles):
+def generate_generalized_trajectories_avg(mtdf, sequences, tiles, timestamp=False):
     # Remove some columns from tiles file and merge with mtdf
     tiles = tiles.drop(['n_locs', 'lng', 'lat'], axis="columns", errors="ignore")
     mtdf = pd.merge(mtdf, tiles, how="left", on="tile_ID")
@@ -276,6 +276,10 @@ def generate_generalized_trajectories_avg(mtdf, sequences, tiles):
     new_lng = mtdf.groupby('tile_ID', as_index=False)[constants.LONGITUDE].mean()
     new_lat = mtdf.groupby('tile_ID', as_index=False)[constants.LATITUDE].mean()
 
+    # if timestamp:
+    #     new_timestamp = mtdf.groupby('tile_ID', as_index=False)[constants.DATETIME].mean()
+    #     mtdf = pd.merge(mtdf, new_timestamp, how="left", on="tile_ID", suffixes=('', '_new'))
+
     mtdf = pd.merge(mtdf, new_lng, how="left", on="tile_ID", suffixes=('', '_new'))
     mtdf = pd.merge(mtdf, new_lat, how="left", on="tile_ID", suffixes=('', '_new'))
 
@@ -285,6 +289,12 @@ def generate_generalized_trajectories_avg(mtdf, sequences, tiles):
         constants.LATITUDE + '_new': constants.LATITUDE,
         constants.LONGITUDE + '_new': constants.LONGITUDE,
     })
+
+    # if timestamp:
+    #     mtdf = mtdf.rename(columns={
+    #         constants.DATETIME: 'orig_datetime',
+    #         constants.DATETIME + '_new': constants.DATETIME,
+    #     })
 
     return mtdf
 
@@ -324,6 +334,7 @@ def get_grid_shape(grid: GeoDataFrame):
     :param tiles:
     :return:
     '''
+
     t = grid.copy()
 
     tmp_crs = constants.UNIVERSAL_CRS
@@ -353,7 +364,7 @@ def get_grid_shape(grid: GeoDataFrame):
 
 def preprocessing_merge_tiles(tiles: GeoDataFrame, mtdf: TrajDataFrame, min_k: int):
     '''
-    Check the original tessellation and try to merge cells with less than min_k locations
+    Check the original tessellation (3D if we are also tessellating by time) and try to merge cells in the same time_level with less than min_k locations
     :param tiles: original tessellation
     :param mtdf: locations
     :param min_k: min value of locations per cell
@@ -366,6 +377,10 @@ def preprocessing_merge_tiles(tiles: GeoDataFrame, mtdf: TrajDataFrame, min_k: i
         :param list_of_sets:
         :return: the list of final supersets
         '''
+
+        if not list_of_sets:
+            return []
+
         while True:
             merged_one = False
             supersets = [list_of_sets[0]]
@@ -385,40 +400,60 @@ def preprocessing_merge_tiles(tiles: GeoDataFrame, mtdf: TrajDataFrame, min_k: i
 
         return supersets
 
-    def merge_tiles(tile_ids: list[str], tessellation: GeoDataFrame):
+    def merge_tiles(tile_ids: list[str], tdf: TrajDataFrame, tessellation: GeoDataFrame, time_level=0):
         '''
 
         :param tile_ids: Set with the tile ids of the tiles to be combined
+        :param tdf:
         :param tessellation: The whole tessellation
+        :param time_level
         :return: The whole tessellation with the tiles combined
         '''
+
         polygons = list(map(lambda id: tessellation[tessellation.tile_ID == id].geometry.values[0], tile_ids))
+        s_tile_ids = list(map(lambda id: tessellation[tessellation.tile_ID == id].s_tile_ID.values[0], tile_ids))
+        n_locs = list(
+            map(lambda id: tessellation[tessellation.tile_ID == id].n_locs.values[0], tile_ids))
 
+        # New merge tile data
+        new_tile_id = f'{".".join(sorted(tile_ids))}'
+
+        new_s_tile_id = f'{".".join(sorted(s_tile_ids))}'
         new_polygon = unary_union(polygons)
+        new_n_locs = sum(n_locs)
 
-        # Delete rows
-        for id in tile_ids:
-            tessellation = tessellation.drop(tessellation[tessellation.tile_ID == id].index)
+        # Remap locations
+        tdf['tile_ID'] = tdf['tile_ID'].replace(tile_ids, new_tile_id)
 
         # Add new row to geoseries
-        row = pd.Series([f'{".".join(sorted(tile_ids))}', new_polygon, None, None, None], index=tessellation.columns)
-
+        row = pd.Series([new_tile_id, new_polygon, new_s_tile_id, time_level,
+                         new_n_locs, None, None], index=tessellation.columns)
         tessellation = pd.concat([tessellation, row.to_frame().T], ignore_index=True)
 
-        return tessellation
+        # Delete old tiles
+        tessellation = tessellation.drop(tessellation[tessellation.tile_ID.isin(tile_ids)].index)
 
-    rows, columns = get_grid_shape(tiles)
+        return tdf, tessellation
+
+    # Get rows, columns and max_tile_id of a spatial layer
+    logging.info("\t Computing grid shape")
+    rows, columns = get_grid_shape(tiles[tiles['time_level'] == 0])
+    logging.info(f"\t Every time layer has {rows} rows and {columns} columns")
     max_tile_id = (rows * columns) - 1
 
     # Count the number of locations in every tile
+    logging.info("\t Counting the number of locations in every tile")
     s = mtdf['tile_ID'].value_counts()
-    tiles = pd.merge(tiles, s, left_on="tile_ID", right_index=True)
+    tiles = pd.merge(tiles, s, left_on='tile_ID', right_index=True)
+
     tiles = tiles.rename(columns={
         'tile_ID_y': 'n_locs',
     })
-    tiles = tiles.drop('tile_ID_x', axis="columns")
+
+    tiles = tiles.drop(['tile_ID_x'], axis=1)
 
     # Compute centroids of the tiles as avg of locations
+    logging.info("\t Computings centroids of the tiles as avg of locations")
     mtdf_tiles = pd.merge(mtdf, tiles, how="left", on="tile_ID")
     new_lng = mtdf_tiles.groupby('tile_ID', as_index=False)[constants.LONGITUDE].mean()
     new_lat = mtdf_tiles.groupby('tile_ID', as_index=False)[constants.LATITUDE].mean()
@@ -426,67 +461,100 @@ def preprocessing_merge_tiles(tiles: GeoDataFrame, mtdf: TrajDataFrame, min_k: i
     tiles = pd.merge(tiles, new_lat, how="left", on="tile_ID")
 
     # Get tiles with less than 2*k locations
-    tiles_to_check = tiles[tiles['n_locs'] < min_k]
-    tiles_to_check = tiles_to_check.sort_values(by=['n_locs', 'tile_ID'])
+    all_tiles_to_check = tiles[tiles['n_locs'] < min_k]
+    all_tiles_to_check = all_tiles_to_check.sort_values(by=['n_locs', 'tile_ID'])
 
-    # We start to try to join tiles
-    tiles_to_join = []  # List of sets with the ids to be joined
+    # Go time level by time level, trying to merging tiles
+    logging.info("\t Going time level by time level")
+    n_time_levels = all_tiles_to_check['time_level'].unique()
+    for t in n_time_levels:
+        logging.info(f"\t Time level: {t}")
+        time_level_tiles_to_check = all_tiles_to_check[all_tiles_to_check['time_level'] == t].copy()
 
-    for index, tile in tiles_to_check.iterrows():
-        tile_id = int(tile['tile_ID'])
-        tile_lat = tile['lat']
-        tile_lng = tile['lng']
+        # We start to try to join tiles
+        logging.info(f"\t\t Building sets of tiles to join")
+        tiles_to_join = []  # List of sets with the ids to be joined
+        tiles_to_exclude = set()  # During the merge process, the number of locations of the tiles will change. In some cases,
+        # tiles originally to be checked can get the min required number of locations,
+        # so we will not have to check them
 
-        # Look the four adjacents files
-        tile_up = tile_id + 1 if (tile_id + 1) % rows != 0 else None
-        tile_down = tile_id - 1 if tile_id % rows != 0 else None
-        tile_left = tile_id - rows if tile_id - rows >= 0 else None
-        tile_right = tile_id + rows if tile_id + rows < max_tile_id else None
+        for index, tile in tqdm(time_level_tiles_to_check.iterrows()):
+            tile_id = int(tile['tile_ID'])
 
-        candidate_ids = (tile_up, tile_right, tile_down, tile_left)
+            # This tile has been merged before, and it already has the required number of locations
+            if tile_id in tiles_to_exclude:
+                continue
 
-        max_gravity = 0
-        selected_tile = None
-        selected_id = None
-        for candidate_id in candidate_ids:
-            row = tiles[tiles.tile_ID == str(candidate_id)]
+            s_tile_id = int(tile['s_tile_ID'])
+            tile_lat = tile['lat']
+            tile_lng = tile['lng']
 
-            if not row.empty:
-                row_lat = row['lat'].iloc[0]
-                row_lng = row['lng'].iloc[0]
-                # Compute gravity
-                d = haversine((tile_lat, tile_lng), (row_lat, row_lng))
-                locs = row['n_locs'].iloc[0]
-                g = locs / (d ** 2)
+            # Look the four adjacent tiles (in the same time level)
+            tile_up = s_tile_id + 1 if (s_tile_id + 1) % rows != 0 else None
+            tile_down = s_tile_id - 1 if s_tile_id % rows != 0 else None
+            tile_left = s_tile_id - rows if s_tile_id - rows >= 0 else None
+            tile_right = s_tile_id + rows if s_tile_id + rows < max_tile_id else None
 
-                # The tile will be merged with the adjacent tile which 'attracts' it more
-                if g > max_gravity:
-                    max_gravity = g
-                    selected_tile = row
-                    selected_id = candidate_id
+            candidate_ids = (tile_up, tile_right, tile_down, tile_left)
 
-        if selected_tile is not None:
+            max_gravity = 0
+            selected_tile = None
+            selected_id = None
 
-            # Add to tiles to join
-            for group in tiles_to_join:
-                # If one of the tiles has been market to be joined before, we add a new tile to this set
-                if not group.isdisjoint({tile_id, selected_id}):
-                    group |= {str(tile_id), str(selected_id)}
-                    break
-            else:
-                # Otherwise, we create a new set of tiles to be joined
-                tiles_to_join.append({str(tile_id), str(selected_id)})
+            for candidate_id in candidate_ids:
 
-    # Merge all the sets to get disjoint supersets
-    tiles_to_join = get_super_sets(tiles_to_join)
+                candidate = tiles[(tiles['s_tile_ID'] == str(candidate_id)) & (tiles['time_level'] == t)]
 
-    for s in tiles_to_join:
-        tiles = merge_tiles(s, tiles)
+                if not candidate.empty:
+                    row_lat = candidate['lat'].iloc[0]
+                    row_lng = candidate['lng'].iloc[0]
+                    # Compute gravity
+                    d = haversine((tile_lat, tile_lng), (row_lat, row_lng))
+                    locs = candidate['n_locs'].iloc[0]
+                    g = locs / (d ** 2)
 
-    return tiles
+                    # The tile will be merged with the adjacent tile which 'attracts' it more
+                    if g > max_gravity:
+                        max_gravity = g
+                        selected_tile = candidate
+                        selected_id = int(candidate['tile_ID'])
+
+            if selected_tile is not None:
+
+                # Add to tiles to join
+                for group in tiles_to_join:
+                    # If one of the tiles has been marked to be joined before, we add a new tile to this set
+                    if not group.isdisjoint({tile_id, selected_id}):
+                        group |= {str(tile_id), str(selected_id)}
+                        break
+                else:
+                    # Otherwise, we create a new set of tiles to be joined
+                    tiles_to_join.append({str(tile_id), str(selected_id)})
+
+                # If the resulting cell will have more than min_k, mark to not check it
+                n_locs = tile['n_locs']
+                sel_n_locs = selected_tile['n_locs'].iloc[0]
+                if sel_n_locs + n_locs > min_k:
+                    tiles_to_exclude.add(selected_id)
+
+        # Merge all the sets to get disjoint supersets
+        tiles_to_join = get_super_sets(tiles_to_join)
+
+        logging.info(f"\t\t Merging")
+        for s in tqdm(tiles_to_join):
+            mtdf, tiles = merge_tiles(s, mtdf, tiles, t)
+
+    return mtdf, tiles
 
 
 def time_tessellation(tdf: TrajDataFrame, tiles: GeoDataFrame, time_interval: int):
+    if not time_interval:
+        logging.info('\tNot required')
+        tiles['s_tile_ID'] = tiles['tile_ID']
+        tiles['time_level'] = np.int8(0)
+
+        return tdf, tiles
+
     n_tiles = len(tiles)
 
     # Compute datatime ranges
@@ -497,30 +565,34 @@ def time_tessellation(tdf: TrajDataFrame, tiles: GeoDataFrame, time_interval: in
     max_datetime = tdf[constants.DATETIME].max()
 
     datetime_ranges = pd.date_range(start=min_datetime, end=max_datetime, freq=offset)
-    # print(min_datetime, max_datetime)
-    print(datetime_ranges)
+    logging.info(f'\tNumber of time levels: {len(datetime_ranges)}')
+    logging.info(f'\tTime levels: {datetime_ranges}')
 
     # Add temporal tiles to the tessellation
-    tiles = tiles.rename(columns={
-        'tile_ID': 's_tile_ID',
-    })
-    tiles['s_tile_ID'] = pd.to_numeric(tiles['s_tile_ID'])
-    tiles['time_level'] = 0
-    tiles['tile_ID'] = tiles['s_tile_ID']
+    logging.info('\tAdding temporal tiles')
+    tiles['s_tile_ID'] = tiles['tile_ID']
+    tiles['tile_ID'] = tiles['tile_ID'].astype('int')
+    tiles['s_tile_ID'] = tiles['s_tile_ID'].astype('int')
+    tiles['time_level'] = np.int8(0)
+
     tiles_2 = tiles.copy()
     for time_level, t in enumerate(datetime_ranges):
         if time_level > 0:
-            tiles_2['time_level'] = time_level
+            tiles_2['time_level'] = np.int8(time_level)
             tiles_2['tile_ID'] = tiles_2['s_tile_ID'] + (n_tiles * time_level)
             tiles = pd.concat([tiles, tiles_2], ignore_index=True)
 
     # Modify tile_Ids based on location timestamp
-    # print(tdf)
-    # print(n_tiles)
+    logging.info('\tModifying tile ids based on timestamp')
+    tdf['tile_ID'] = tdf['tile_ID'].astype('int')
     tdf['tile_ID'] = tdf.apply(
         lambda row: row['tile_ID'] + (
                 n_tiles * (bisect_left(datetime_ranges, row[constants.DATETIME]) - 1)),
         axis=1)
+
+    tiles['tile_ID'] = tiles['tile_ID'].astype('str')
+    tiles['s_tile_ID'] = tiles['s_tile_ID'].astype('str')
+    tdf['tile_ID'] = tdf['tile_ID'].astype('str')
 
     return tdf, tiles
 
@@ -555,16 +627,14 @@ class ProtectedGeneralization(AnonymizationMethodInterface):
 
         logging.info("Starting tessellation")
         mtdf, tessellation = spatial_tessellation(tdf, "squared", self.tile_size)
+        logging.info(f"Number of tiles: {len(tessellation)}")
 
-        if self.time_interval is not None:
-            logging.info("Time tessellation")
-            mtdf['tile_ID'] = pd.to_numeric(mtdf['tile_ID'])
-            mtdf, tessellation = time_tessellation(mtdf, tessellation, self.time_interval)
+        logging.info("Time tessellation")
+        mtdf, tessellation = time_tessellation(mtdf, tessellation, self.time_interval)
+        logging.info(f"Number of tiles: {len(tessellation)}")
 
         logging.info("Preprocessing tiles")
-        # tessellation = preprocessing_merge_tiles(tessellation, mtdf, 2 * self.k)
-        #
-        # mtdf = tdf.mapping(tessellation, remove_na=True)
+        mtdf, tessellation = preprocessing_merge_tiles(tessellation, mtdf, 3 * self.k)
 
         logging.info("Generating sequences")
         sequences = generate_sequences(mtdf)
@@ -575,13 +645,13 @@ class ProtectedGeneralization(AnonymizationMethodInterface):
         logging.info("Computing unique combinations by trajectory")
         bad_combinations, good_combinations, number_of_bad_comb = get_combinations_by_trajectory(combinations_count,
                                                                                                  self.k)
-
         logging.info(f'Total combinations: {len(combinations_count.keys())}. Bad: {number_of_bad_comb}')
 
         logging.info("REMOVING TRAJECTORY TILES")
         while number_of_bad_comb > 0:
             logging.info("Starting iteration")
             logging.info("\tStarting removing")
+
             sequences = remove_tiles(sequences, bad_combinations, good_combinations)
 
             logging.info("\tCounting combinations")
@@ -596,9 +666,8 @@ class ProtectedGeneralization(AnonymizationMethodInterface):
         if self.strategy == 'centroid':
             mtdf = generate_generalized_trajectories_centroid(mtdf, sequences, tessellation)
         else:
-            mtdf = generate_generalized_trajectories_avg(mtdf, sequences, tessellation)
+            mtdf = generate_generalized_trajectories_avg(mtdf, sequences, tessellation, self.time_interval is not None)
 
-        # mtdf.to_csv(f"filtered_dataset_20080608_tmp_k{self.k}_kw{self.knowledge}_t{self.tile_size}.csv")
         logging.info("Cleaning dataframe")
         mtdf = clean_tdf(mtdf)
 
