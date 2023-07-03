@@ -38,7 +38,7 @@ class PropensityScore(MeasuresMethodInterface):
 
     def run(self):
         self.results["propensity"] = round(self.get_propensity_score(self.tiles_size, self.time_interval), 4)
-        # print(f'Propensity score: {self.results["propensity"]}')
+        logging.info(f'Propensity score: {self.results["propensity"]}')
 
     def get_result(self):
         return self.results

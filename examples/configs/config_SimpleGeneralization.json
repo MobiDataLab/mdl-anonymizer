@@ -1,8 +1,8 @@
 {
   "method": "SimpleGeneralization",
-  "input_file": "examples/data/filtered_dataset_20080608_sample.csv",
-  "output_folder": "examples/output",
-  "main_output_file": "filtered_dataset_20080608_sample_anonymized.csv",
+  "input_file": "examples/data/filtered_dataset_20080608.csv",
+  "output_folder": "examples/output/cabs_dataset/",
+  "main_output_file": "filtered_dataset_20080608_anonymized_SimpleGen.csv",
   "params":  {
     "gen_tile_size": 500,
     "tile_shape": "squared",

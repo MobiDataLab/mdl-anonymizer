@@ -1,8 +1,8 @@
 {
   "method": "ProtectedGeneralization",
-  "input_file": "examples/data/mock_dataset.csv",
-  "output_folder": "examples/output",
-  "main_output_file": "mock_dataset_anonymized.csv",
+  "input_file": "examples/data/fr-idf_2022_January.csv",
+  "output_folder": "examples/output/fr-idf_2022_January/",
+  "main_output_file": "fr-idf_2022_January_anonymized_protectedGen_k3.csv",
   "params":  {
     "k": 3,
     "knowledge": 2,

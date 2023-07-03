@@ -36,10 +36,7 @@ class RecordLinkage(MeasuresMethodInterface):
             random.seed(self.seed)
 
         self.results["percen_record_linkage"] = round(self.get_fast_record_linkage(self.trajectory_distance), 2)
-        # print(f'% Record linkage: {self.results["percen_record_linkage"]}')
-
-        self.results["percen_record_linkage_sample"] = round(self.get_sample_record_linkage(self.trajectory_distance), 2)
-        # print(f'% Record linkage: {self.results["percen_record_linkage_sample"]}')
+        logging.info(f'% Record linkage: {self.results["percen_record_linkage"]}')
 
     def get_result(self):
         return self.results

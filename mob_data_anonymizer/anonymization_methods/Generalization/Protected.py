@@ -565,7 +565,7 @@ def time_tessellation(tdf: TrajDataFrame, tiles: GeoDataFrame, time_interval: in
     if not time_interval:
         logging.info('\tNot required')
         tiles['s_tile_ID'] = tiles['tile_ID']
-        tiles['time_level'] = np.int8(0)
+        tiles['time_level'] = 0
 
         return tdf, tiles, None
 
@@ -587,12 +587,12 @@ def time_tessellation(tdf: TrajDataFrame, tiles: GeoDataFrame, time_interval: in
     tiles['s_tile_ID'] = tiles['tile_ID']
     tiles['tile_ID'] = tiles['tile_ID'].astype('int')
     tiles['s_tile_ID'] = tiles['s_tile_ID'].astype('int')
-    tiles['time_level'] = np.int8(0)
+    tiles['time_level'] = 0
 
     tiles_2 = tiles.copy()
-    for time_level, t in enumerate(datetime_ranges):
+    for time_level, t in enumerate(tqdm(datetime_ranges)):
         if time_level > 0:
-            tiles_2['time_level'] = np.int8(time_level)
+            tiles_2['time_level'] = time_level
             tiles_2['tile_ID'] = tiles_2['s_tile_ID'] + (n_tiles * time_level)
             tiles = pd.concat([tiles, tiles_2], ignore_index=True)
 
