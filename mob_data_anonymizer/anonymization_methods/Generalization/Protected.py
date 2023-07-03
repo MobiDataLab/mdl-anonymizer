@@ -2,6 +2,7 @@ import collections
 import itertools
 import logging
 import math
+import time
 from bisect import bisect_left
 from datetime import datetime
 
@@ -589,12 +590,18 @@ def time_tessellation(tdf: TrajDataFrame, tiles: GeoDataFrame, time_interval: in
     tiles['s_tile_ID'] = tiles['s_tile_ID'].astype('int')
     tiles['time_level'] = 0
 
-    tiles_2 = tiles.copy()
+
+    # start_time = time.time()
+    all_tiles_df = [tiles]
     for time_level, t in enumerate(tqdm(datetime_ranges)):
         if time_level > 0:
+            tiles_2 = tiles.copy()
             tiles_2['time_level'] = time_level
             tiles_2['tile_ID'] = tiles_2['s_tile_ID'] + (n_tiles * time_level)
-            tiles = pd.concat([tiles, tiles_2], ignore_index=True)
+            all_tiles_df.append(tiles_2)
+
+    tiles = pd.concat(all_tiles_df, ignore_index=True)
+    # print("--- %s seconds ---" % (time.time() - start_time))
 
     # Modify tile_Ids based on location timestamp
     logging.info('\tModifying tile ids based on timestamp')
