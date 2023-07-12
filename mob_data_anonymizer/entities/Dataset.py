@@ -140,7 +140,7 @@ class Dataset(ABC):
         Note: Datetimes are written in UTC timezone
         """
         if not self.is_loaded():
-            raise RuntimeError("Dataset is not loaded")
+            raise RuntimeError("Dataset is not loaded or it is empty")
 
         logging.info("Writing dataset...")
 

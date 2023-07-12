@@ -17,17 +17,17 @@ class Microaggregation(AnonymizationMethodInterface):
                  clustering_method: ClusteringInterface = None,
                  aggregation_method: TrajectoryAggregationInterface = None):
         """
-                Parameters
-                ----------
-                dataset : Dataset
-                    Dataset to anonymize.
-                k : int
-                    Minimum number of trajectories to be aggregated in a cluster (default is 3)
-                clustering_method : ClusteringInterface, optional
-                    Method to cluster the trajectories (Default is SimpleMDAV)
-                aggregation_method : TrajectoryAggregationInterface, optional
-                    Method to aggregate the trajectories within a cluster (Default is Martinez2021.Aggregation)
-                """
+        Parameters
+        ----------
+        dataset : Dataset
+            Dataset to anonymize.
+        k : int
+            Minimum number of trajectories to be aggregated in a cluster (default is 3)
+        clustering_method : ClusteringInterface, optional
+            Method to cluster the trajectories (Default is SimpleMDAV)
+        aggregation_method : TrajectoryAggregationInterface, optional
+            Method to aggregate the trajectories within a cluster (Default is Martinez2021.Aggregation)
+        """
 
         self.dataset = dataset
         self.aggregation_method = aggregation_method

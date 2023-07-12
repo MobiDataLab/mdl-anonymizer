@@ -6,6 +6,9 @@
     "ProtectedGeneralization": {
       "class": "mob_data_anonymizer.anonymization_methods.Generalization.Protected.ProtectedGeneralization"
     },
+    "DomingoTrujillo2012_SwapLocations": {
+      "class": "mob_data_anonymizer.anonymization_methods.DomingoTrujillo_2012.SwapLocations.SwapLocations"
+    },
     "SwapLocations": {
       "class": "mob_data_anonymizer.anonymization_methods.SwapLocations.SwapLocations.SwapLocations"
     },

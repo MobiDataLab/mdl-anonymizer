@@ -627,7 +627,7 @@ class ProtectedGeneralization(AnonymizationMethodInterface):
         '''
 
         :param dataset:
-        :param tile_size:
+        :param tile_size: in meters
         :param time_interval: in minutes
         :param k:
         :param knowledge:

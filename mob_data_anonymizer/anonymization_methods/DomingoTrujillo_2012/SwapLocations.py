@@ -2,6 +2,8 @@ import logging
 import random
 import time
 
+from haversine import Unit
+
 from mob_data_anonymizer.aggregation.Martinez2021.mean_trajectory import Mean_trajectory
 from mob_data_anonymizer.aggregation.TrajectoryAggregationInterface import TrajectoryAggregationInterface
 from mob_data_anonymizer.anonymization_methods.AnonymizationMethodInterface import AnonymizationMethodInterface
@@ -15,24 +17,32 @@ from mob_data_anonymizer.entities.TimestampedLocation import TimestampedLocation
 from mob_data_anonymizer.entities.Trajectory import Trajectory
 
 
-class SwapLocations(AnonymizationMethodInterface):
-    def __init__(self, dataset: Dataset, k, R_t, R_s, clustering_method: ClusteringInterface = None,
-                 distance: DistanceInterface = None, aggregation_method: TrajectoryAggregationInterface = None):
-        '''
+DEFAULT_VALUES = {
+    "k": 3,
+    "R_t": 30,
+    "R_s": 1000,
+}
 
-        :param dataset:
-        :param k:
-        :param R_t: s
-        :param R_s: km
-        :param clustering_method:
-        :param distance:
-        :param aggregation_method:
-        '''
+class SwapLocations(AnonymizationMethodInterface):
+    def __init__(self, dataset: Dataset, k=DEFAULT_VALUES['k'], R_t=DEFAULT_VALUES['R_t'], R_s=DEFAULT_VALUES['R_s'],
+                 clustering_method: ClusteringInterface = None,
+                 aggregation_method: TrajectoryAggregationInterface = None):
+        """
+
+        :param dataset : Dataset
+            Dataset to anonymize.
+        :param k : int
+            Minimum number of trajectories to be aggregated in a cluster (default is 3)
+        :param R_t: in minutes
+        :param R_s: in meters
+        :param clustering_method : ClusteringInterface, optional
+            Method to cluster the trajectories (Default is SimpleMDAV)
+        :param aggregation_method : TrajectoryAggregationInterface, optional
+            Method to aggregate the trajectories within a cluster (Default is Martinez2021.Aggregation)
+        """
         self.dataset = dataset
-        self.distance = distance if distance else Distance(dataset)
-        self.aggregation_method = aggregation_method if aggregation_method else Aggregation
-        self.clustering_method = clustering_method if clustering_method \
-            else SimpleMDAV(SimpleMDAVDataset(dataset, self.distance, self.aggregation_method))
+        self.aggregation_method = aggregation_method
+        self.clustering_method = clustering_method
 
         self.clusters = {}
         self.anonymized_dataset = dataset.__class__()
@@ -44,16 +54,16 @@ class SwapLocations(AnonymizationMethodInterface):
     def run(self):
 
         # Filter dataset. We take just the main component of the distance graph
-        filtered_dataset = self.distance.filter_dataset()
-        logging.info(f"Dataset filtered by main component. Now it has {len(filtered_dataset)} trajectories.")
+        # filtered_dataset = self.distance.filter_dataset()
+        # logging.info(f"Dataset filtered by main component. Now it has {len(filtered_dataset)} trajectories.")
 
         # Clustering
         logging.info("Starting clustering!")
-        start = time.time()
-        self.clustering_method.set_dataset(filtered_dataset)
+        logging.info(f"k: {self.k}")
+
         self.clustering_method.run(self.k)
-        end = time.time()
-        logging.info(f"Clustering finished! Time: {end - start}")
+
+        logging.info(f"Clustering finished! ")
         logging.debug(self.clustering_method.mdav_dataset.assigned_to)
 
         logging.info("Swapping locations!")
@@ -84,7 +94,7 @@ class SwapLocations(AnonymizationMethodInterface):
 
                 # For all trajectories t_p in C with t_p != T
                 for T_p in [traj for traj in cluster_trajectories if traj != T]:
-                    # Look for an "unswapped" triple 'l' minimazing the intra-cluster distance in U and such that:
+                    # Look for an "unswapped" triple 'l' minimizing the intra-cluster distance in U and such that:
                     d = 99999999
                     landa_p = None
 
@@ -94,7 +104,7 @@ class SwapLocations(AnonymizationMethodInterface):
                         # Check temporal distance from 'landa' to 'l'
                         if landa.temporal_distance(l) <= self.R_t:
                             # Check spatial distance from 'landa' to 'l'
-                            if 0 <= landa.spatial_distance(l) <= self.R_s:
+                            if 0 <= landa.spatial_distance(l, unit=Unit.METERS) <= self.R_s:
                                 # We take the location with the minimum intra-cluster distance
                                 if TimestampedLocation.compute_centroid([tuple[1] for tuple in U]).distance(l) < d:
                                     d = landa.distance(l)
