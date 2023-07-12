@@ -1,17 +1,11 @@
 import logging
 import random
-import time
 
 from haversine import Unit
 
-from mob_data_anonymizer.aggregation.Martinez2021.mean_trajectory import Mean_trajectory
 from mob_data_anonymizer.aggregation.TrajectoryAggregationInterface import TrajectoryAggregationInterface
 from mob_data_anonymizer.anonymization_methods.AnonymizationMethodInterface import AnonymizationMethodInterface
 from mob_data_anonymizer.clustering.ClusteringInterface import ClusteringInterface
-from mob_data_anonymizer.clustering.MDAV.SimpleMDAV import SimpleMDAV
-from mob_data_anonymizer.clustering.MDAV.SimpleMDAVDataset import SimpleMDAVDataset
-from mob_data_anonymizer.distances.trajectory.DistanceInterface import DistanceInterface
-from mob_data_anonymizer.distances.trajectory.DomingoTrujillo2012.Distance import Distance
 from mob_data_anonymizer.entities.Dataset import Dataset
 from mob_data_anonymizer.entities.TimestampedLocation import TimestampedLocation
 from mob_data_anonymizer.entities.Trajectory import Trajectory
@@ -26,15 +20,18 @@ DEFAULT_VALUES = {
 class SwapLocations(AnonymizationMethodInterface):
     def __init__(self, dataset: Dataset, k=DEFAULT_VALUES['k'], R_t=DEFAULT_VALUES['R_t'], R_s=DEFAULT_VALUES['R_s'],
                  clustering_method: ClusteringInterface = None,
-                 aggregation_method: TrajectoryAggregationInterface = None):
+                 aggregation_method: TrajectoryAggregationInterface = None,
+                 seed: int = None):
         """
 
         :param dataset : Dataset
             Dataset to anonymize.
         :param k : int
             Minimum number of trajectories to be aggregated in a cluster (default is 3)
-        :param R_t: in minutes
-        :param R_s: in meters
+        :param R_t: int
+            Temporal threshold to be swapped (in minutes)
+        :param R_s: int
+            Distance threshold to be swapped (in meters)
         :param clustering_method : ClusteringInterface, optional
             Method to cluster the trajectories (Default is SimpleMDAV)
         :param aggregation_method : TrajectoryAggregationInterface, optional
@@ -51,7 +48,13 @@ class SwapLocations(AnonymizationMethodInterface):
         self.R_t = R_t
         self.R_s = R_s
 
+        self.seed = seed
+
     def run(self):
+
+        # Set seed
+        if self.seed is not None:
+            random.seed(self.seed)
 
         # Filter dataset. We take just the main component of the distance graph
         # filtered_dataset = self.distance.filter_dataset()
@@ -102,7 +105,7 @@ class SwapLocations(AnonymizationMethodInterface):
                     for l in [l for l in T_p.locations if (T_p.id, l.timestamp, l.x, l.y) not in triples_swapped]:
 
                         # Check temporal distance from 'landa' to 'l'
-                        if landa.temporal_distance(l) <= self.R_t:
+                        if landa.temporal_distance(l) / 60 <= self.R_t:
                             # Check spatial distance from 'landa' to 'l'
                             if 0 <= landa.spatial_distance(l, unit=Unit.METERS) <= self.R_s:
                                 # We take the location with the minimum intra-cluster distance
