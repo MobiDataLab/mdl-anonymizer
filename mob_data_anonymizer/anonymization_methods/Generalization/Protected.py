@@ -482,7 +482,7 @@ def preprocessing_merge_tiles(tiles: GeoDataFrame, mtdf: TrajDataFrame, min_k: i
     # Go time level by time level, trying to merging tiles
     logging.info("\t Going time level by time level")
     n_time_levels = all_tiles_to_check['time_level'].unique()
-    for t in n_time_levels:
+    for t in tqdm(n_time_levels):
         logging.info(f"\t Time level: {t}")
         time_level_tiles_to_check = all_tiles_to_check[all_tiles_to_check['time_level'] == t].copy()
 
@@ -493,7 +493,7 @@ def preprocessing_merge_tiles(tiles: GeoDataFrame, mtdf: TrajDataFrame, min_k: i
         # tiles originally to be checked can get the min required number of locations,
         # so we will not have to check them
 
-        for index, tile in tqdm(time_level_tiles_to_check.iterrows()):
+        for index, tile in time_level_tiles_to_check.iterrows():
             tile_id = int(tile['tile_ID'])
 
             # This tile has been merged before, and it already has the required number of locations
@@ -646,6 +646,7 @@ class ProtectedGeneralization(AnonymizationMethodInterface):
         self.time_strategy = time_strategy
 
     def run(self):
+        start = time.time()
         tdf = self.dataset.to_tdf()
 
         logging.info("Starting tessellation")
@@ -697,6 +698,8 @@ class ProtectedGeneralization(AnonymizationMethodInterface):
         mtdf = clean_tdf(mtdf)
 
         logging.info(f"Finished! Anonymized dataset has {len(mtdf)} locations")
+        end = time.time()
+        logging.info(f"Clustering finished! Time: {end - start}")
         self.anonymized_dataset.from_tdf(mtdf)
 
     def get_anonymized_dataset(self) -> Dataset:

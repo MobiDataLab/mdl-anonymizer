@@ -46,8 +46,6 @@ class TimePartMicroaggregation(AnonymizationMethodInterface):
         logging.info(f"k: {self.k}")
         logging.info(f"Interval: {self.interval}")
         # Partition
-        for i, t in enumerate(self.dataset.trajectories):
-            t.index = i
         datasets = []
         ordered_trajectories = sorted(self.dataset.trajectories, key=lambda t: t.locations[0].timestamp)
         while len(ordered_trajectories) >= self.k:

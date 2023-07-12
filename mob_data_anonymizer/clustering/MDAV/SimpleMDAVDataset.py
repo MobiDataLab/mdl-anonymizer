@@ -12,6 +12,8 @@ class SimpleMDAVDataset(MDAVDatasetInterface):
     def __init__(self, dataset: Dataset, distance: DistanceInterface,
                  aggregation_method: TrajectoryAggregationInterface = None):
         self.dataset = dataset
+        for i, t in enumerate(self.dataset.trajectories):
+            t.index = i
         self.distance = distance
         self.trajectories_elegible = np.array(self.dataset.trajectories)
         self.distances = None
