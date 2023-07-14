@@ -194,6 +194,8 @@ class Dataset(ABC):
         tdf[constants.UID] = tdf[constants.UID].astype(np.int32)
         tdf[constants.TID] = tdf[constants.TID].astype(np.int32)
 
+        tdf.crs = 'epsg:4326'
+
         return tdf
 
     # def to_tdf(self):
