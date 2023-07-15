@@ -17,33 +17,59 @@ class TestSimpleGeneralization(TestBase):
 
     def test_default(self):
 
-        swap_locations = AnonymizationMethodFactory.get("SimpleGeneralization", self.dataset)
-        swap_locations.run()
-        anon_dataset = swap_locations.get_anonymized_dataset()
+        simple_generalization = AnonymizationMethodFactory.get("SimpleGeneralization", self.dataset)
+        simple_generalization.run()
+        anon_dataset = simple_generalization.get_anonymized_dataset()
 
-        self.assertEqual(len(anon_dataset), 44)
-        self.assertEqual(anon_dataset.get_number_of_locations(), 344)
+        self.assertEqual(len(anon_dataset), 46)
+        self.assertEqual(anon_dataset.get_number_of_locations(), 383)
         self.assertEqual(anon_dataset.get_min_timestamp(), 1669043011)
         self.assertEqual(anon_dataset.get_max_timestamp(), 1669058195)
-        self.assertEqual(anon_dataset.get_n_locations_longest_trajectory(), 26)
+        self.assertEqual(anon_dataset.get_n_locations_longest_trajectory(), 28)
+        self.assertEqual(anon_dataset.trajectories[1].locations[0].x, 1.2388959063102787)
+        self.assertEqual(anon_dataset.trajectories[1].locations[0].y, 41.11418028778517)
+        self.assertEqual(anon_dataset.trajectories[1].locations[0].timestamp, 1669044651)
 
     def test_params(self):
 
         params = {
-            "gen_tile_size": 250,
-            "traj_anon_tile_size": 2000,
+            "tile_size": 250,
             "overlapping_strategy": "one"
         }
 
-        swap_locations = AnonymizationMethodFactory.get("SimpleGeneralization", self.dataset, params)
-        swap_locations.run()
-        anon_dataset = swap_locations.get_anonymized_dataset()
+        simple_generalization = AnonymizationMethodFactory.get("SimpleGeneralization", self.dataset, params)
+        simple_generalization.run()
+        anon_dataset = simple_generalization.get_anonymized_dataset()
 
-        self.assertEqual(len(anon_dataset), 43)
-        self.assertEqual(anon_dataset.get_number_of_locations(), 337)
+        self.assertEqual(len(anon_dataset), 46)
+        self.assertEqual(anon_dataset.get_number_of_locations(), 364)
         self.assertEqual(anon_dataset.get_min_timestamp(), 1669043011)
         self.assertEqual(anon_dataset.get_max_timestamp(), 1669058195)
-        self.assertEqual(anon_dataset.get_n_locations_longest_trajectory(), 24)
+        self.assertEqual(anon_dataset.get_n_locations_longest_trajectory(), 26)
+        self.assertEqual(anon_dataset.trajectories[1].locations[0].x, 1.2400188004154278)
+        self.assertEqual(anon_dataset.trajectories[1].locations[0].y, 41.115026271509265)
+        self.assertEqual(anon_dataset.trajectories[1].locations[0].timestamp, 1669044651)
+
+    def test_own_tiles(self):
+
+        tiles_filename = f"{TEST_ROOT_DIR}/files/mock_tiles.geojson"
+
+        params = {
+            'tiles_filename': tiles_filename
+        }
+
+        simple_generalization = AnonymizationMethodFactory.get("SimpleGeneralization", self.dataset, params)
+        simple_generalization.run()
+        anon_dataset = simple_generalization.get_anonymized_dataset()
+
+        self.assertEqual(len(anon_dataset), 46)
+        self.assertEqual(anon_dataset.get_number_of_locations(), 383)
+        self.assertEqual(anon_dataset.get_min_timestamp(), 1669043011)
+        self.assertEqual(anon_dataset.get_max_timestamp(), 1669058195)
+        self.assertEqual(anon_dataset.get_n_locations_longest_trajectory(), 28)
+        self.assertEqual(anon_dataset.trajectories[1].locations[0].x, 1.242994189976175)
+        self.assertEqual(anon_dataset.trajectories[1].locations[0].y, 41.11441558826653)
+        self.assertEqual(anon_dataset.trajectories[1].locations[0].timestamp, 1669044651)
 
 
 if __name__ == '__main__':

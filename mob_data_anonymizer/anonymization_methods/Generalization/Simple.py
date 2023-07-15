@@ -5,50 +5,66 @@ from mob_data_anonymizer.anonymization_methods.AnonymizationMethodInterface impo
 from mob_data_anonymizer.anonymization_methods.SwapLocations.trajectory_anonymization import \
     apply_trajectory_anonymization
 from mob_data_anonymizer.entities.Dataset import Dataset
-from mob_data_anonymizer.utils.tessellation import spatial_tessellation
+from mob_data_anonymizer.utils.tessellation import spatial_tessellation, load_tiles_file, compute_centroids
 
 DEFAULT_VALUES = {
-    "gen_tile_size": 500,
+    "tiles_filename": None,
+    "tile_size": 500,
     "tile_shape": "squared",
-    "traj_anon_tile_size": 1000,
-    "overlapping_strategy": "all"      # Options: "all", "one"
+    "overlapping_strategy": "all"  # Options: "all", "one"
 }
 
 
 class SimpleGeneralization(AnonymizationMethodInterface):
+    """SimpleGeneralization anonymization method
+
+        Longer class information....
+
+        Attributes:
+            tiles_filename (str): Tiles file for tessellation (geojson or shapefile)
+            tile_size (int): If a tiles file is not provided a squared tessellation of size 'tile_size' will be
+                generated  (in meters)
+            overlapping_strategy (str): If several locations of the same trajectories end up in the same tile, keep all
+                ('all') or take just one and compute the average timestamp ('one')
+        """
+
     def __init__(self, dataset: Dataset,
-                 gen_tile_size=DEFAULT_VALUES['gen_tile_size'], tile_shape=DEFAULT_VALUES["tile_shape"],
-                 traj_anon_tile_size=DEFAULT_VALUES["traj_anon_tile_size"],
-                 overlapping_strategy=DEFAULT_VALUES['overlapping_strategy']):
+                 tiles_filename: str = DEFAULT_VALUES['tiles_filename'],
+                 tile_shape: str = DEFAULT_VALUES['tile_shape'],
+                 tile_size: int = DEFAULT_VALUES['tile_size'],
+                 overlapping_strategy: str = DEFAULT_VALUES['overlapping_strategy']):
+
         self.dataset = dataset
         self.anonymized_dataset = dataset.__class__()
 
-        self.gen_tile_size = gen_tile_size
-        self.traj_anon_tile_size = traj_anon_tile_size
+        self.tile_size = tile_size
         self.tile_shape = tile_shape
         self.overlapping_strategy = overlapping_strategy
 
+        if tiles_filename is not None:
+            self.tiles = load_tiles_file(tiles_filename)
+        else:
+            self.tiles = None
+
     def run(self):
-        pd.set_option('display.max_columns', None)
+
         tdf_dataset = self.dataset.to_tdf()
 
-        mtdf, tiles = spatial_tessellation(tdf_dataset, self.tile_shape, self.gen_tile_size)
-        # print(mtdf.head(5))
-        # print(tiles.head(5))
-
-        tiles['x'] = round(tiles['geometry'].centroid.x, 5)
-        tiles['y'] = round(tiles['geometry'].centroid.y, 5)
+        logging.info("\t Tessellating")
+        mtdf, tiles = spatial_tessellation(tdf_dataset, tiles=self.tiles, tiles_shape=self.tile_shape,
+                                           meters=self.tile_size)
+        tiles = compute_centroids(tiles)
 
         # Add tiles centroids to mapped tdf
         mtdf = pd.merge(mtdf, tiles, how="left", on="tile_ID")
 
         # Rename and reorder columns
-        mtdf.rename(columns={
+        mtdf = mtdf.rename(columns={
             constants.LATITUDE: 'orig_lat',
             constants.LONGITUDE: 'orig_lng',
-            'x': constants.LONGITUDE,
-            'y': constants.LATITUDE,
-        }, inplace=True)
+            'centroid_lon': constants.LONGITUDE,
+            'centroid_lat': constants.LATITUDE,
+        })
 
         mtdf = mtdf[
             [constants.LONGITUDE, constants.LATITUDE, constants.DATETIME, constants.UID, constants.TID]]
@@ -58,9 +74,6 @@ class SimpleGeneralization(AnonymizationMethodInterface):
             mtdf = mtdf.groupby([constants.TID, constants.UID, constants.LATITUDE, constants.LONGITUDE],
                                 as_index=False).mean()
 
-        # mtdf.to_csv("anonymized_pre.csv")
-        logging.info(f"Anonymized dataset has {len(mtdf)} locations before trajectory anonymization")
-        mtdf = apply_trajectory_anonymization(mtdf, tile_size=self.traj_anon_tile_size)
         logging.info(f"Anonymized dataset has {len(mtdf)} locations")
         self.anonymized_dataset.from_tdf(mtdf)
 
