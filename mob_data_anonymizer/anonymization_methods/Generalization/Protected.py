@@ -19,7 +19,7 @@ from tqdm import tqdm
 
 from mob_data_anonymizer.anonymization_methods.AnonymizationMethodInterface import AnonymizationMethodInterface
 from mob_data_anonymizer.entities.Dataset import Dataset
-from mob_data_anonymizer.utils.tessellation import spatial_tessellation
+from mob_data_anonymizer.utils.tessellation import spatial_tessellation, load_tiles_file, compute_centroids
 
 DEFAULT_VALUES = {
     "tile_size": 500,
@@ -27,7 +27,8 @@ DEFAULT_VALUES = {
     "knowledge": 2,
     "strategy": 'avg',
     "time_interval": None,
-    "time_strategy": 'keep'
+    "time_strategy": 'keep',
+    'tiles_filename': None
 }
 
 
@@ -188,7 +189,8 @@ def remove_tiles(sequences: list[str], bad_combinations: dict, good_combinations
 
                 # Are there duplicated elements in the sequence? This means loops in the trajectory
                 if len(sequence) != len(set(sequence)):
-                    sequence, bad_combs, good_combs = duplicates_preprocessing(sequence,                                                                               good_combinations.get(tid, None))
+                    sequence, bad_combs, good_combs = duplicates_preprocessing(sequence,
+                                                                               good_combinations.get(tid, None))
                     sequence = fix_bad_combinations(sequence, bad_combs, good_combs)
                     # Keep parent tiles
                     sequence = list(map(lambda x: x[:x.find('#')], sequence))
@@ -236,8 +238,8 @@ def mark_locations_to_keep(df: TrajDataFrame, sequences: list[str]):
 
 
 def generate_generalized_trajectories_centroid(mtdf: TrajDataFrame, sequences, tiles, dt_ranges=None):
-    tiles['x'] = round(tiles['geometry'].centroid.x, 5)
-    tiles['y'] = round(tiles['geometry'].centroid.y, 5)
+
+    tiles = compute_centroids(tiles)
 
     mtdf = pd.merge(mtdf, tiles, how="left", on="tile_ID")
 
@@ -264,8 +266,8 @@ def generate_generalized_trajectories_centroid(mtdf: TrajDataFrame, sequences, t
     mtdf = mtdf.rename(columns={
         constants.LATITUDE: 'orig_lat',
         constants.LONGITUDE: 'orig_lng',
-        'x': constants.LONGITUDE,
-        'y': constants.LATITUDE,
+        'centroid_lon': constants.LONGITUDE,
+        'centroid_lat': constants.LATITUDE,
     })
 
     return mtdf
@@ -292,7 +294,6 @@ def generate_generalized_trajectories_avg(mtdf, sequences, tiles, dt_ranges=None
     if dt_ranges is not None:
         dtr = dt_ranges.strftime("%Y-%m-%d %H:%M:%S").tolist()
         mtdf['new_timestamp'] = mtdf.apply(lambda row: dtr[int(row['time_level'])], axis=1)
-
 
     mtdf = pd.merge(mtdf, new_lng, how="left", on="tile_ID", suffixes=('', '_new'))
     mtdf = pd.merge(mtdf, new_lat, how="left", on="tile_ID", suffixes=('', '_new'))
@@ -559,6 +560,8 @@ def preprocessing_merge_tiles(tiles: GeoDataFrame, mtdf: TrajDataFrame, min_k: i
         for s in tqdm(tiles_to_join):
             mtdf, tiles = merge_tiles(s, mtdf, tiles, t)
 
+        tiles.set_crs(mtdf.crs, inplace=True)
+
     return mtdf, tiles
 
 
@@ -590,7 +593,6 @@ def time_tessellation(tdf: TrajDataFrame, tiles: GeoDataFrame, time_interval: in
     tiles['s_tile_ID'] = tiles['s_tile_ID'].astype('int')
     tiles['time_level'] = 0
 
-
     # start_time = time.time()
     all_tiles_df = [tiles]
     for time_level, t in enumerate(tqdm(datetime_ranges)):
@@ -619,21 +621,31 @@ def time_tessellation(tdf: TrajDataFrame, tiles: GeoDataFrame, time_interval: in
 
 
 class ProtectedGeneralization(AnonymizationMethodInterface):
+    """
+    ProtectedGeneralization anonymization method
 
-    def __init__(self, dataset: Dataset, tile_size: int = DEFAULT_VALUES['tile_size'],
+    Longer class information....
+
+    Attributes:
+        dataset (Dataset): Dataset to be anonymized
+        tiles_filename (str): Tiles file for spatial tessellation (geojson or shapefile)
+        tile_size (int): If a tiles file is not provided a squared tessellation of size 'tile_size' will be
+            generated  (in meters)
+        time_interval (int):   (in minutes)
+        k (int):
+        strategy (str): To generate the generalized location compute the centroid of the tile ('centroid') or
+            the average of locations within the tile ('avg')
+        time_strategy (str): Keep the original timestamps ('keep') or generalize them by taking a specific timestamp
+            for every time_level
+    """
+
+    def __init__(self, dataset: Dataset,
+                 tiles_filename: str = DEFAULT_VALUES['tiles_filename'],
+                 tile_size: int = DEFAULT_VALUES['tile_size'],
                  time_interval: int = DEFAULT_VALUES['time_interval'],
                  k: int = DEFAULT_VALUES['k'], knowledge: int = DEFAULT_VALUES['knowledge'],
-                 strategy: str = DEFAULT_VALUES['strategy'], time_strategy: str = DEFAULT_VALUES['time_strategy']):
-        '''
-
-        :param dataset:
-        :param tile_size:
-        :param time_interval: in minutes
-        :param k:
-        :param knowledge:
-        :param strategy: 'avg' or 'centroid'
-        :param time_strategy: 'same' or 'keep'
-        '''
+                 strategy: str = DEFAULT_VALUES['strategy'],
+                 time_strategy: str = DEFAULT_VALUES['time_strategy']):
 
         self.dataset = dataset
         self.anonymized_dataset = dataset.__class__()
@@ -645,20 +657,29 @@ class ProtectedGeneralization(AnonymizationMethodInterface):
         self.strategy = strategy
         self.time_strategy = time_strategy
 
+        if tiles_filename is not None:
+            self.tiles = load_tiles_file(tiles_filename)
+        else:
+            self.tiles = None
+
     def run(self):
         start = time.time()
         tdf = self.dataset.to_tdf()
 
         logging.info("Starting tessellation")
-        mtdf, tessellation = spatial_tessellation(tdf, "squared", self.tile_size)
+        mtdf, tessellation = spatial_tessellation(tdf, tiles=self.tiles, tiles_shape="squared",
+                                                  meters=self.tile_size)
+
         logging.info(f"Number of tiles: {len(tessellation)}")
 
         logging.info("Time tessellation")
         mtdf, tessellation, datetime_ranges = time_tessellation(mtdf, tessellation, self.time_interval)
         logging.info(f"Number of tiles: {len(tessellation)}")
 
-        logging.info("Preprocessing tiles")
-        mtdf, tessellation = preprocessing_merge_tiles(tessellation, mtdf, 3 * self.k)
+        # If we have generated a squared tessellation, try to merge some tiles with few locations
+        if self.tiles is None:
+            logging.info("Preprocessing tiles")
+            mtdf, tessellation = preprocessing_merge_tiles(tessellation, mtdf, 3 * self.k)
 
         logging.info("Generating sequences")
         sequences = generate_sequences(mtdf)

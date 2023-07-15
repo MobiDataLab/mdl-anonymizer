@@ -10,27 +10,27 @@ from mob_data_anonymizer.utils.tessellation import spatial_tessellation, load_ti
 DEFAULT_VALUES = {
     "tiles_filename": None,
     "tile_size": 500,
-    "tile_shape": "squared",
     "overlapping_strategy": "all"  # Options: "all", "one"
 }
 
 
 class SimpleGeneralization(AnonymizationMethodInterface):
-    """SimpleGeneralization anonymization method
+    """
+    SimpleGeneralization anonymization method
 
-        Longer class information....
+    Longer class information....
 
-        Attributes:
-            tiles_filename (str): Tiles file for tessellation (geojson or shapefile)
-            tile_size (int): If a tiles file is not provided a squared tessellation of size 'tile_size' will be
-                generated  (in meters)
-            overlapping_strategy (str): If several locations of the same trajectories end up in the same tile, keep all
-                ('all') or take just one and compute the average timestamp ('one')
-        """
+    Attributes:
+        dataset (Dataset): Dataset to be anonymized
+        tiles_filename (str): Tiles file for tessellation (geojson or shapefile)
+        tile_size (int): If a tiles file is not provided a squared tessellation of size 'tile_size' will be
+            generated  (in meters)
+        overlapping_strategy (str): If several locations of the same trajectories end up in the same tile, keep all
+            ('all') or take just one and compute the average timestamp ('one')
+    """
 
     def __init__(self, dataset: Dataset,
                  tiles_filename: str = DEFAULT_VALUES['tiles_filename'],
-                 tile_shape: str = DEFAULT_VALUES['tile_shape'],
                  tile_size: int = DEFAULT_VALUES['tile_size'],
                  overlapping_strategy: str = DEFAULT_VALUES['overlapping_strategy']):
 
@@ -38,7 +38,7 @@ class SimpleGeneralization(AnonymizationMethodInterface):
         self.anonymized_dataset = dataset.__class__()
 
         self.tile_size = tile_size
-        self.tile_shape = tile_shape
+        self.tile_shape = "squared"
         self.overlapping_strategy = overlapping_strategy
 
         if tiles_filename is not None:

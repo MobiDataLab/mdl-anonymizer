@@ -89,15 +89,16 @@ def compute_centroids(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
 def spatial_tessellation(tdf: TrajDataFrame, tiles: gpd.GeoDataFrame = None,
                          bounding_box=None, tiles_shape: str = "squared", meters: int = 250) \
         -> tuple:
-    '''
+    """
 
     :param tdf: tdf to be tessellated
     :param tiles_shape:
     :param meters: size of the tiles
     :param tiles: If a tiles GeoDataFrame is provided is used, if not tiles are generated
-    :param bounding_box: If a bounding_box is not provided, it is computed
-    :return: tuple of tdf mapped to tiles and tiles computed
-    '''
+    :param bounding_box: If a bounding_box is not provided, it is computed for generating tiles
+
+    :return: tuple of tdf mapped to tiles and tiles used
+    """
 
     # Build tiles
     if tiles is None:
