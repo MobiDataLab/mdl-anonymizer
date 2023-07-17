@@ -17,7 +17,8 @@ class TestScikitMeasures(TestBase):
         self.dataset.from_file(path)
 
         self.a_dataset = Dataset()
-        path = f"{TEST_ROOT_DIR}/../examples/data/mock_dataset_anonymized.csv"
+        path = f"{TEST_ROOT_DIR}/files" \
+               f"/mock_dataset_anonymized.csv"
         self.a_dataset.from_file(path)
 
     def test_default(self):
@@ -36,6 +37,7 @@ class TestScikitMeasures(TestBase):
         self.assertEqual(result['random_location_entropy_anonymized'], 1.9491)
         self.assertEqual(result['mean_square_displacement_original'], 2.8363)
         self.assertEqual(result['mean_square_displacement_anonymized'], 1.9704)
+
 
 if __name__ == '__main__':
     unittest.main()

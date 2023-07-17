@@ -67,13 +67,13 @@ def load_tiles_file(tiles_filename) -> gpd.GeoDataFrame:
 
 def compute_centroids(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
 
-    tiles = gdf.to_crs('EPSG:3857')
+    tiles_3857 = gdf.to_crs('EPSG:3857')
 
     # tiles['x'] = round(tiles['geometry'].centroid.x, 5)
     # tiles['y'] = round(tiles['geometry'].centroid.y, 5)
 
-    centroids = gpd.GeoDataFrame(geometry=gpd.points_from_xy(tiles['geometry'].centroid.x,
-                                                             tiles['geometry'].centroid.y), crs="EPSG:3857")
+    centroids = gpd.GeoDataFrame(geometry=gpd.points_from_xy(tiles_3857['geometry'].centroid.x,
+                                                             tiles_3857['geometry'].centroid.y), crs="EPSG:3857")
 
     centroids = centroids.to_crs('epsg:4326')
 
@@ -81,7 +81,7 @@ def compute_centroids(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     centroids['centroid_lat'] = centroids['geometry'].y
     centroids = centroids.drop(['geometry'], axis=1)
 
-    tiles = pd.merge(tiles, centroids, left_index=True, right_index=True)
+    tiles = pd.merge(gdf, centroids, left_index=True, right_index=True)
 
     return tiles
 

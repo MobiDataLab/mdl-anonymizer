@@ -15,7 +15,7 @@ from skmob.utils.constants import DEFAULT_CRS
 from mob_data_anonymizer.measures_methods.MeasuresMethodInterface import MeasuresMethodInterface
 from mob_data_anonymizer.entities.Dataset import Dataset
 from shapely.errors import ShapelyDeprecationWarning
-from mob_data_anonymizer.utils.tessellation import spatial_tessellation
+from mob_data_anonymizer.utils.tessellation import spatial_tessellation, compute_centroids
 from mob_data_anonymizer.utils.utils import round_tuple
 
 VALID_METHODS = ['mean_square_displacement',
@@ -52,30 +52,30 @@ class ScikitMeasures(MeasuresMethodInterface):
 
         # Tessellation
         logging.info("Tessellating original dataset")
-        self.original_tdf, tiles = spatial_tessellation(self.pre_original_tdf, "squared",
+        self.original_tdf, tiles = spatial_tessellation(self.pre_original_tdf, tiles_shape="squared",
                                                         meters=self.tile_size)
+        tiles.to_csv("tiles_mock_test_precentroid.csv")
+        tiles = compute_centroids(tiles)
+        tiles.to_csv("tiles_mock_test.csv")
 
-        tiles['x'] = round(tiles['geometry'].centroid.x, 5)
-        tiles['y'] = round(tiles['geometry'].centroid.y, 5)
         self.original_tdf = pandas.merge(self.original_tdf, tiles, how="left", on="tile_ID")
-        self.original_tdf.rename(columns={
+        self.original_tdf = self.original_tdf.rename(columns={
             constants.LATITUDE: 'orig_lat',
             constants.LONGITUDE: 'orig_lng',
-            'x': constants.LONGITUDE,
-            'y': constants.LATITUDE,
-        }, inplace=True)
+            'centroid_lon': constants.LONGITUDE,
+            'centroid_lat': constants.LATITUDE,
+        })
 
         logging.info("Tessellating anonymized dataset")
-        self.anonymized_tdf, _ = spatial_tessellation(self.pre_anonymized_tdf, "squared",
-                                                      tiles=tiles)
+        self.anonymized_tdf, _ = spatial_tessellation(self.pre_anonymized_tdf, tiles=tiles)
 
         self.anonymized_tdf = pandas.merge(self.anonymized_tdf, tiles, how="left", on="tile_ID")
-        self.anonymized_tdf.rename(columns={
+        self.anonymized_tdf = self.anonymized_tdf.rename(columns={
             constants.LATITUDE: 'orig_lat',
             constants.LONGITUDE: 'orig_lng',
-            'x': constants.LONGITUDE,
-            'y': constants.LATITUDE,
-        }, inplace=True)
+            'centroid_lon': constants.LONGITUDE,
+            'centroid_lat': constants.LATITUDE,
+        })
 
         self.output_folder = output_folder
         self.results = {}
