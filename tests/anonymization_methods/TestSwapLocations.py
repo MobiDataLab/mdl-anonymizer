@@ -17,15 +17,19 @@ class TestSwapLocations(TestBase):
 
     def test_default(self):
 
-        swap_locations = AnonymizationMethodFactory.get("SwapLocations", self.dataset, {'seed': 20})
+        swap_locations = AnonymizationMethodFactory.get("SwapLocations", self.dataset, {'seed': 42})
         swap_locations.run()
         anon_dataset = swap_locations.get_anonymized_dataset()
 
-        self.assertEqual(len(anon_dataset), 31)
-        self.assertEqual(anon_dataset.get_number_of_locations(), 140)
+        self.assertEqual(len(anon_dataset), 35)
+        self.assertEqual(anon_dataset.get_number_of_locations(), 166)
         self.assertEqual(anon_dataset.get_min_timestamp(), 1669044573)
-        self.assertEqual(anon_dataset.get_max_timestamp(), 1669047982)
+        self.assertEqual(anon_dataset.get_max_timestamp(), 1669048073)
         self.assertEqual(anon_dataset.get_n_locations_longest_trajectory(), 8)
+        self.assertEqual(anon_dataset.trajectories[1].locations[0].x, 1.2393100261688232)
+        self.assertEqual(anon_dataset.trajectories[1].locations[0].y, 41.117374420166016)
+        self.assertEqual(anon_dataset.trajectories[1].locations[0].timestamp, 1669044682)
+
 
     def test_params(self):
 

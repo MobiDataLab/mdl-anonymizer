@@ -48,8 +48,8 @@ def apply_trajectory_anonymization(tdf, tile_size: int = 1000):
     logging.info(f"{len(fake_locations)} new fake locations created")
     logging.info(f"Tessellating")
     # Tessellate both the original dataframe and the datafram with fake locations
-    mfl_tdf, tessellation = spatial_tessellation(fl_tdf, tessellation_shape_type, tile_size)
-    mtdf, tessellation = spatial_tessellation(tdf, tessellation_shape_type, tile_size, tessellation)
+    mfl_tdf, tessellation = spatial_tessellation(fl_tdf, tiles_shape="squared", meters=tile_size)
+    mtdf, tessellation = spatial_tessellation(tdf, tiles=tessellation)
 
     # Compute tile sequences of the tdf with fake locations
     logging.info("Computing tile sequences")
