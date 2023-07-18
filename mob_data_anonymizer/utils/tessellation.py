@@ -75,7 +75,7 @@ def compute_centroids(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     centroids = gpd.GeoDataFrame(geometry=gpd.points_from_xy(tiles_3857['geometry'].centroid.x,
                                                              tiles_3857['geometry'].centroid.y), crs="EPSG:3857")
 
-    centroids = centroids.to_crs('epsg:4326')
+    centroids = centroids.to_crs(gdf.crs)
 
     centroids['centroid_lon'] = centroids['geometry'].x
     centroids['centroid_lat'] = centroids['geometry'].y

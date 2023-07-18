@@ -29,6 +29,10 @@ class Dataset(ABC):
         self.sample = None
 
         self.timezone = pytz.timezone("UTC")
+        self.crs = DEFAULT_CRS
+
+    def set_crs(self, crs):
+        self.crs = crs
 
     #    @abstractmethod
     #    def load(self):
@@ -194,28 +198,9 @@ class Dataset(ABC):
         tdf[constants.UID] = tdf[constants.UID].astype(np.int32)
         tdf[constants.TID] = tdf[constants.TID].astype(np.int32)
 
-        tdf.crs = 'epsg:4326'
+        tdf.crs = self.crs
 
         return tdf
-
-    # def to_tdf(self):
-    #
-    #     df = pandas.DataFrame()
-    #
-    #     for traj in tqdm(self.trajectories):
-    #         for loc in traj.locations:
-    #             df2 = pandas.DataFrame(
-    #                 {constants.LONGITUDE: [loc.x],
-    #                  constants.LATITUDE: [loc.y],
-    #                  constants.DATETIME: [loc.timestamp],
-    #                  constants.UID: [traj.user_id],
-    #                  constants.TID: [traj.id]
-    #                  })
-    #             df = pandas.concat([df, df2], ignore_index=True)
-    #
-    #     tdf = TrajDataFrame(df, timestamp=True)
-    #
-    #     return tdf
 
     def to_numpy(self, sort_by_timestamp=False):
         """Transforms the dataset to a NumPy array for faster processing.
