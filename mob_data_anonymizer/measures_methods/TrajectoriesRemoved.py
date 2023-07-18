@@ -24,9 +24,7 @@ class TrajectoriesRemoved(MeasuresMethodInterface):
 
     def run(self):
         self.results["percen_traj_removed"] = round(self.get_perc_of_removed_trajectories() * 100, 2)
-        print(f'% Removed trajectories: {self.results["percen_traj_removed"]}%')
         self.results["percen_loc_removed"] = round(self.get_perc_of_removed_locations() * 100, 2)
-        print(f'% Removed locations: {self.results["percen_loc_removed"]}%')
 
     def get_result(self):
         return self.results
