@@ -1,8 +1,8 @@
 {
   "method": "QuadTreeHeatMap",
-  "input_file": "examples/data/preprocessed_dataset_20080608_sample.csv",
+  "input_file": "examples/data/cabs_dataset_20080608_0700_0715.csv",
   "output_folder": "examples/output",
-  "main_output_file": "anonymous_QuadTreeHeatMap_CLI.json",
+  "main_output_file": "cabs_dataset_20080608_0700_0715_QuadTreeHeatMap.json",
   "params": {
     "min_k": 5,
     "min_sector_length": 50,

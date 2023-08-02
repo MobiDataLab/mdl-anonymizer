@@ -1,11 +1,13 @@
 import io
 import json
+import logging
 import os
 from mob_data_anonymizer.client.make_api_call import MakeApiCall
 from mob_data_anonymizer.entities.Dataset import Dataset
 from mob_data_anonymizer.factories.analysis_method_factory import AnalysisMethodFactory
 from mob_data_anonymizer import PARAMETERS_FILE_DOESNT_EXIST, SUCCESS, PARAMETERS_FILE_NOT_JSON, PARAMETERS_NOT_VALID, \
-    WRONG_METHOD, INPUT_FILE_NOT_EXIST, OUTPUT_FOLDER_NOT_EXIST, DEFAULT_OUTPUT_FILE, CONFIG_FILE
+    WRONG_METHOD, INPUT_FILE_NOT_EXIST, OUTPUT_FOLDER_NOT_EXIST, CONFIG_FILE, \
+    DEFAULT_ANALYSIS_OUTPUT_FILE
 
 
 def check_parameters_file(file_path: str) -> int:
@@ -76,7 +78,7 @@ def run_analysis(file_path: str):
     with open(file_path) as param_file:
         data = json.load(param_file)
 
-    print("Analysis method: ", data['method'])
+    logging.info(f"Analysis method: {data['method']}")
     # Load dataset
     filename = data.get("input_file")
     dataset = Dataset()
@@ -93,7 +95,7 @@ def run_analysis(file_path: str):
     method.run()
 
     # Save output file
-    output_file = data.get('main_output_file', DEFAULT_OUTPUT_FILE)
+    output_file = data.get('main_output_file', DEFAULT_ANALYSIS_OUTPUT_FILE)
 
     method.export_result(f"{output_folder}{output_file}")
 

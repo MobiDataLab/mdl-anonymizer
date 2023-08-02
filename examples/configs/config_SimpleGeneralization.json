@@ -1,11 +1,9 @@
 {
   "method": "SimpleGeneralization",
-  "input_file": "examples/data/filtered_dataset_20080608.csv",
-  "output_folder": "examples/output/cabs_dataset/",
-  "main_output_file": "filtered_dataset_20080608_anonymized_SimpleGen.csv",
+  "input_file": "examples/data/cabs_dataset_20080608_0700_0715.csv",
+  "output_folder": "examples/output",
+  "main_output_file": "cabs_dataset_20080608_0700_0715_anonymized_simple.csv",
   "params":  {
-    "gen_tile_size": 500,
-    "tile_shape": "squared",
-    "traj_anon_tile_size": 1700
+    "tiles_filename": "examples/data/bb_SF_zipcodes.geojson"
   }
 }

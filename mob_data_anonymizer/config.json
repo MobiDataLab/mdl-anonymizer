@@ -6,8 +6,8 @@
     "ProtectedGeneralization": {
       "class": "mob_data_anonymizer.anonymization_methods.Generalization.Protected.ProtectedGeneralization"
     },
-    "SwapLocations": {
-      "class": "mob_data_anonymizer.anonymization_methods.SwapLocations.SwapLocations.SwapLocations"
+    "SwapAllLocations": {
+      "class": "mob_data_anonymizer.anonymization_methods.SwapAllLocations.SwapLocations.SwapLocations"
     },
     "SwapMob": {
       "class": "mob_data_anonymizer.anonymization_methods.SwapMob.SwapMob.SwapMob"

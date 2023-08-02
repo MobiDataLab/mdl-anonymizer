@@ -6,9 +6,9 @@ __version__ = "0.1.0"
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__)) + '/'
 
 DEFAULT_PARAMETERS_FILE = "anonymization_parameters.json"
-DEFAULT_OUTPUT_FILE = "output.json"
-DEFAULT_SAVE_FILTERED_DATASET = True
-DEFAULT_FILTERED_FILE = "filtered.json"
+DEFAULT_ANONYMIZE_OUTPUT_FILE = "output.csv"
+DEFAULT_ANALYSIS_OUTPUT_FILE = "output.json"
+DEFAULT_MEASURES_OUTPUT_FILE = "output.json"
 
 CONFIG_FILE = ROOT_DIR + "config.json"
 CONFIG_API_FILE = "mob_data_anonymizer/server/config_api.json"

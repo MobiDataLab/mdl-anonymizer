@@ -1,15 +1,5 @@
 from mob_data_anonymizer.measures_methods.MeasuresMethodInterface import MeasuresMethodInterface
 from mob_data_anonymizer.entities.Dataset import Dataset
-from mob_data_anonymizer.utils.pyqtree import Index, _QuadTree
-import logging
-from tqdm import tqdm
-from shapely import geometry
-from shapely.ops import transform
-from geopandas import GeoDataFrame
-import pyproj
-from functools import partial
-from haversine import haversine, Unit
-import math
 
 DEFAULT_VALUES = {
     

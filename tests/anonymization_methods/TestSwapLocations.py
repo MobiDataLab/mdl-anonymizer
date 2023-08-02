@@ -17,7 +17,7 @@ class TestSwapLocations(TestBase):
 
     def test_default(self):
 
-        swap_locations = AnonymizationMethodFactory.get("SwapLocations", self.dataset, {'seed': 42})
+        swap_locations = AnonymizationMethodFactory.get("SwapAllLocations", self.dataset, {'seed': 42})
         swap_locations.run()
         anon_dataset = swap_locations.get_anonymized_dataset()
 
@@ -43,7 +43,7 @@ class TestSwapLocations(TestBase):
             'seed': 23
         }
 
-        swap_locations = AnonymizationMethodFactory.get("SwapLocations", self.dataset, params)
+        swap_locations = AnonymizationMethodFactory.get("SwapAllLocations", self.dataset, params)
         swap_locations.run()
         anon_dataset = swap_locations.get_anonymized_dataset()
 

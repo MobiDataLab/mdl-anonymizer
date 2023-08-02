@@ -54,9 +54,8 @@ class ScikitMeasures(MeasuresMethodInterface):
         logging.info("Tessellating original dataset")
         self.original_tdf, tiles = spatial_tessellation(self.pre_original_tdf, tiles_shape="squared",
                                                         meters=self.tile_size)
-        tiles.to_csv("tiles_mock_test_precentroid.csv")
+
         tiles = compute_centroids(tiles)
-        tiles.to_csv("tiles_mock_test.csv")
 
         self.original_tdf = pandas.merge(self.original_tdf, tiles, how="left", on="tile_ID")
         self.original_tdf = self.original_tdf.rename(columns={

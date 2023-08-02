@@ -10,25 +10,19 @@ from datetime import datetime
 from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split
 import xgboost as xgb
-from sklearn.metrics import accuracy_score
 from bisect import bisect_left
 import logging
-from tqdm import tqdm
-from shapely import geometry
-from shapely.ops import transform
-from geopandas import GeoDataFrame
-import pyproj
-from functools import partial
-from haversine import haversine, Unit
-import math
 
 DEFAULT_VALUES = {
-    
+    'tiles_size': 200
 }
 
 
 class PropensityScore(MeasuresMethodInterface):
-    def __init__(self, original_dataset: Dataset, anom_dataset: Dataset, tiles_size=200, time_interval=None, seed=None):
+    def __init__(self, original_dataset: Dataset, anom_dataset: Dataset,
+                 tiles_size=DEFAULT_VALUES['tiles_size'],
+                 time_interval=None,
+                 seed=None):
         self.original_dataset = original_dataset
         self.anom_dataset = anom_dataset
         self.tiles_size = tiles_size
@@ -105,31 +99,16 @@ class PropensityScore(MeasuresMethodInterface):
         X_all = df.drop(columns=['clas'])
         y_all = df['clas']
 
-        # model = LogisticRegression()
-        # model = GradientBoostingClassifier()
-        # model = xgb.XGBClassifier(n_jobs=multiprocessing.cpu_count() // 2)
-        # clf = GridSearchCV(model, {'max_depth': [2, 4, 6], 'n_estimators': [50, 100, 200]}, verbose=1, n_jobs=2)
-        # clf.fit(X_train, y_train)
-        # print(clf.best_score_)
-        # print(clf.best_params_)
-        # sys.exit(0)
 
-        # clf = LazyClassifier(verbose=0, ignore_warnings=True, custom_metric=None)
-        # models, predictions = clf.fit(X_train, X_test, y_train, y_test)
-        # print(models)
-        # sys.exit(0)
-
-        # model = LogisticRegression()
         model = xgb.XGBClassifier(random_state=self.seed)
-        # model = ExtraTreesClassifier()
 
         model.fit(X_train, y_train)
-        preds_train = model.predict(X_train)
-        preds_test = model.predict(X_test)
+        # preds_train = model.predict(X_train)
+        # preds_test = model.predict(X_test)
         # print('accuracy in train:', accuracy_score(y_train, preds_train))
         # print('accuracy in test:', accuracy_score(y_test, preds_test))
 
-        preds_all = model.predict(X_all)
+        # preds_all = model.predict(X_all)
         # print('accuracy in all:', accuracy_score(y_all, preds_all))
 
         # probs = np.max(model.predict_proba(X_all), axis=1)

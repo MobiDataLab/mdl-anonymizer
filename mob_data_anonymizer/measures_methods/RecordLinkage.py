@@ -1,15 +1,8 @@
 from mob_data_anonymizer.measures_methods.MeasuresMethodInterface import MeasuresMethodInterface
 from mob_data_anonymizer.entities.Dataset import Dataset
 from bisect import bisect_left
-from mob_data_anonymizer.utils.pyqtree import Index, _QuadTree
 import logging
 from tqdm import tqdm
-from shapely import geometry
-from shapely.ops import transform
-from geopandas import GeoDataFrame
-import pyproj
-from functools import partial
-from haversine import haversine, Unit
 import math
 import random
 from datetime import datetime
@@ -20,7 +13,9 @@ DEFAULT_VALUES = {
 
 
 class RecordLinkage(MeasuresMethodInterface):
-    def __init__(self, original_dataset: Dataset, anom_dataset: Dataset, trajectory_distance, percen_window_size=None,
+    def __init__(self, original_dataset: Dataset, anom_dataset: Dataset,
+                 trajectory_distance,
+                 percen_window_size=None,
                  seed: int = None):
         self.original_dataset = original_dataset
         self.anom_dataset = anom_dataset

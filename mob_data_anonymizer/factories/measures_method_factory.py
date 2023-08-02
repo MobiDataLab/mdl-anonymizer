@@ -34,8 +34,9 @@ class MeasuresMethodFactory:
         if 'trajectory_distance' in method_signature.parameters:
             if 'trajectory_distance' in params:
                 distance_name = params['trajectory_distance'].pop('name')
+                distance_params = params['trajectory_distance'].get('params', {})
                 params['trajectory_distance'] = TrajectoryDistanceFactory.get(distance_name, original_dataset,
-                                                                              params['trajectory_distance']['params'])
+                                                                              distance_params)
                 name = distance_name
             else:
                 # Default

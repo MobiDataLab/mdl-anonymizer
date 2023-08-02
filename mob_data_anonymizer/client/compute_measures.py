@@ -7,7 +7,7 @@ from mob_data_anonymizer.client.make_api_call import MakeApiCall
 from shapely.errors import ShapelyDeprecationWarning
 from mob_data_anonymizer.factories.measures_method_factory import MeasuresMethodFactory
 from mob_data_anonymizer import PARAMETERS_FILE_DOESNT_EXIST, PARAMETERS_FILE_NOT_JSON, INPUT_FILE_NOT_EXIST, \
-    OUTPUT_FOLDER_NOT_EXIST, PARAMETERS_NOT_VALID, SUCCESS, WRONG_METHOD, DEFAULT_OUTPUT_FILE, CONFIG_FILE
+    OUTPUT_FOLDER_NOT_EXIST, PARAMETERS_NOT_VALID, SUCCESS, WRONG_METHOD, CONFIG_FILE, DEFAULT_MEASURES_OUTPUT_FILE
 from mob_data_anonymizer.entities.Dataset import Dataset
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -118,7 +118,7 @@ def compute_measures(param_file_path: str):
         results.update(result)
 
     # Save output file
-    output_file = data.get('main_output_file', DEFAULT_OUTPUT_FILE)
+    output_file = data.get('main_output_file', DEFAULT_MEASURES_OUTPUT_FILE)
 
     output_file_path = data["output_folder"] + "/" + output_file
     with open(output_file_path, 'w') as f:

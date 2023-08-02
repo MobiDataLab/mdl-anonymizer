@@ -1,0 +1,14 @@
+{
+  "method": "SwapAllLocations",
+  "input_file": "examples/data/cabs_dataset_20080608_0700_0715.csv",
+  "output_folder": "examples/output",
+  "main_output_file": "cabs_dataset_20080608_0700_0715_anonymized_swap.csv",
+  "params": {
+    "k": 5,
+    "max_r_s": 600,
+    "max_r_t": 200,
+    "min_r_s": 150,
+    "min_r_t": 10,
+    "seed": 42
+  }
+}

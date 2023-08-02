@@ -99,9 +99,9 @@ python -m mob_data_anonymizer anonymize -f examples/configs/config_Microaggregat
   * min_r_t (int): Minimum temporal threshold for building the swapping cluster (in seconds)
   * max_r_t (int): Maximum temporal threshold for building the swapping cluster (in seconds)
 
-Example using the given [configuration file](examples/configs/config_SwapLocations.json):
+Example using the given [configuration file](examples/configs/config_SwapAllLocations.json):
 ```bash
-python -m mob_data_anonymizer anonymize -f examples/configs/config_SwapLocations.json
+python -m mob_data_anonymizer anonymize -f examples/configs/config_SwapAllLocations.json
 ```
 
 * QuadTreeHeatMap:

@@ -1,12 +1,13 @@
 import io
 import json
+import logging
 import os
 
 from mob_data_anonymizer.entities.Dataset import Dataset
 from mob_data_anonymizer.factories.anonymization_method_factory import AnonymizationMethodFactory
 from mob_data_anonymizer.client.make_api_call import MakeApiCall
 from mob_data_anonymizer import PARAMETERS_FILE_DOESNT_EXIST, SUCCESS, PARAMETERS_FILE_NOT_JSON, PARAMETERS_NOT_VALID, \
-    WRONG_METHOD, INPUT_FILE_NOT_EXIST, OUTPUT_FOLDER_NOT_EXIST, DEFAULT_OUTPUT_FILE, CONFIG_FILE
+    WRONG_METHOD, INPUT_FILE_NOT_EXIST, OUTPUT_FOLDER_NOT_EXIST, CONFIG_FILE, DEFAULT_ANONYMIZE_OUTPUT_FILE
 
 
 def check_parameters_file(file_path: str) -> int:
@@ -77,31 +78,30 @@ def anonymizer(file_path: str):
     with open(file_path) as param_file:
         data = json.load(param_file)
 
-    print("Anonymization method: ", data['method'])
+    logging.info(f"Anonymization method: {data['method']}")
     # Load dataset
     filename = data.get("input_file")
     dataset = Dataset()
     dataset.from_file(filename)
-    print("Dataset loaded")
+    # print("Dataset loaded")
 
     # Get instance of requested method
     method = AnonymizationMethodFactory.get(data['method'], dataset, data.get('params', None))
 
     # Run method
-    print("Anonymizing...")
+    logging.info("Anonymizing...")
     try:
         method.run()
     except BaseException as e:
         print("ERROR", e)
         exit()
 
-
-    print("Saving file...")
+    logging.info("Saving file...")
     # Save output file
     output_folder = data.get('output_folder', '')
     if output_folder != '':
         output_folder += '/'
-    output_file = data.get('main_output_file', DEFAULT_OUTPUT_FILE)
+    output_file = data.get('main_output_file', DEFAULT_ANONYMIZE_OUTPUT_FILE)
 
     output = method.get_anonymized_dataset()
     output.to_csv(f"{output_folder}{output_file}")

@@ -1,12 +1,11 @@
 {
   "method": "ProtectedGeneralization",
-  "input_file": "examples/data/fr-idf_2022_January.csv",
-  "output_folder": "examples/output/fr-idf_2022_January/",
-  "main_output_file": "fr-idf_2022_January_anonymized_protectedGen_k3.csv",
+  "input_file": "examples/data/cabs_dataset_20080608_0700_0715.csv",
+  "output_folder": "examples/output",
+  "main_output_file": "cabs_dataset_20080608_0700_0715_anonymized_protected.csv",
   "params":  {
     "k": 3,
     "knowledge": 2,
-    "strategy":"avg",
-    "time_interval": 60
+    "strategy":"avg"
   }
 }

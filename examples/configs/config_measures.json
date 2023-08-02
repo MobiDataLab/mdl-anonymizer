@@ -1,8 +1,8 @@
 {
-  "original_dataset": "examples/data/fr-idf_2022_January.csv",
-  "anonymized_dataset": "examples/output/fr-idf_2022_January_anonymized_tpm_k3_i60.csv",
+  "original_dataset": "examples/data/cabs_dataset_20080608_0700_0715.csv",
+  "anonymized_dataset": "examples/data/cabs_dataset_20080608_0700_0715_an.csv",
   "output_folder": "examples/output/",
-  "main_output_file": "measures_fr-idf_2022_January_anonymized_tpm_k3_i60.json",
+  "main_output_file": "measures_cabs_dataset_20080608_0700_0715_simple.json",
   "measures": [
     {"name":  "ScikitMeasures",
      "params":  {

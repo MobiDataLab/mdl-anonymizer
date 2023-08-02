@@ -2,7 +2,7 @@ import logging
 import pandas as pd
 from skmob.utils import constants
 from mob_data_anonymizer.anonymization_methods.AnonymizationMethodInterface import AnonymizationMethodInterface
-from mob_data_anonymizer.anonymization_methods.SwapLocations.trajectory_anonymization import \
+from mob_data_anonymizer.anonymization_methods.SwapAllLocations.trajectory_anonymization import \
     apply_trajectory_anonymization
 from mob_data_anonymizer.entities.Dataset import Dataset
 from mob_data_anonymizer.utils.tessellation import spatial_tessellation, load_tiles_file, compute_centroids
