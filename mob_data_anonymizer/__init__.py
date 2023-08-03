@@ -1,7 +1,7 @@
 import os
 
 __app_name__ = "mob_data_anonymizer"
-__version__ = "0.1.0"
+__version__ = "1.0.0"
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__)) + '/'
 
@@ -34,7 +34,7 @@ ERRORS = {
     OUTPUT_FOLDER_NOT_EXIST: "Output folder does not exist",
     WRONG_METHOD: "A requested method is not supported (or it is misspelled)",
     WRONG_MODE: "The requested mode is not supported (or it is misspelled)",
-    WRONG_METHOD_PARAMETER: "A method parameter is wrong"
+    WRONG_METHOD_PARAMETER: "A method parameter in the config file is wrong"
 }
 
 # Default methods

@@ -118,4 +118,4 @@ def anonymizer_api(param_file_path: str):
     response = api.post_user_data(action, input_file, param_file_path)
 
     print(f"Response: {response}")
-    print(f"Received: {response.json()['message']}")
+    print(f"Received: {response.json()}")

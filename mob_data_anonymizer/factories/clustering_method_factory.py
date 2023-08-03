@@ -7,7 +7,8 @@ from mob_data_anonymizer.distances.trajectory.DistanceInterface import DistanceI
 from mob_data_anonymizer.entities.Dataset import Dataset
 from mob_data_anonymizer.factories.aggregation_method_factory import AggregationMethodFactory
 from mob_data_anonymizer.factories.trajectory_distance_factory import TrajectoryDistanceFactory
-from mob_data_anonymizer import CONFIG_FILE, DEFAULT_TRAJECTORY_DISTANCE, DEFAULT_AGGREGATION, WRONG_METHOD_PARAMETER
+from mob_data_anonymizer import CONFIG_FILE, DEFAULT_TRAJECTORY_DISTANCE, DEFAULT_AGGREGATION, WRONG_METHOD_PARAMETER, \
+    ERRORS
 
 
 class ClusteringMethodFactory:
@@ -60,7 +61,7 @@ class ClusteringMethodFactory:
             return method_class(**params)
         except TypeError:
             # Wrong parameter
-            raise ValueError(WRONG_METHOD_PARAMETER) from None
+            raise ValueError(ERRORS[WRONG_METHOD_PARAMETER]) from None
 
 
 

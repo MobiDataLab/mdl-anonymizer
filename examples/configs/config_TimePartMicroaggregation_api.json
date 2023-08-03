@@ -1,6 +1,5 @@
 {
   "method": "TimePartMicroaggregation",
-  "input_file": "examples/data/filtered_dataset_20080608_sample.csv",
   "params": {
     "k": 3,
     "interval": 900,

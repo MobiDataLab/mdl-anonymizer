@@ -1,7 +1,5 @@
 {
   "method": "Microaggregation",
-  "input_file": "examples/data/filtered_dataset_20080608.csv",
-  "_p_lambda_calculated": 0.00657901067783612,
   "params": {
     "k": 3,
     "clustering_method": {

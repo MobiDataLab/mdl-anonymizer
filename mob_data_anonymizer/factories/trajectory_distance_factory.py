@@ -3,7 +3,7 @@ import json
 
 from mob_data_anonymizer.distances.trajectory.DistanceInterface import DistanceInterface
 from mob_data_anonymizer.entities.Dataset import Dataset
-from mob_data_anonymizer import CONFIG_FILE
+from mob_data_anonymizer import CONFIG_FILE, WRONG_METHOD_PARAMETER, ERRORS
 
 
 class TrajectoryDistanceFactory:
@@ -30,7 +30,7 @@ class TrajectoryDistanceFactory:
             return method_class(**params)
         except TypeError:
             # Wrong parameter
-            raise ValueError("Wrong parameter") from None
+            raise ValueError(ERRORS[WRONG_METHOD_PARAMETER]) from None
 
 
 

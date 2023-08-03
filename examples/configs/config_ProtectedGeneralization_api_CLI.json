@@ -1,0 +1,9 @@
+{
+  "method": "ProtectedGeneralization",
+  "input_file": "examples/data/cabs_dataset_20080608_0700_0715.csv",
+  "params":  {
+    "k": 3,
+    "knowledge": 2,
+    "strategy":"avg"
+  }
+}

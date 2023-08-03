@@ -1,8 +1,12 @@
 {
-  "original_dataset": "examples/data/cabs_dataset_20080608.parquet",
-  "filtered_dataset": "examples/output/filtered_cabs_dataset_20080608.csv",
+  "input_filename": "examples/data/cabs_dataset_20080608_0700_0715.csv",
+  "output_filename": "examples/output/filtered_cabs_dataset_20080608_0700_0715.csv",
   "methods": [
-    {"min_locations":  10},
-    {"max_speed":  300}
+    {
+      "min_locations":  5
+    },
+    {
+      "max_speed":  300
+    }
   ]
 }

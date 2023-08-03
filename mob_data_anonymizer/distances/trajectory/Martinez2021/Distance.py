@@ -14,7 +14,7 @@ from mob_data_anonymizer.utils.utils import memory
 
 
 class Distance(DistanceInterface):
-    def __init__(self, dataset: Dataset, sp_type='Haversine', p_lambda=None, max_dist=None, normalized=False):
+    def __init__(self, dataset: Dataset, sp_type='Haversine', p_lambda=None, max_dist=None, normalized=False, checking=False):
         self.dataset = dataset
         self.spatial_distance = sp_type
         self.distance_matrix = {}
@@ -22,6 +22,11 @@ class Distance(DistanceInterface):
         self.mean_spatial_distance = 0
         self.mean_temporal_distance = 0
         self.normalized = normalized
+
+        # Don't compute anything If we are just checking if an object can be instantiated
+        if checking:
+            return
+
         self.average_speed = self.__compute_average_speed()
         self.max_dist = 0  # for normalization [0,1]
         self.reference_trajectory = None

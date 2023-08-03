@@ -31,7 +31,7 @@ def check_parameters_file(file_path: str) -> int:
 
     try:
         # Check if input files exist
-        if not os.path.exists(data['original_dataset']):
+        if not os.path.exists(data['input_filename']):
             return INPUT_FILE_NOT_EXIST
 
         # Check if all methods are valid
@@ -76,7 +76,7 @@ def filter_dataset(param_file_path: str):
         data = json.load(param_file)
 
     typer.secho(f'Loading original dataset')
-    filename = data.get("original_dataset")
+    filename = data.get("input_filename")
     dataset = Dataset()
     methods = data["methods"]
     min_locations = 0
@@ -88,7 +88,7 @@ def filter_dataset(param_file_path: str):
             max_speed = method["max_speed"]
     dataset.from_file(filename, min_locations=min_locations, datetime_key="timestamp")
     dataset.filter_by_speed(max_speed_kmh=max_speed)
-    dataset.to_csv(filename=data.get("filtered_dataset"))
+    dataset.to_csv(filename=data.get("output_filename"))
 
 
 def filter_dataset_api(param_file_path: str):

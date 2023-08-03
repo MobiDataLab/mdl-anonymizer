@@ -1,6 +1,5 @@
 {
   "method": "SwapAllLocations",
-  "input_file": "examples/data/mock_dataset.csv",
   "params": {
     "k": 3,
     "max_r_s": 600,

@@ -3,7 +3,7 @@ import json
 import os
 
 from mob_data_anonymizer.aggregation.TrajectoryAggregationInterface import TrajectoryAggregationInterface
-from mob_data_anonymizer import CONFIG_FILE, WRONG_METHOD_PARAMETER
+from mob_data_anonymizer import CONFIG_FILE, WRONG_METHOD_PARAMETER, ERRORS
 
 
 class AggregationMethodFactory:
@@ -28,7 +28,7 @@ class AggregationMethodFactory:
             return method_class(**params)
         except TypeError:
             # Wrong parameter
-            raise ValueError(WRONG_METHOD_PARAMETER) from None
+            raise ValueError(ERRORS[WRONG_METHOD_PARAMETER]) from None
 
 
 

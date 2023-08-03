@@ -13,19 +13,40 @@ import warnings
 logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', level=logging.INFO)
 warnings.filterwarnings('ignore')
 
+ERROR_TASK_NOT_COMPLETED = "Your task could not be completed..."
 
 def anonymize(file, filename, params, task_id):
     print("Anonymization method: ", params['method'])
 
-    # Load dataset
-    dataset = Dataset()
-    dataset.from_file(file, filename)
+    try:
+        # Load dataset
+        dataset = Dataset()
+        dataset.from_file(file, filename)
 
-    # Get instance of requested method
-    method = AnonymizationMethodFactory.get(params['method'], dataset, params['params'])
+        # Get instance of requested method
+        method = AnonymizationMethodFactory.get(params['method'], dataset, params['params'])
 
-    # Run method
-    method.run()
+        # Run method
+        method.run()
+
+    except Exception as e:
+
+        with open(CONFIG_DB_FILE) as param_file:
+            data = json.load(param_file)
+
+        error = {
+            "message": ERROR_TASK_NOT_COMPLETED,
+            "error": str(e)
+        }
+        # Serializing json
+        json_object = json.dumps(error, indent=4)
+
+        output_file = data["db_folder"] + "/" + task_id + ".json"
+        with open(output_file, "w") as outfile:
+            outfile.write(json_object)
+
+        logging.info("Error!")
+        sys.exit()
 
     # Save output file
     with open(CONFIG_DB_FILE) as param_file:
@@ -40,15 +61,35 @@ def anonymize(file, filename, params, task_id):
 def analyze(file, filename, params, task_id):
     print("Analysis method: ", params['method'])
 
-    # Load dataset
-    dataset = Dataset()
-    dataset.from_file(file, filename)
+    try:
+        # Load dataset
+        dataset = Dataset()
+        dataset.from_file(file, filename)
 
-    # Get instance of requested method
-    method = AnalysisMethodFactory.get(params['method'], dataset, params['params'])
+        # Get instance of requested method
+        method = AnalysisMethodFactory.get(params['method'], dataset, params['params'])
 
-    # Run method
-    method.run()
+        # Run method
+        method.run()
+
+    except Exception as e:
+
+        with open(CONFIG_DB_FILE) as param_file:
+            data = json.load(param_file)
+
+        error = {
+            "message": ERROR_TASK_NOT_COMPLETED,
+            "error": str(e)
+        }
+
+        # Serializing json
+        json_object = json.dumps(error, indent=4)
+        output_file = data["db_folder"] + "/" + task_id + ".json"
+        with open(output_file, "w") as outfile:
+            outfile.write(json_object)
+
+        logging.info("Error!")
+        sys.exit()
 
     # Save output file
     with open(CONFIG_DB_FILE) as param_file:
@@ -60,26 +101,47 @@ def analyze(file, filename, params, task_id):
 
 
 def measures(original_file, anom_file, original_filename, anom_filename, params, task_id):
-    typer.secho(f'Loading original dataset')
-    original_dataset = Dataset()
-    original_dataset.from_file(original_file, original_filename)
 
-    typer.secho(f'Loading anonymized dataset')
-    anonymized_dataset = Dataset()
-    anonymized_dataset.from_file(anom_file, anom_filename)
+    try:
+        typer.secho(f'Loading original dataset')
+        original_dataset = Dataset()
+        original_dataset.from_file(original_file, original_filename)
 
-    results = {}
-    measures = params['measures']
-    for measure in measures:
-        print("Measures method: ", measure['name'])
-        # Get instance of requested method
-        method = MeasuresMethodFactory.get(measure['name'], original_dataset, anonymized_dataset, measure['params'])
+        typer.secho(f'Loading anonymized dataset')
+        anonymized_dataset = Dataset()
+        anonymized_dataset.from_file(anom_file, anom_filename)
 
-        # Run method
-        method.run()
+        results = {}
+        measures = params['measures']
+        for measure in measures:
+            print("Measures method: ", measure['name'])
+            # Get instance of requested method
+            method = MeasuresMethodFactory.get(measure['name'], original_dataset, anonymized_dataset, measure['params'])
 
-        result = method.get_result()
-        results.update(result)
+            # Run method
+            method.run()
+
+            result = method.get_result()
+            results.update(result)
+
+    except Exception as e:
+
+        with open(CONFIG_DB_FILE) as param_file:
+            data = json.load(param_file)
+
+        error = {
+            "message": ERROR_TASK_NOT_COMPLETED,
+            "error": str(e)
+        }
+
+        # Serializing json
+        json_object = json.dumps(error, indent=4)
+        output_file = data["db_folder"] + "/" + task_id + ".json"
+        with open(output_file, "w") as outfile:
+            outfile.write(json_object)
+
+        logging.info("Error!")
+        exit()
 
     with open(CONFIG_DB_FILE) as param_file:
         data = json.load(param_file)
@@ -90,22 +152,43 @@ def measures(original_file, anom_file, original_filename, anom_filename, params,
     logging.info("Done!")
 
 
-def filter(file, filename, params, task_id):
-    typer.secho(f'Loading original dataset')
+def filter_dataset(file, filename, params, task_id):
 
-    dataset = Dataset()
+    try:
+        typer.secho(f'Loading original dataset')
 
-    methods = params["methods"]
-    min_locations = 0
-    max_speed = sys.maxsize
-    for method in methods:
-        if "min_locations" in method:
-            min_locations = method["min_locations"]
-        if "max_speed" in method:
-            max_speed = method["max_speed"]
+        dataset = Dataset()
 
-    dataset.from_file(file, filename, min_locations=min_locations, datetime_key="timestamp")
-    dataset.filter_by_speed(max_speed_kmh=max_speed)
+        methods = params["methods"]
+        min_locations = 0
+        max_speed = sys.maxsize
+        for method in methods:
+            if "min_locations" in method:
+                min_locations = method["min_locations"]
+            if "max_speed" in method:
+                max_speed = method["max_speed"]
+
+        dataset.from_file(file, filename, min_locations=min_locations, datetime_key="timestamp")
+        dataset.filter_by_speed(max_speed_kmh=max_speed)
+
+    except Exception as e:
+
+        with open(CONFIG_DB_FILE) as param_file:
+            data = json.load(param_file)
+
+        error = {
+            "message": ERROR_TASK_NOT_COMPLETED,
+            "error": str(e)
+        }
+
+        # Serializing json
+        json_object = json.dumps(error, indent=4)
+        output_file = data["db_folder"] + "/" + task_id + ".json"
+        with open(output_file, "w") as outfile:
+            outfile.write(json_object)
+
+        logging.info("Error!")
+        exit()
 
     # Save filtered file
     with open(CONFIG_DB_FILE) as param_file:
