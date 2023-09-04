@@ -34,6 +34,14 @@ class Dataset(ABC):
     def set_crs(self, crs):
         self.crs = crs
 
+    def _ensure_values(self, lat, lon):
+        if lat < -90 or lat > 90:
+            return False
+        if lon < -180 or lon > 180:
+            return False
+
+        return True
+
     #    @abstractmethod
     #    def load(self):
     #        raise NotImplementedError
@@ -82,21 +90,27 @@ class Dataset(ABC):
 
         pbar = tqdm(total=len(df))
 
+        wrong_values = False
         T = Trajectory(traj_id, user_id)
         for index, row in df.iterrows():
             if traj_id == row[trajectory_key]:
-                # Add location to current trajectory
 
-                # Convert datetime to timestamp
-                element = datetime.datetime.strptime(row[datetime_key], datetime_format)
-                element = self.timezone.localize(element)
-                timestamp = datetime.datetime.timestamp(element)
+                # Check values
+                if not self._ensure_values(row[latitude_key], row[longitude_key]):
+                    wrong_values = True
+                else:
+                    # Add location to current trajectory
 
-                location = TimestampedLocation(timestamp, row[longitude_key], row[latitude_key])
-                T.add_location(location, sort=False)
+                    # Convert datetime to timestamp
+                    element = datetime.datetime.strptime(row[datetime_key], datetime_format)
+                    element = self.timezone.localize(element)
+                    timestamp = datetime.datetime.timestamp(element)
+
+                    location = TimestampedLocation(timestamp, row[longitude_key], row[latitude_key])
+                    T.add_location(location, sort=False)
             else:
                 # Sort locations and add trajectory
-                if len(T.locations) >= min_locations:
+                if len(T.locations) >= min_locations and not wrong_values:
                     T.locations.sort(key=lambda x: x.timestamp)
                     self.add_trajectory(T)
 
@@ -104,18 +118,22 @@ class Dataset(ABC):
                         break
 
                 # Create another trajectory
+                wrong_values = False
                 traj_id = row[trajectory_key]
                 user_id = row[user_key]
                 users.add(user_id)
 
                 T = Trajectory(traj_id, user_id)
 
-                # Convert datetime to timestamp
-                element = datetime.datetime.strptime(row[datetime_key], datetime_format)
-                element = self.timezone.localize(element)
-                timestamp = datetime.datetime.timestamp(element)
-                location = TimestampedLocation(timestamp, row[longitude_key], row[latitude_key])
-                T.add_location(location, sort=False)
+                if not self._ensure_values(row[latitude_key], row[longitude_key]):
+                    wrong_values = True
+                else:
+                    # Convert datetime to timestamp
+                    element = datetime.datetime.strptime(row[datetime_key], datetime_format)
+                    element = self.timezone.localize(element)
+                    timestamp = datetime.datetime.timestamp(element)
+                    location = TimestampedLocation(timestamp, row[longitude_key], row[latitude_key])
+                    T.add_location(location, sort=False)
 
             pbar.update(1)
         else:
