@@ -1,6 +1,6 @@
 import logging
 
-from fastapi import FastAPI, File, UploadFile, BackgroundTasks
+from fastapi import FastAPI, File, UploadFile, BackgroundTasks, Query
 from fastapi.responses import FileResponse
 import uuid
 
@@ -9,15 +9,20 @@ import json
 
 from mob_data_anonymizer.server.server_functions import return_task, anonymize, analyze, measures, filter_dataset
 
-app = FastAPI()
+app = FastAPI(title="Anonymization Processor API",
+              description="MobiDataLab anonymization API",
+              contact={"url": "https://github.com/MobiDataLab/mdl-anonymizer"},
+              version='1.0.0')
 
 PROCESSING_MESSAGE = "Your task is being processed. Use the 'GET /task/' endpoint to obtain the results later"
 OK = "OK"
 ERROR = "ERROR"
 NOT_AVAILABLE = "NOT_AVAILABLE"
 
-@app.get("/task/")
-def get(task_id: str):
+
+@app.get("/task/",
+         description="Get the result from a previous requested task")
+def get(task_id: str = Query(description="Task ID associated with a previously done POST request.")):
     response_file_path = return_task(task_id)
     if response_file_path is None:
         task_message = f"task {task_id} not available or still processing"
@@ -27,7 +32,8 @@ def get(task_id: str):
         return response
 
 
-@app.post("/anonymize/")
+@app.post("/anonymize/",
+         description="Anonymize a dataset")
 def post(input_dataset: UploadFile = File(...),
          config_file: UploadFile = File(...), background_tasks: BackgroundTasks = None):
     with open(CONFIG_FILE, 'r') as f:
@@ -45,7 +51,8 @@ def post(input_dataset: UploadFile = File(...),
     return {"status": OK, "message": PROCESSING_MESSAGE, "task_id": task_id}
 
 
-@app.post("/analyze/")
+@app.post("/analyze/",
+          description="Compute an aggregation analysis in a private way")
 def post(input_dataset: UploadFile = File(...),
          config_file: UploadFile = File(...), background_tasks: BackgroundTasks = None):
     with open(CONFIG_FILE, 'r') as f:
@@ -62,7 +69,8 @@ def post(input_dataset: UploadFile = File(...),
     return {"status": OK, "message": PROCESSING_MESSAGE, "task_id": task_id}
 
 
-@app.post("/compute_measures/")
+@app.post("/compute_measures/",
+          description="Compute utility and privacy measure of a dataset")
 def post(original_dataset: UploadFile = File(...), anonymized_dataset: UploadFile = File(...),
          config_file: UploadFile = File(...), background_tasks: BackgroundTasks = None):
     params = json.load(config_file.file)
@@ -74,7 +82,8 @@ def post(original_dataset: UploadFile = File(...), anonymized_dataset: UploadFil
     return {"status": OK, "message": PROCESSING_MESSAGE, "task_id": task_id}
 
 
-@app.post("/filter/")
+@app.post("/filter/",
+          description="Filter a dataset")
 def post(input_dataset: UploadFile = File(...), config_file: UploadFile = File(...),
          background_tasks: BackgroundTasks = None):
     params = json.load(config_file.file)
