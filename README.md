@@ -62,15 +62,18 @@ python -m mob_data_anonymizer anonymize -f parameters_file.json
 ```
 There are some common parameters to all the anonymization methods:
 * method (string): The name of the anonymization method to be executed. Must be one of the following:
-  * SwapMob
+  * SimpleGeneralization
+  * ProtectedGeneralization
   * Microaggregation
-  * SwapLocations
-  * QuadTreeHeatMap
+  * TimePartMicroaggregation
+  * SwapAllLocations
+  * SwapMob
 * input_file (string): The dataset to be anonymized
 * output_folder (string, optional): Folder to save the generated output datasets
-* main_output_file (string. optional): The name of the anonymized dataset 
-* save_preprocessed_dataset (boolean, optional): True: Export the pre-processed dataset
-* preprocessed_file (string, optional): The name of the pre-processed dataset
+* main_output_file (string, optional): The name of the anonymized dataset 
+* params (JSON object, optional): Specific parameters of the corresponding anonymized method
+
+Please, visit the [examples folder](examples/configs/) to find some examples of config files. Documentation from every method can be found [here](docs/).
 
 Each of the anonymization methods has some specific parameters that have to be added to the parameters file:
 * SwapMob:
