@@ -72,7 +72,7 @@ Once the module is installed, its usage only requires an import:
 ```python
 import mob_data_anonymizer
 ```
-You can find examples of how to use the library in the [examples folder](../examples).
+You can find examples of how to use the library in the [examples folder](examples).
 
 ## Contributing
 The anonymization module has been designed with a focus on modularity, where pseudonymization or anonymization methods can be built using different components dedicated to preprocessing, clustering, distance computation, aggregation, etc. We have focused on making it easy to add new methods and components, in order to encourage contributions from other researchers.
@@ -87,8 +87,9 @@ To do so, developers should simply follow the next steps:
    6.	*DistanceInterface*, for new trajectory distance methods
 2. The constructor of the new class must receive as arguments first the original dataset and then the necessary parameters for the new method.
 3. Implement the inherited class method `run()` by including the code that executes the logic of the new method (e.g., in the case of a new anonymization method, the routine that anonymizes the original dataset)
-4. Include the reference description to the new class method in the main configuration file ([config.json](../mob_data_anonymizer/config.json)) archive located at the root of the project library. The reference must be included inside the method type (anonymization, clustering, aggregation, trajectory_distances, analysis, or measures) and it must contain the name of the method and the path name of the new class.
-5. Don't forget to add a description of your method in the [docs section](docs).
+4. Include the reference description to the new class method in the main configuration file ([config.json](mob_data_anonymizer/config.json)) archive located at the root of the project library. The reference must be included inside the method type (anonymization, clustering, aggregation, trajectory_distances, analysis, or measures) and it must contain the name of the method and the path name of the new class.
+5. Add a Unit Test to the [test folder](tests). We recommend to use a [mock dataset](examples/data/mock_dataset.csv) included in the [data folder](examples/data).
+6. Don't forget to add a description of your method in the [docs section](docs).
 
-Once the new method has been implemented and referenced in the [config.json](../mob_data_anonymizer/config.json) file as described above, the new method can be used in the same way as those already developed.  
+Once the new method has been implemented and referenced in the [config.json](mob_data_anonymizer/config.json) file as described above, the new method can be used in the same way as those already developed.  
 
