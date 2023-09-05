@@ -5,12 +5,12 @@ Developed by [CRISES research group](https://crises-deim.urv.cat/web/) from [URV
 
 
 ## Table of Contents
-* [Install](#install)
-* [Usage](#usage)
-  * [CLI](#cli)
-    * [Anonymization methods](#anonymization-methods)
-    * [Utility metrics](#utility-metrics)
-  * [As a library](#as-a-library)
+- [Install](#install)
+- [Usage](#usage)
+  - [CLI](#cli)
+  - [API](#api)
+  - [As a library](#as-a-library)
+- [Contributing](#contributing)
 
 ## Install
 To install the package, run the commands below in a terminal located at the root of this repository.
@@ -50,119 +50,45 @@ This module can be used as an independent command line interface (CLI) tool or a
 Following subsections illustrate their usage.
 
 ### CLI
-The developed package provides a command line interface (CLI) that lets users anonymize a mobility dataset and compute some utility measures over both the original and the anonymized datasets in a straightforward way.
-```bash
+The developed package provides a command line interface (CLI) that allows users anonymizing a mobility dataset, performing an analysis in a private-way and compute some utility and privacy measures measures over both the original and the anonymized datasets in a straightforward way.
+```
 python -m mob_data_anonymizer
 ```
-
-#### Anonymization methods
-The parameter values to configure the anonymization methods are provided to the application using a JSON file:  
-```bash
-python -m mob_data_anonymizer anonymize -f parameters_file.json
-```
-There are some common parameters to all the anonymization methods:
-* method (string): The name of the anonymization method to be executed. Must be one of the following:
-  * SimpleGeneralization
-  * ProtectedGeneralization
-  * Microaggregation
-  * TimePartMicroaggregation
-  * SwapAllLocations
-  * SwapMob
-* input_file (string): The dataset to be anonymized
-* output_folder (string, optional): Folder to save the generated output datasets
-* main_output_file (string, optional): The name of the anonymized dataset 
-* params (JSON object, optional): Specific parameters of the corresponding anonymized method
-
-Please, visit the [examples folder](examples/configs/) to find some examples of config files. Documentation from every method can be found [here](docs/).
-
-Each of the anonymization methods has some specific parameters that have to be added to the parameters file:
-* SwapMob:
-  * spatial_thold (float): Maximum distance (in km) to consider two locations as close
-  * temporal_thold (int): Maximum time difference (in seconds) to consider two locations as coexistent 
-  * min_n_swap (int, optional): Minimum number of swaps for a trajectory for not being removed.
-  * seed (int, optional): Seed for the random swapping process
-
-Example using the given [configuration file](examples/configs/config_SwapMob.json):
-```bash
-python -m mob_data_anonymizer anonymize -f examples/configs/config_SwapMob.json
-```
-
-* Microaggregation:
-  * k (int): Minimum number of trajectories to be aggregated in a cluster
-
-Example using the given [configuration file](examples/configs/config_Microaggregation.json):
-```bash
-python -m mob_data_anonymizer anonymize -f examples/configs/config_Microaggregation.json
-```
-
-* SwapLocations:
-  * k (int):  Minimum number of locations of the swapping cluster
-  * min_r_s (int): Minimum spatial radius of the swapping cluster (in meters)
-  * max_r_s (int): Maximum spatial radius for building the swapping cluster (in meters)
-  * min_r_t (int): Minimum temporal threshold for building the swapping cluster (in seconds)
-  * max_r_t (int): Maximum temporal threshold for building the swapping cluster (in seconds)
-
-Example using the given [configuration file](examples/configs/config_SwapAllLocations.json):
-```bash
-python -m mob_data_anonymizer anonymize -f examples/configs/config_SwapAllLocations.json
-```
-
-* QuadTreeHeatMap:
-  * min_k (int): Minimum number of locations allowed co-exist in a QuadTree sector.
-  The algorithm ensures K-anonymity using this k.
-  * min_sector_length (int): Minimum side length (in meters) for a QuadTree sector.
-  Equivalent to minimum resolution.
-  Due to the definition of the tree depth, empirical min_sector_length can be almost two times greater.
-  * merge_sectors (bool): If True, sectors with an insufficient number of locations will be merged with neighboring sectors.
-  This always preserves or enhances utility.
-  * split_n_locations (int): Maximum number of locations allowed in a QuadTree sector before it is split into 4 subsectors.
-  It must be greater than min_k. If lower or None, the value would be automatically set to min_k.
-  A value of min_k is expected to be the bests in terms of utility.
-
-Example using the given [configuration file](examples/configs/config_QuadTreeHeatMap.json):
-```bash
-python -m mob_data_anonymizer analysis -f examples/configs/config_QuadTreeHeatMap.json
-```
-
-#### Utility metrics
-As previously mentioned, the anonymization module also includes a tool to compute and compare some utility metrics of original and anonymized datasets. We leverage on the well-known scikit-mobility library to compute these utility metrics. To compute some of these measures, the datasets to be compared are previously tessellated.
-
-Again, the parameter values to compute the measures are provided to the application through a JSON file:
-```bash
-python –m mob_data_anonymizer measures -f parameters_file.json 
-```
-Available parameters are:
-* method (array): The name of the measures to compute. Must be some of the following (please, visit the [scikit-mobility website](https://scikit-mobility.github.io/scikit-mobility/reference/measures.html) for details):
-  * visits_per_location
-  * distance_straight_line
-  * uncorrelated_location_entropy
-  * random_location_entropy
-  * mean_square_displacement
-* mode (string): Type of output. As some measures output is a DataFrame a strategy has to be defined. Must be one of the following:
-  * average: computes the average of each DataFrame (from original and anonymized dataset) and send it to stdout
-  * export: join and export both output DataFrame (from the original and anonymized datasets) to a single CSV file
-* input_1 (string): Filepath of the first dataset 
-* input_2 (string): Filepath of the second dataset 
-* output_folder (string, optional): Folder to save the generated output files
-
-Example using the given [configuration file](examples/configs/config_metrics.json):
-```bash
-python -m mob_data_anonymizer measures -f examples/configs/config_metrics.json
-```
+You can find a detailed documentation [here](docs/README.md).
 
 ### API
-uvicorn mob_data_anonymizer.main_api:app --host 0.0.0.0 --port 8000
-host:8000/docs
+
+The anonymization module is also ready to be deployed in a server to provide all its functionality remotely.
+To start the server application, use the following command:
+
+```
+uvicorn mob_data_anonymizer.server.main_api:app --reload --host 0.0.0.0 --port 8000
+```
+
+See a detailed documentation [here](docs/API.md)
 
 ### As a library
 Once the module is installed, its usage only requires an import:
 ```python
 import mob_data_anonymizer
 ```
-An example using all the aforementioned anonymization methods is provided in the [examples/anonymize/src/main.py](examples/anonymize/src/main.py) file.
+You can find examples of how to use the library in the [examples folder](../examples).
 
-<!---
-## Datasets
-- **cabs_dataset_20080608_0700_0715.csv**: 371 trajectories and 3120 locations. All locations between 07:00 and 07:15
-- **cabs_dataset_0700_0715.csv**: 7265 trajectories and 60628 locations. All locations between 07:00 and 07:15
---->
+## Contributing
+The anonymization module has been designed with a focus on modularity, where pseudonymization or anonymization methods can be built using different components dedicated to preprocessing, clustering, distance computation, aggregation, etc. We have focused on making it easy to add new methods and components, in order to encourage contributions from other researchers.
+
+To do so, developers should simply follow the next steps:
+1. Create a Python class that implements (inherits from), respectively:
+   1.	*AnonymizationMethodInterface*, for new anonymization methods
+   2.	*TrajectoryAggregationInterface*, for new aggregation methods
+   3.	*AnalysisMethodInterface*, for new analysis methods
+   4.	*ClusteringInterface*, for new clustering methods
+   5.	*MeasuresMethodInterface*, for new measure methods
+   6.	*DistanceInterface*, for new trajectory distance methods
+2. The constructor of the new class must receive as arguments first the original dataset and then the necessary parameters for the new method.
+3. Implement the inherited class method `run()` by including the code that executes the logic of the new method (e.g., in the case of a new anonymization method, the routine that anonymizes the original dataset)
+4. Include the reference description to the new class method in the main configuration file ([config.json](../mob_data_anonymizer/config.json)) archive located at the root of the project library. The reference must be included inside the method type (anonymization, clustering, aggregation, trajectory_distances, analysis, or measures) and it must contain the name of the method and the path name of the new class.
+5. Don't forget to add a description of your method in the [docs section](docs).
+
+Once the new method has been implemented and referenced in the [config.json](../mob_data_anonymizer/config.json) file as described above, the new method can be used in the same way as those already developed.  
+
