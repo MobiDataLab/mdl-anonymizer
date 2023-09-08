@@ -50,7 +50,7 @@ This module can be used as an independent command line interface (CLI) tool or a
 Following subsections illustrate their usage.
 
 ### CLI
-The developed package provides a command line interface (CLI) that allows users anonymizing a mobility dataset, performing an analysis in a private-way and compute some utility and privacy measures measures over both the original and the anonymized datasets in a straightforward way.
+The developed package provides a command line interface (CLI) that allows users to anonymize a mobility dataset, to perform an analysis in a private-way and to compute some utility and privacy measures over both the original and the anonymized datasets in a straightforward way. 
 ```
 python -m mob_data_anonymizer
 ```
