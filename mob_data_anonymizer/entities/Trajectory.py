@@ -18,7 +18,6 @@ class Trajectory:
         if sort:
             self.locations.sort(key=lambda x: x.timestamp)
 
-
     def add_locations(self, locations: list):
         locations.sort(key=lambda l: l.timestamp)
         self.locations.extend(locations)
@@ -100,11 +99,28 @@ class Trajectory:
         for i, l1 in enumerate(self.locations):
             try:
                 l2 = self.locations[i + 1]
+                if l1.temporal_distance(l2) == 0:
+                    return True
                 speed = (l1.spatial_distance(l2) / l1.temporal_distance(l2)) * 3600
                 if speed > max_speed_kmh:
                     return True
             except IndexError:
                 return False
+
+    def some_location_outside(self, bbox: tuple) -> bool:
+        '''
+        bbox (min_lng, min_lat, max_lng, max_lat)
+        '''
+
+        min_lng, min_lat, max_lng, max_lat = bbox
+
+        for l in self.locations:
+            if not min_lng <= l.x <= max_lng:
+                return True
+            if not min_lat <= l.y <= max_lat:
+                return True
+
+        return False
 
     def default_distance(self, trajectory, p_lambda) -> float:
         avg_speed_1 = self.get_avg_speed(sp_type="Haversine")

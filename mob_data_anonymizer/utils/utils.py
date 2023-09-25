@@ -1,4 +1,7 @@
 import psutil
+from shapely import geometry
+import geopandas as gpd
+from skmob.utils.constants import DEFAULT_CRS
 
 
 def inclusive_range(start, stop, step):
@@ -12,6 +15,15 @@ def round_tuple(t: tuple, precision: int = 2):
     r = [round(v, precision) for v in t]
 
     return tuple(r)
+
+
+def build_bounding_box(min_lng: float, min_lat: float, max_lng: float, max_lat: float):
+    point_list = [[max_lng, max_lat], [max_lng, min_lat], [min_lng, min_lat], [min_lng, max_lat]]
+
+    poly = geometry.Polygon(point_list)
+    polygon = gpd.GeoDataFrame(index=[0], crs=DEFAULT_CRS, geometry=[poly])
+
+    return polygon
 
 
 def memory():

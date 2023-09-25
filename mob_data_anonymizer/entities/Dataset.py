@@ -391,6 +391,21 @@ class Dataset(ABC):
         logging.info(f"Dataset filtered."
                      f"Now it has {len(self)} trajectories and {count_locations} locations.")
 
+    def filter_by_bounding_box(self, bbox: tuple):
+        '''
+        The whole trajectory should be inside the bounding box
+
+        bbox (min_lng, min_lat, max_lng, max_lat)
+        '''
+        logging.info(f"Filtering dataset by bounding box")
+
+        self.trajectories = [t for t in self.trajectories if not t.some_location_outside(bbox)]
+
+        count_locations = sum([len(t) for t in self.trajectories])
+
+        logging.info(f"Dataset filtered. Removed trajectories with some location outside the bbox ({bbox}). "
+                     f"Now it has {len(self)} trajectories and {count_locations} locations.")
+
     def __len__(self):
         return len(self.trajectories)
 
