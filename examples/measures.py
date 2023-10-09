@@ -20,9 +20,13 @@ a_dataset.from_file("data/mock_dataset_anonymized.csv")
 
 params = {
     'trajectory_distance': {
-        'name': 'Martinez2021'
+        'name': 'Martinez2021',
+        "params": {
+            "p_lambda": None
+        }
     }
 }
+
 
 measure = MeasuresMethodFactory.get('Rsme', dataset, a_dataset, params)
 measure.run()

@@ -9,12 +9,21 @@ dataset = Dataset()
 dataset.from_file("data/mock_dataset.csv")
 
 params = {
-        "tile_size": 500,
-        "k": 3,
-        "knowledge": 2
+    'k': 3,
+    'interval': 60,
+    "clustering_method": {
+        "name": "SimpleMDAV",
+        "params": {
+            "trajectory_distance": {
+                "name": "Martinez2021",
+                "params": {
+                    "p_lambda": 0
+                }
+            }
+        }
     }
-
-method = AnonymizationMethodFactory.get('ProtectedGeneralization', dataset, params = params)
+}
+method = AnonymizationMethodFactory.get('TimePartMicroaggregation', dataset, params = params)
 method.run()
 a_dataset = method.get_anonymized_dataset()
 
