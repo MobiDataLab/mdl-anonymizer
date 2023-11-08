@@ -20,7 +20,7 @@ Setup is only required when using the module as a library in Python code, not fo
 
 # Create and activate environment
 conda create -n mdl_env pip python=3.9 rtree
-conda activate mda_env
+conda activate mdl_env
 
 # Install dependencies
 conda install -c conda-forge scikit-mobility -y   # If this fails, use "pip install scikit-mobility"
