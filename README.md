@@ -52,7 +52,7 @@ Following subsections illustrate their usage.
 ### CLI
 The developed package provides a command line interface (CLI) that allows users to anonymize a mobility dataset, to perform an analysis in a private-way and to compute some utility and privacy measures over both the original and the anonymized datasets in a straightforward way. 
 ```
-python -m mob_data_anonymizer
+python -m mdl_anonymizer
 ```
 You can find a detailed documentation [here](docs/README.md).
 
@@ -62,7 +62,7 @@ The anonymization module is also ready to be deployed in a server to provide all
 To start the server application, use the following command:
 
 ```
-uvicorn mob_data_anonymizer.server.main_api:app --reload --host 0.0.0.0 --port 8000
+uvicorn mdl_anonymizer.server.main_api:app --reload --host 0.0.0.0 --port 8000
 ```
 
 See a detailed documentation [here](docs/API.md)
