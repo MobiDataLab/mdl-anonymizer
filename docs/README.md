@@ -12,7 +12,7 @@ The parameter values to configure the anonymization methods are provided to the 
 python -m mob_data_anonymizer anonymize -f parameters_file.json
 ```
 There are some common parameters to all the anonymization methods:
-* method (string): The name of the anonymization method to be executed. Must be one of those defined in [config.json](../mob_data_anonymizer/config.json). Currently, 
+* method (string): The name of the anonymization method to be executed. Must be one of those defined in [config.json](../mdl_anonymizer/config.json). Currently, 
 they are the following:
   * [SimpleGeneralization](anonymization/SimpleGeneralization.md)
   * [ProtectedGeneralization](anonymization/ProtectedGeneralization.md)
@@ -40,7 +40,7 @@ The parameter file contains all the measures to be computed with their correspon
 - anonymized_dataset (str): Path of the anonymized dataset
 - output_folder (string, optional): Folder to save the generated outputs 
 - main_output_file (string, optional): Name of the main output file
-- measures (Array of JSON objects): List of measures to be computed. Every measure includes their own parameters (if any). They should appear in the main configuration file ([config.json](../mob_data_anonymizer/config.json)). Currently, these are the developed measures: 
+- measures (Array of JSON objects): List of measures to be computed. Every measure includes their own parameters (if any). They should appear in the main configuration file ([config.json](../mdl_anonymizer/config.json)). Currently, these are the developed measures: 
   - ScikitMeasures
   - [RSME](metrics/rsme.md)
   - [PropensityScore](metrics/propensityScore.md)
@@ -57,7 +57,7 @@ python -m mob_data_anonymizer analysis -f parameters_file.json
 ```
 
 There are some common parameters to all the analysis methods:
-* method (string): The name of the analysis method to be executed. Must be one of those defined in [config.json](../mob_data_anonymizer/config.json). Currently, 
+* method (string): The name of the analysis method to be executed. Must be one of those defined in [config.json](../mdl_anonymizer/config.json). Currently, 
 they are the following:
   * [QuadTreeHeatMap](analysis/QuadTreeHeatMap.md)
 * input_file (string): The dataset to be analyzed

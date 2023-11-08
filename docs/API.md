@@ -43,7 +43,7 @@ After some time, the result can be obtained from the following endpoint:
 
 The command line interface can also be used to send requests to the API.
 
-First, define the server API address in the [/server/config_api.json](../mob_data_anonymizer/server/config_api.json) file:
+First, define the server API address in the [/server/config_api.json](../mdl_anonymizer/server/config_api.json) file:
 
 ```
 {

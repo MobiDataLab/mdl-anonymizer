@@ -5,7 +5,7 @@ import logging
 from haversine import haversine, Unit
 from tqdm import tqdm
 
-from mob_data_anonymizer.entities.Dataset import Dataset
+from mdl_anonymizer.entities.Dataset import Dataset
 
 logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', level=logging.INFO)
 

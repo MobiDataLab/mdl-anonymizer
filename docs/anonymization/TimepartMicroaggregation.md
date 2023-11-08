@@ -18,8 +18,8 @@ To solve this issue in large datasets, we have based on microaggregation to prop
 
 - k (int, optional, default: 3): Minimum number of trajectories to be aggregated in a cluster
 - interval (int, optional, default: 900): Time interval in each partitioned dataset (in seconds)
-- clustering_method (JSON object, optional, default: SimpleMDAV): Name and parameters (if any) of the method to cluster the trajectories. Must be one of those defined in [config.json](../../mob_data_anonymizer/config.json)
-- aggregation_method (JSON object, optional, default: Mean_trajectory): Name and parameters (if any) of the method to aggregate the trajectories within a cluster. Must be one of those defined in [config.json](../../mob_data_anonymizer/config.json)
+- clustering_method (JSON object, optional, default: SimpleMDAV): Name and parameters (if any) of the method to cluster the trajectories. Must be one of those defined in [config.json](../../mdl_anonymizer/config.json)
+- aggregation_method (JSON object, optional, default: Mean_trajectory): Name and parameters (if any) of the method to aggregate the trajectories within a cluster. Must be one of those defined in [config.json](../../mdl_anonymizer/config.json)
 
 Please, visit the [examples folder](../../examples/configs/config_TimePartMicroaggregation.json) to find an example of config file 
 for the Time PartitionMicroaggregation method.

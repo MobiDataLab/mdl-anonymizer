@@ -6,7 +6,7 @@ from geopandas import GeoDataFrame
 from skmob.utils.constants import DEFAULT_CRS
 
 from entities.Dataset import Dataset
-from mob_data_anonymizer.factories.analysis_method_factory import AnalysisMethodFactory
+from mdl_anonymizer.factories.analysis_method_factory import AnalysisMethodFactory
 from tests import TEST_ROOT_DIR
 from tests.TestBase import TestBase
 

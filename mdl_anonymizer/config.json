@@ -1,0 +1,70 @@
+{
+  "anonymization_methods": {
+    "SimpleGeneralization": {
+      "class": "mdl_anonymizer.anonymization_methods.Generalization.Simple.SimpleGeneralization"
+    },
+    "ProtectedGeneralization": {
+      "class": "mdl_anonymizer.anonymization_methods.Generalization.Protected.ProtectedGeneralization"
+    },
+    "SwapAllLocations": {
+      "class": "mdl_anonymizer.anonymization_methods.SwapAllLocations.SwapLocations.SwapLocations"
+    },
+    "SwapMob": {
+      "class": "mdl_anonymizer.anonymization_methods.SwapMob.SwapMob.SwapMob"
+    },
+    "Microaggregation": {
+      "class": "mdl_anonymizer.anonymization_methods.Microaggregation.Microaggregation.Microaggregation"
+    },
+    "TimePartMicroaggregation": {
+      "class": "mdl_anonymizer.anonymization_methods.Microaggregation.TimePartMicroaggregation.TimePartMicroaggregation"
+    }
+  },
+
+  "clustering_methods": {
+    "SimpleMDAV": {
+      "class": "mdl_anonymizer.clustering.MDAV.SimpleMDAV.SimpleMDAV"
+    }
+  },
+
+  "aggregation_methods": {
+    "Mean_trajectory": {
+      "class": "mdl_anonymizer.aggregation.Martinez2021.mean_trajectory.Mean_trajectory"
+    },
+    "Closest_locations_to_mean_trajectory": {
+      "class": "mdl_anonymizer.aggregation.Martinez2021.closest_locations_to_mean_trajectory.Closest_locations_to_mean_trajectory"
+    },
+    "Closest_trajectory_to_mean_trajectory": {
+      "class": "mdl_anonymizer.aggregation.Martinez2021.closest_trajectory_to_mean_trajectory.Closest_trajectory_to_mean_trajectory"
+    }
+  },
+
+  "trajectory_distances": {
+    "Martinez2021": {
+      "class": "mdl_anonymizer.distances.trajectory.Martinez2021.Distance.Distance"
+    }
+  },
+
+  "analysis_methods": {
+    "QuadTreeHeatMap": {
+      "class": "mdl_anonymizer.analysis_methods.QuadTreeHeatMap.QuadTreeHeatMap"
+    }
+  },
+
+  "measures_methods": {
+    "ScikitMeasures": {
+      "class": "mdl_anonymizer.measures_methods.ScikitMeasures.ScikitMeasures"
+    },
+    "TrajectoriesRemoved": {
+      "class": "mdl_anonymizer.measures_methods.TrajectoriesRemoved.TrajectoriesRemoved"
+    },
+    "Rsme": {
+      "class": "mdl_anonymizer.measures_methods.Rsme.Rsme"
+    },
+    "PropensityScore": {
+      "class": "mdl_anonymizer.measures_methods.PropensityScore.PropensityScore"
+    },
+    "RecordLinkage": {
+      "class": "mdl_anonymizer.measures_methods.RecordLinkage.RecordLinkage"
+    }
+  }
+}

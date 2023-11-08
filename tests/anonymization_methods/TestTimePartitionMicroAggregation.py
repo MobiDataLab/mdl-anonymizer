@@ -1,7 +1,7 @@
 import unittest
 
-from mob_data_anonymizer.entities.Dataset import Dataset
-from mob_data_anonymizer.factories.anonymization_method_factory import AnonymizationMethodFactory
+from mdl_anonymizer.entities.Dataset import Dataset
+from mdl_anonymizer.factories.anonymization_method_factory import AnonymizationMethodFactory
 from tests import TEST_ROOT_DIR
 from tests.TestBase import TestBase
 
