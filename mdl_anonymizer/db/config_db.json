@@ -1,4 +1,4 @@
 {
-  "db_folder": "mob_data_anonymizer/db/",
+  "db_folder": "mdl_anonymizer/db/",
   "db_file": "db_sqlite.db"
 }
