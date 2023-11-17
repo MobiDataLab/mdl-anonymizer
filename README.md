@@ -1,6 +1,8 @@
 # MobiDataLab anonymization module
 Python module for mobility data anonymization of the [MobiDataLab](https://mobidatalab.eu/) European project.
 
+[Demonstrator video](docs/videos/MDL_demo_final_v1_compressed.mp4)
+
 Developed by [CRISES research group](https://crises-deim.urv.cat/web/) from [URV](https://www.urv.cat/en/).
 
 
